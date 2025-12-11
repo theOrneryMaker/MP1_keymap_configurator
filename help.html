@@ -3,16 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <title>MP1 Macropad User Guide</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Orbitron + Fira Code -->
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/fira@4.0.1/fira.css" rel="stylesheet">
     <style>
-        body { font-family: Arial, sans-serif; margin: 40px; background: #222; color: #eee; line-height: 1.6; }
-        pre { background: #333; padding: 15px; border-radius: 6px; overflow-x: auto; }
-        h2 { color: #8cf; }
+        * { box-sizing: border-box; }
+        body {
+            margin:0;
+            padding:40px;
+            background:#0f0b1a;
+            color:#e0d8ff;
+            font-family:Arial,sans-serif;
+            line-height:1.7;
+            min-height:100vh;
+        }
+        h1 {
+            text-align:center;
+            font-family:'Orbitron',sans-serif;
+            font-weight:900;
+            font-size:3.6em;
+            letter-spacing:5px;
+            margin:0 0 40px;
+            color:#ff8c42;
+            text-shadow:
+                0 0 10px rgba(255,140,66,0.6),
+                0 0 20px rgba(255,140,66,0.5),
+                0 0 40px rgba(255,140,66,0.4);
+        }
+        .container {
+            max-width:1100px;
+            margin:0 auto;
+            background:#1a1625;
+            padding:40px 50px;
+            border-radius:20px;
+            border-left:12px solid #ff8c42;
+            box-shadow:0 12px 50px rgba(0,0,0,0.9);
+        }
+        h2 {
+            color:#b19cd9;
+            font-size:2em;
+            margin-top:50px;
+            border-bottom:2px solid #443355;
+            padding-bottom:10px;
+        }
+        pre {
+            background:#111;
+            color:#d4d4d4;
+            padding:20px;
+            border-radius:12px;
+            border:1px solid #444;
+            overflow-x:auto;
+            font-family:'Fira Code',Consolas,monospace;
+            font-size:1em;
+            line-height:1.5;
+            box-shadow:inset 0 4px 20px rgba(0,0,0,0.6);
+        }
+        code {
+            background:#333;
+            padding:2px 8px;
+            border-radius:6px;
+            color:#a6e22e;
+        }
+        ul {
+            padding-left:30px;
+        }
+        li {
+            margin:12px 0;
+        }
+        .highlight {
+            color:#ff8c42;
+            font-weight:bold;
+        }
+        .note {
+            background:#221c33;
+            border-left:5px solid #ff8c42;
+            padding:15px 20px;
+            margin:25px 0;
+            border-radius:8px;
+        }
+        .footer {
+            text-align:center;
+            margin-top:80px;
+            color:#888;
+            font-size:0.9em;
+        }
     </style>
 </head>
 <body>
-    <h1>Macropad Keymap Guide</h1>
-    <pre>
-
+    <h1>MP1 USER GUIDE</h1>
+    <div class="container">
+        <pre>
 === GESTURES ===
 • Short tap encoder button (< 0.4s) → Open Menu 1 (Layer selection)
 • Long press encoder button (≥ 1.5s) → Open Menu 2 (Utilities)
@@ -25,79 +106,90 @@
 • All activity (keys, encoder, menus) resets the timer
 
 === USING THE CONFIGURATOR ===
-1. Load your current keymap.py (optional)
+1. Load your current keymap.json (optional)
 2. Edit layers, keys, icons, encoder actions
-3. Click "Generate keymap.json"
-4. Save and copy  to your macropad
-5. Eject and reset – changes are live!
+3. Click "<span class="highlight">Generate keymap.json</span>"
+4. Click "<span class="highlight">Save keymap.json</span>"
+5. Copy the file to your MP1 macropad
+6. Eject and reset – changes are live!
 
   +-----------------------------------+
   |                                   |
   |     ___       +----------------+  |
-  |   /    \      |                |  |
-  |  |      |     |                |  |
-  |   \____/      +----------------+  |
-  |                                   |  
+  |   /     \     |                |  |
+  |  |       |    |                |  |
+  |   \_____/     +----------------+  |
+  |                                   |
   |   +---+   +---+   +---+   +---+   |
   |   | 0 |   | 1 |   | 2 |   | 3 |   |
-  |   +---+   +---+   +---+   +---+   |   
+  |   +---+   +---+   +---+   +---+   |
   |                                   |
   |   +---+   +---+   +---+   +---+   |
   |   | 4 |   | 5 |   | 6 |   | 7 |   |
   |   +---+   +---+   +---+   +---+   |
   +-----------------------------------+
 
-
 === KEY TYPES ===
-Website
+<span class="highlight">Website</span>
 • Full URL starting with http:// or https://
-• Example: https://netflix.com
+• Example: https://github.com
 
-App (Windows only)
-• Start with "win:" followed by full path
-• Example: win:C:\Program Files\Google\Chrome\Application\chrome.exe
+<span class="highlight">App (Windows only)</span>
+• Just type or paste the full path – <span class="highlight">win:</span> prefix is added automatically
+• Example: C:\Program Files\Google\Chrome\Application\chrome.exe
 
-String
+<span class="highlight">String</span>
 • Plain text that will be typed
-• Great for emails, passwords, phrases
+• Perfect for emails, passwords, snippets
 
-Key Combo
+<span class="highlight">Key Combo</span>
 • Up to 3 keys from dropdowns
 • Use LEFT_/RIGHT_ versions for side-specific modifiers
-• Example: CONTROL + SHIFT + V
+• Example: CONTROL + SHIFT + T
 
-Consumer Control
+<span class="highlight">Consumer Control</span>
 • Media keys: PREV, PLAYPAUSE, NEXT, MUTE, VOL_DN, VOL_UP
 
-User Define
-• Raw Python code – for advanced use
+<span class="highlight">User Defined</span>
+• Raw Python / CircuitPython code
 • Examples:
-  - None
   - Keycode.F13
   - (Keycode.CONTROL, Keycode.SHIFT, Keycode.ESCAPE)
 
 === ICON FIELD ===
-• Max 4 characters
-• Shown on OLED next to the key
-• Use uppercase for best readability
+• Max 4 characters (shown on OLED next to key)
+• Uppercase recommended for best readability
+• "---" = no icon
 
 === ENCODER ACTIONS ===
-None – disabled
-Volume – turn for volume up/down
-Zoom – turn for zoom in/out
-Scroll – turn for page up/down
-Custom – write your own dictionary
-Invert Direction – swaps clockwise/counter-clockwise
+<span class="highlight">None</span> – disabled
+<span class="highlight">Volume</span> – turn for volume
+<span class="highlight">Zoom</span> – turn for zoom in/out
+<span class="highlight">Scroll</span> – turn for page up/down
+<span class="highlight">Custom</span> – write your own dictionary
+  • Also supports custom 4-character icon (e.g. MOUSE, VOL+, ZOOM)
+
 
 === DEFAULT & SECRET LAYERS ===
 • Only one Default layer (boot layer)
 • Only one Secret layer
 • A layer cannot be both
 
+=== QUICK START EXAMPLE ===
+Want a media + app launcher layer?
+1. Set Layer 0 as Default
+2. Key 0 → App → C:\Program Files\Spotify\Spotify.exe (win: added automatically)
+3. Key 1 → Consumer Control → PLAYPAUSE
+4. Key 2 → Consumer Control → NEXT
+5. Encoder → Volume
+6. Generate → Save → Flash → Done!
 
+Enjoy your fully customized MP1 macropad!
+        </pre>
 
-Enjoy your fully customized macropad!
-</pre>
+        <div class="footer">
+
+        </div>
+    </div>
 </body>
-
 </html>
