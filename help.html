@@ -1,0 +1,102 @@
+HTML<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Macropad Keymap Guide</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; background: #222; color: #eee; line-height: 1.6; }
+        pre { background: #333; padding: 15px; border-radius: 6px; overflow-x: auto; }
+        h2 { color: #8cf; }
+    </style>
+</head>
+<body>
+    <h1>Macropad Keymap Guide</h1>
+    <pre>
+
+=== GESTURES ===
+• Short tap encoder button (< 0.4s) → Open Menu 1 (Layer selection)
+• Long press encoder button (≥ 1.5s) → Open Menu 2 (Utilities)
+• Hold encoder button + turn clockwise → Toggle Jiggle (mouse wiggle)
+• Hold encoder button + turn counter-clockwise → Enter Secret Layer
+
+=== SECRET LAYER ===
+• Accessed by hold + counter-clockwise turn
+• Automatically exits after 15 seconds of inactivity
+• All activity (keys, encoder, menus) resets the timer
+
+=== USING THE CONFIGURATOR ===
+1. Load your current keymap.py (optional)
+2. Edit layers, keys, icons, encoder actions
+3. Click "Generate keymap.py"
+4. Download and copy to your macropad
+5. Eject and reset – changes are live!
+
+  +-----------------------------------+
+  |                                   |
+  |     ___       +----------------+  |
+  |   /    \      |                |  |
+  |  |      |     |                |  |
+  |   \____/      +----------------+  |
+  |                                   |  
+  |   +---+   +---+   +---+   +---+   |
+  |   | 0 |   | 1 |   | 2 |   | 3 |   |
+  |   +---+   +---+   +---+   +---+   |   
+  |                                   |
+  |   +---+   +---+   +---+   +---+   |
+  |   | 4 |   | 5 |   | 6 |   | 7 |   |
+  |   +---+   +---+   +---+   +---+   |
+  +-----------------------------------+
+
+
+=== KEY TYPES ===
+Website
+• Full URL starting with http:// or https://
+• Example: https://netflix.com
+
+App (Windows only)
+• Start with "win:" followed by full path
+• Example: win:C:\Program Files\Google\Chrome\Application\chrome.exe
+
+String
+• Plain text that will be typed
+• Great for emails, passwords, phrases
+
+Key Combo
+• Up to 3 keys from dropdowns
+• Use LEFT_/RIGHT_ versions for side-specific modifiers
+• Example: CONTROL + SHIFT + V
+
+Consumer Control
+• Media keys: PREV, PLAYPAUSE, NEXT, MUTE, VOL_DN, VOL_UP
+
+User Define
+• Raw Python code – for advanced use
+• Examples:
+  - None
+  - Keycode.F13
+  - (Keycode.CONTROL, Keycode.SHIFT, Keycode.ESCAPE)
+
+=== ICON FIELD ===
+• Max 4 characters
+• Shown on OLED next to the key
+• Use uppercase for best readability
+
+=== ENCODER ACTIONS ===
+None – disabled
+Volume – turn for volume up/down
+Zoom – turn for zoom in/out
+Scroll – turn for page up/down
+Custom – write your own dictionary
+Invert Direction – swaps clockwise/counter-clockwise
+
+=== DEFAULT & SECRET LAYERS ===
+• Only one Default layer (boot layer)
+• Only one Secret layer
+• A layer cannot be both
+
+
+
+Enjoy your fully customized macropad!
+</pre>
+</body>
+</html>
