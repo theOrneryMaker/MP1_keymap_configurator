@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MP1 Macro Recorder</title>
+    <title>MP1 Macropad Configurator</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -14,7 +14,6 @@
             color: #e0d8ff;
             padding: 20px;
             line-height: 1.6;
-            min-height: 100vh;
         }
         
         .container {
@@ -32,15 +31,8 @@
             font-weight: bold;
             font-size: 3.5em;
             color: #ff8c42;
-            margin-bottom: 20px;
-            text-shadow: 0 0 20px rgba(255,140,66,0.5);
-        }
-        
-        .subtitle {
-            text-align: center;
-            color: #b19cd9;
             margin-bottom: 30px;
-            font-size: 1.1em;
+            text-shadow: 0 0 20px rgba(255,140,66,0.5);
         }
         
         .section {
@@ -57,61 +49,32 @@
             font-size: 1.4em;
         }
         
-        .recorder-box {
-            background: #0f0f1e;
-            border: 3px solid #555;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            margin: 20px 0;
-            min-height: 150px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-            cursor: pointer;
-        }
-        
-        .recorder-box.ready {
-            border-color: #27ae60;
-        }
-        
-        .recorder-box.recording {
-            border-color: #ff8c42;
-            box-shadow: 0 0 30px rgba(255,140,66,0.6);
-            animation: pulse 1.5s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 30px rgba(255,140,66,0.6); }
-            50% { box-shadow: 0 0 50px rgba(255,140,66,0.9); }
-        }
-        
-        .recorder-status {
-            font-size: 2em;
+        label {
+            display: block;
+            margin: 10px 0 5px;
+            color: #b19cd9;
             font-weight: bold;
-            margin-bottom: 10px;
         }
         
-        .recorder-hint {
-            color: #888;
-            font-size: 0.9em;
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            background: #0f0f1e;
+            border: 1px solid #555;
+            color: #e0d8ff;
+            border-radius: 5px;
+            font-size: 1em;
         }
         
-        .recording-indicator {
-            width: 20px;
-            height: 20px;
-            background: #e74c3c;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 10px;
-            animation: blink 1s infinite;
-        }
-        
-        @keyframes blink {
-            0%, 50% { opacity: 1; }
-            51%, 100% { opacity: 0.3; }
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #ff8c42;
         }
         
         button {
@@ -133,129 +96,222 @@
             box-shadow: 0 5px 15px rgba(255,140,66,0.4);
         }
         
-        button:disabled {
-            background: #555;
-            cursor: not-allowed;
-            transform: none;
+        /* Override for sequence remove button */
+        .sequence-step-remove {
+            all: unset;
+            background: #c0392b !important;
+            color: white !important;
+            border-radius: 50% !important;
+            cursor: pointer !important;
+            font-weight: bold !important;
+            font-size: 1em !important;
+            width: 28px !important;
+            height: 28px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            transition: background 0.2s !important;
+            box-sizing: border-box !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            flex-shrink: 0 !important;
+            margin-top: 12px !important;
         }
         
-        button.danger {
-            background: #c0392b;
-            color: white;
+        .sequence-step-remove:hover {
+            background: #e74c3c !important;
+            transform: none !important;
+            box-shadow: none !important;
         }
         
-        button.danger:hover {
-            background: #e74c3c;
-        }
-        
-        button.success {
-            background: #27ae60;
-            color: white;
-        }
-        
-        button.success:hover {
-            background: #2ecc71;
-        }
-        
-        .events-list {
-            background: #0f0f1e;
-            border: 1px solid #444;
-            border-radius: 8px;
-            padding: 15px;
-            max-height: 400px;
-            overflow-y: auto;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            scroll-behavior: smooth;
-        }
-        
-        .event-item {
-            padding: 8px;
-            margin: 5px 0;
-            background: #1a1a2e;
-            border-radius: 4px;
-            border-left: 3px solid #ff8c42;
-        }
-        
-        .event-item.keydown {
-            border-left-color: #27ae60;
-        }
-        
-        .event-item.keyup {
-            border-left-color: #c0392b;
-        }
-        
-        .event-item.delay {
-            border-left-color: #3498db;
-        }
-        
-        .event-time {
-            color: #888;
-            font-size: 0.85em;
-        }
-        
-        .event-key {
-            color: #ff8c42;
-            font-weight: bold;
-        }
-        
-        textarea {
-            width: 100%;
-            min-height: 300px;
-            background: #0f0f1e;
-            border: 1px solid #555;
-            color: #e0d8ff;
-            border-radius: 5px;
-            padding: 15px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            resize: vertical;
-        }
-        
-        .controls {
-            display: flex;
-            gap: 10px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin: 20px 0;
-        }
-        
-        .stats {
+        .key-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 15px;
             margin: 20px 0;
         }
         
-        .stat-box {
-            background: #0f0f1e;
+        .key-config {
+            background: #1a1a2e;
             padding: 15px;
             border-radius: 8px;
+            border: 2px solid #444;
+            min-width: 300px;
+            max-width: 100%;
+            transition: all 0.3s;
+        }
+        
+        .key-config:hover {
+            border-color: #ff8c42;
+            box-shadow: 0 0 15px rgba(255, 140, 66, 0.5);
+        }
+        
+        .key-config h3 {
+            color: #ff8c42;
+            margin-bottom: 10px;
             text-align: center;
         }
         
-        .stat-value {
-            font-size: 2em;
+        .layer-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .layer-tab {
+            background: #2a2544;
+            padding: 6px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+        
+        .layer-tab:hover {
+		    background: #ffa666;
+            border-color: #ff8c42;
+			transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,140,66,0.4);
+        }
+        
+        .layer-tab.active {
+            background: #ff8c42;
+            color: #000;
+            font-weight: bold;
+        }
+		.layer-tab.active:hover {
+            background: #ffa666;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,140,66,0.4);
+        }
+        
+        .input-group {
+            margin: 10px 0;
+        }
+        
+        .combo-selector {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+        }
+        
+        .combo-selector select {
+            flex: 1;
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        #jsonOutput {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            height: 400px;
+            resize: vertical;
+        }
+        
+        .help-link {
+            display: inline-block;
+            margin: 10px 0;
             color: #ff8c42;
+            text-decoration: none;
+        }
+        
+        .help-link:hover {
+            text-decoration: underline;
+        }
+        
+        /* Sequence Builder Styles */
+        .sequence-builder {
+            background: #1a1a2e;
+            border: 2px solid #ff8c42;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+        }
+        
+        .sequence-step {
+            background: #16213e;
+            border: 1px solid #444;
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .sequence-step-number {
+            background: #ff8c42;
+            color: #000;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+        
+        .sequence-step-content {
+            flex: 1;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .sequence-step select,
+        .sequence-step input {
+            background: #0f0f1e;
+            border: 1px solid #555;
+            color: #e0d8ff;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        
+        .sequence-step-remove {
+            background: #c0392b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
             font-weight: bold;
         }
         
-        .stat-label {
-            color: #888;
-            font-size: 0.9em;
-            margin-top: 5px;
+        .sequence-step-remove:hover {
+            background: #e74c3c;
         }
         
-        .note {
-            background: #221c33;
-            border-left: 5px solid #ff8c42;
-            padding: 15px 20px;
-            margin: 20px 0;
-            border-radius: 8px;
+        .sequence-add-step {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+            width: 100%;
+            margin-top: 10px;
         }
         
-        .note strong {
-            color: #ff8c42;
+        .sequence-add-step:hover {
+            background: #2ecc71;
+        }
+        
+        .combo-key-selector {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .combo-key-selector select {
+            min-width: 120px;
         }
         
         .help-button {
@@ -283,797 +339,1054 @@
             transform: scale(1.1);
         }
         
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.8);
-            animation: fadeIn 0.3s;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
-        .modal-content {
-            background: #1a1625;
-            margin: 5% auto;
-            padding: 30px;
-            border: 2px solid #ff8c42;
-            border-radius: 15px;
-            width: 80%;
-            max-width: 800px;
-            max-height: 80vh;
-            overflow-y: auto;
-            box-shadow: 0 10px 50px rgba(0,0,0,0.9);
-            animation: slideDown 0.3s;
-        }
-        
-        @keyframes slideDown {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        .modal-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-            border-bottom: 2px solid #ff8c42;
-            padding-bottom: 15px;
-        }
-        
-        .modal-header h2 {
-            color: #ff8c42;
-            margin: 0;
-        }
-        
-        .close-button {
-            background: #c0392b;
-            color: white;
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.2em;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.3s;
-        }
-        
-        .close-button:hover {
-            background: #e74c3c;
-            transform: rotate(90deg);
-        }
-        
-        .recording-section {
+        .header-section {
             position: relative;
         }
         
-        /* Sliding Switch Styles */
-        .switch-container {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin: 20px 0;
-            justify-content: center;
-        }
-        
-        .switch-container > label:first-child {
-            color: #b19cd9;
-            font-weight: bold;
-            font-size: 1em;
-        }
-        
-        .switch {
-            position: relative;
-            display: inline-block;
-            width: 60px;
-            height: 30px;
-        }
-        
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
-        
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background-color: #555;
-            transition: all 0.3s;
-            border-radius: 30px;
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
-        }
-        
-        .slider:before {
-            position: absolute;
-            content: "";
-            height: 22px;
-            width: 22px;
-            left: 4px;
-            bottom: 4px;
-            background-color: #e0d8ff;
-            transition: all 0.3s;
-            border-radius: 50%;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-        
-        .switch input:checked + .slider {
-            background-color: #ff8c42;
-            box-shadow: 0 0 15px rgba(255,140,66,0.4);
-        }
-        
-        .switch input:checked + .slider:before {
-            transform: translateX(30px);
-            background-color: #fff;
-        }
-        
-        .switch:hover .slider {
-            background-color: #666;
-        }
-        
-        .switch input:checked:hover + .slider {
-            background-color: #ffa666;
-            box-shadow: 0 0 20px rgba(255,140,66,0.6);
-        }
-        
-        .input-group {
-            margin: 15px 0;
-        }
-        
-        .input-group label {
-            display: block;
-            color: #b19cd9;
-            font-weight: bold;
-            margin-bottom: 8px;
-        }
-        
-        .input-group input[type="number"] {
-            width: 100%;
-            max-width: 200px;
-            padding: 8px 12px;
-            background: #0f0f1e;
-            border: 1px solid #555;
-            color: #e0d8ff;
-            border-radius: 5px;
-            font-size: 1em;
-        }
-        
-        .input-group input[type="number"]:focus {
-            outline: none;
-            border-color: #ff8c42;
-        }
-        
-        .recorder-controls {
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-            justify-content: center;
-            gap: 30px;
-            margin: 20px 0;
-        }
-        
-        .switch-container {
-            min-width: 200px;
-        }
-        
-        .input-group.key-delay {
+        .checkbox-inline {
             display: flex;
             align-items: center;
             gap: 10px;
-            margin: 0;
-            min-width: 300px;
+            margin: 10px 0;
         }
         
-        .input-group.key-delay label {
+        .checkbox-inline input[type="checkbox"] {
+            width: auto;
             margin: 0;
+        }
+        
+        .checkbox-inline label {
+            margin: 0;
+            display: inline;
+        }
+        
+        .label-with-button {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 10px 0 5px;
+        }
+        
+        .macro-recorder-button {
+            background: #ff8c42;
+            color: #000;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
             white-space: nowrap;
         }
         
-        .input-group.key-delay input[type="number"] {
-            width: 80px;
-            max-width: 80px;
+        .macro-recorder-button:hover {
+            background: #ffa666;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,140,66,0.4);
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Macro Recorder</h1>        
-        <div class="section recording-section">
-            <h2>Recording Tool</h2>
-            <button class="help-button" onclick="event.stopPropagation(); openHelp();" title="Instructions">?</button>
-            
-            <div id="recorderBox" class="recorder-box" onclick="focusRecorder()">
-                <div class="recorder-status" id="recorderStatus">Click to Focus</div>
-                <div class="recorder-hint" id="recorderHint">Click here, then press keys to record</div>
-            </div>
-            
-            <div class="recorder-controls">
-                <div class="switch-container">
-                    <label>Capture Timing</label>
-                    <label class="switch">
-                        <input type="checkbox" id="timingSwitch" onchange="toggleKeyDelayVisibility()">
-                        <span class="slider"></span>
-                    </label>
-                </div>
-                
-                <div class="input-group key-delay" id="keyDelayGroup">
-                    <label for="keyDelay">Auto-delay after keys (s):</label>
-                    <input type="number" id="keyDelay" min="0" max="2" step="0.01" value="0.05">
-                </div>
-            </div>
-            
-            <div class="controls">
-                <button id="startBtn" onclick="startRecording()" class="success">Start Recording</button>
-                <button id="stopBtn" onclick="stopRecording()" disabled class="danger">Stop Recording</button>
-                <button onclick="clearRecording()">Clear Recording</button>
-            </div>
-            
-            <div class="stats">
-                <div class="stat-box">
-                    <div class="stat-value" id="eventCount">0</div>
-                    <div class="stat-label">Events Recorded</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="duration">0.0s</div>
-                    <div class="stat-label">Total Duration</div>
-                </div>
-                <div class="stat-box">
-                    <div class="stat-value" id="keysPressed">0</div>
-                    <div class="stat-label">Keys Pressed</div>
-                </div>
-            </div>
-
-            <div class="events-list" id="eventsList">
-                <div style="color: #888; text-align: center; padding: 20px;">
-                    No events recorded yet
-                </div>
+        <h1>MP1 Macropad Configurator</h1>
+        
+        <div class="section header-section">
+			<h2>Kymap.json Loader</h2>
+            <button class="help-button" onclick="openHelp()" title="User Guide">?</button>
+            <div class="input-group">
+                <input type="file" id="fileInput" accept=".json">
             </div>
         </div>
         
         <div class="section">
-            <h2>Generator Output</h2>
-		            <div class="controls">
-                <button onclick="generateSequence()">Generate Sequence JSON</button>
-                <button onclick="clearRecording()">Clear Recording</button>
-                <button onclick="copyJSON()">Copy to Clipboard</button>
-                <button onclick="downloadJSON()">Download JSON</button>
-				</div>
+            <h2>Layer Configuration</h2>
+			<div class="input-group">
+                <label for="numLayers">Number of Layers:</label>
+                <input type="number" id="numLayers" min="2" max="10" value="3">
+                <button onclick="updateLayerCount()">Update Layers</button>
+            </div>
+				<div class="layer-tabs" id="layerTabs">
+			</div>
+            <div id="layerContent"></div>
         </div>
-    </div>
-
-    <!-- Help Modal -->
-    <div id="helpModal" class="modal" onclick="closeHelp(event)">
-        <div class="modal-content" onclick="event.stopPropagation();">
-            <div class="modal-header">
-                <h2>Macro Recorder Instructions</h2>
-                <button class="close-button" onclick="closeHelp()">×</button>
-            </div>
-            
-            <div style="line-height: 1.8;">
-                <h3 style="color: #ff8c42; margin-top: 20px;">How to Use</h3>
-                <ol style="padding-left: 30px; color: #e0d8ff;">
-                    <li><strong>Click the recorder box</strong> to focus it (or click "Start Recording")</li>
-                    <li><strong>Press "Start Recording"</strong> button</li>
-                    <li><strong>Type your macro</strong> - all keypresses will be captured</li>
-                    <li><strong>Press "Stop Recording"</strong> when done</li>
-                    <li><strong>Click "Generate Sequence JSON"</strong> to create MP1 format</li>
-                    <li><strong>Copy the JSON</strong> and paste into the Configurator's "User Defined" field</li>
-                </ol>
-                
-                <h3 style="color: #ff8c42; margin-top: 20px;">Capture Timing Switch</h3>
-                <p><strong style="color: #ff8c42;">OFF (Default):</strong></p>
-                <ul style="padding-left: 30px; color: #e0d8ff;">
-                    <li>Records keypresses without timing information</li>
-                    <li>Adds a small auto-delay after special keys (TAB, ENTER, etc.)</li>
-                    <li>SHIFT key is filtered out when typing capitals (cleaner output)</li>
-                    <li>Best for simple macros and login sequences</li>
-                </ul>
-                
-                <p><strong style="color: #ff8c42;">ON:</strong></p>
-                <ul style="padding-left: 30px; color: #e0d8ff;">
-                    <li>Records exact timing between keypresses</li>
-                    <li>Captures all keys including SHIFT</li>
-                    <li>Best for complex macros where timing matters</li>
-                    <li>Creates larger sequences with delay steps</li>
-                </ul>
-                
-                <h3 style="color: #ff8c42; margin-top: 20px;">Auto-delay Setting</h3>
-                <p style="color: #e0d8ff;">
-                    Only visible when Capture Timing is <strong>OFF</strong>. Sets the delay (in seconds) 
-                    automatically added after special keys like TAB, ENTER, etc. Default is 0.05 seconds.
-                </p>
-                
-                <h3 style="color: #ff8c42; margin-top: 20px;">Tips</h3>
-                <ul style="padding-left: 30px; color: #e0d8ff;">
-                    <li>Start with Capture Timing OFF for simpler macros</li>
-                    <li>Use Capture Timing ON if you need precise delays</li>
-                    <li>The recorder automatically merges consecutive text into single strings</li>
-                    <li>Very short delays (&lt; 0.05s) are ignored for cleaner output</li>
-                    <li>Key combinations (Ctrl+C, etc.) are automatically detected</li>
-                </ul>
-                
-                <div class="note" style="margin-top: 20px;">
-                    <strong>Note:</strong> The recorder must have focus to capture keys. Click the recorder box 
-                    if keys aren't being captured.
-                </div>
-            </div>
+        
+        <div class="section">
+            <h2>Keymap.json Generator</h2>
+            <button onclick="generateKeymap()">Generate keymap.json</button>
+            <button onclick="saveKeymap()">Save keymap.json</button>
+            <button onclick="clearAll()">Clear</button>
+            <textarea id="jsonOutput" readonly></textarea>
         </div>
     </div>
 
     <script>
-        let recording = false;
-        let events = [];
-        let startTime = null;
-        let lastEventTime = null;
-        let heldKeys = new Set();
-        let textBuffer = [];
-        let lastTextTime = null;
-        let captureTimingEnabled = false;
-        
-        // Wait for DOM to be ready before accessing elements
-        let recorderBox, startBtn, stopBtn;
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            recorderBox = document.getElementById('recorderBox');
-            startBtn = document.getElementById('startBtn');
-            stopBtn = document.getElementById('stopBtn');
+        // Global state
+        let numLayers = 3;
+        let currentLayer = 0;
+        let keymapData = {
+            layer_names: [],
+            secret_layer: 0,
+            default_layer: 1,
+            keymap: [],
+            icons: [],
+            encoder_icons: [],
+            encoder_actions: []
+        };
+        let sequenceBuilders = [];
+
+        // Keycode list
+        const KEYCODES = [
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+            'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+            'ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SIX', 'SEVEN', 'EIGHT', 'NINE', 'ZERO',
+            'ENTER', 'ESCAPE', 'BACKSPACE', 'TAB', 'SPACE', 'MINUS', 'EQUALS',
+            'LEFT_BRACKET', 'RIGHT_BRACKET', 'BACKSLASH', 'SEMICOLON', 'QUOTE',
+            'GRAVE_ACCENT', 'COMMA', 'PERIOD', 'FORWARD_SLASH',
+            'CAPS_LOCK', 'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
+            'PRINT_SCREEN', 'SCROLL_LOCK', 'PAUSE', 'INSERT', 'HOME', 'PAGE_UP',
+            'DELETE', 'END', 'PAGE_DOWN',
+            'RIGHT_ARROW', 'LEFT_ARROW', 'DOWN_ARROW', 'UP_ARROW',
+            'KEYPAD_NUMLOCK', 'KEYPAD_FORWARD_SLASH', 'KEYPAD_ASTERISK',
+            'KEYPAD_MINUS', 'KEYPAD_PLUS', 'KEYPAD_ENTER',
+            'KEYPAD_ONE', 'KEYPAD_TWO', 'KEYPAD_THREE', 'KEYPAD_FOUR',
+            'KEYPAD_FIVE', 'KEYPAD_SIX', 'KEYPAD_SEVEN', 'KEYPAD_EIGHT',
+            'KEYPAD_NINE', 'KEYPAD_ZERO', 'KEYPAD_PERIOD',
+            'LEFT_CONTROL', 'LEFT_SHIFT', 'LEFT_ALT', 'LEFT_GUI',
+            'RIGHT_CONTROL', 'RIGHT_SHIFT', 'RIGHT_ALT', 'RIGHT_GUI',
+            'CONTROL', 'SHIFT', 'ALT', 'GUI', 'WINDOWS', 'COMMAND'
+        ];
+
+        const CONSUMER_CONTROLS = ['PREV', 'PLAYPAUSE', 'NEXT', 'MUTE', 'VOL_UP', 'VOL_DN'];
+
+        // ============================================
+        // SEQUENCE BUILDER CLASS
+        // ============================================
+        class SequenceBuilder {
+            constructor(containerId, initialSequence = []) {
+                this.container = document.getElementById(containerId);
+                this.sequence = Array.isArray(initialSequence) ? [...initialSequence] : [];
+                this.render();
+            }
             
-            // Make recorder focusable
-            recorderBox.tabIndex = 0;
+            addStep(type = 'string') {
+                this.sequence.push({
+                    type: type,
+                    value: type === 'delay' ? 0.1 : (type === 'combo' ? [] : '')
+                });
+                this.render();
+            }
             
-            // Set up event listeners
-            setupEventListeners();
+            removeStep(index) {
+                this.sequence.splice(index, 1);
+                this.render();
+            }
             
-            // Set initial visibility for keyDelay
-            toggleKeyDelayVisibility();
-        });
-        
-        function toggleKeyDelayVisibility() {
-            const timingSwitch = document.getElementById('timingSwitch');
-            const keyDelayGroup = document.getElementById('keyDelayGroup');
+            updateStep(index, field, value) {
+                if (!this.sequence[index]) return;
+                
+                if (field === 'type') {
+                    this.sequence[index].type = value;
+                    if (value === 'delay') {
+                        this.sequence[index].value = 0.1;
+                    } else if (value === 'combo') {
+                        this.sequence[index].value = [];
+                    } else {
+                        this.sequence[index].value = '';
+                    }
+                } else {
+                    this.sequence[index][field] = value;
+                }
+                this.render();
+            }
             
-            // Show keyDelay only when timing is OFF (unchecked)
-            // Use visibility instead of display to maintain layout space
-            if (timingSwitch && keyDelayGroup) {
-                keyDelayGroup.style.visibility = timingSwitch.checked ? 'hidden' : 'visible';
+            getSequence() {
+                return this.sequence;
+            }
+            
+            render() {
+                if (!this.container) return;
+                
+                const builderIndex = this.container.dataset.index;
+                
+                console.log(`Rendering sequence for key ${builderIndex}:`, this.sequence);
+                console.log(`Number of steps: ${this.sequence.length}`);
+                
+                this.container.innerHTML = `
+                    <div class="sequence-builder">
+                        ${this.sequence.map((step, i) => this.renderStep(step, i, builderIndex)).join('')}
+                        <button class="sequence-add-step" onclick="sequenceBuilders[${builderIndex}].addStep()">
+                            + Add Step
+                        </button>
+                    </div>
+                `;
+            }
+            
+            renderStep(step, index, builderIndex) {
+                const typeOptions = `
+                    <option value="string" ${step.type === 'string' ? 'selected' : ''}>Type String</option>
+                    <option value="key" ${step.type === 'key' ? 'selected' : ''}>Press Key</option>
+                    <option value="combo" ${step.type === 'combo' ? 'selected' : ''}>Key Combo</option>
+                    <option value="cc" ${step.type === 'cc' ? 'selected' : ''}>Media Key</option>
+                    <option value="delay" ${step.type === 'delay' ? 'selected' : ''}>Delay (seconds)</option>
+                `;
+                
+                let valueInput = '';
+                
+                if (step.type === 'string') {
+                    const safeValue = this.escapeHtml(step.value || '');
+                    valueInput = `<input type="text" value="${safeValue}" 
+                        placeholder="Text to type" 
+                        onchange="sequenceBuilders[${builderIndex}].updateStep(${index}, 'value', this.value)"
+                        style="flex: 1; min-width: 200px;">`;
+                } else if (step.type === 'key') {
+                    valueInput = this.renderKeySelector(index, step.value, builderIndex);
+                } else if (step.type === 'combo') {
+                    valueInput = this.renderComboSelector(index, step.value || [], builderIndex);
+                } else if (step.type === 'cc') {
+                    valueInput = this.renderMediaKeySelector(index, step.value, builderIndex);
+                } else if (step.type === 'delay') {
+                    valueInput = `<input type="number" value="${step.value || 0.1}" 
+                        min="0" max="10" step="0.1"
+                        onchange="sequenceBuilders[${builderIndex}].updateStep(${index}, 'value', parseFloat(this.value))"
+                        style="width: 100px;">`;
+                }
+                
+                return `
+                    <div class="sequence-step">
+                        <div class="sequence-step-left">
+                            <div class="sequence-step-number">${index + 1}</div>
+                            <button class="sequence-step-remove" onclick="sequenceBuilders[${builderIndex}].removeStep(${index})" title="Remove step">✕</button>
+                        </div>
+                        <div class="sequence-step-content">
+                            <select onchange="sequenceBuilders[${builderIndex}].updateStep(${index}, 'type', this.value)">
+                                ${typeOptions}
+                            </select>
+                            ${valueInput}
+                        </div>
+                    </div>
+                `;
+            }
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            
+            renderKeySelector(index, currentValue, builderIndex) {
+                return `
+                    <select onchange="sequenceBuilders[${builderIndex}].updateStep(${index}, 'value', this.value)">
+                        <option value="">Select Key</option>
+                        ${KEYCODES.map(k => `<option value="${k}" ${currentValue === k ? 'selected' : ''}>${k}</option>`).join('')}
+                    </select>
+                `;
+            }
+            
+            renderComboSelector(index, currentCombo, builderIndex) {
+                const modifiers = ['CONTROL', 'SHIFT', 'ALT', 'WINDOWS', 'GUI'];
+                const keys = KEYCODES;
+                
+                // Ensure currentCombo is an array
+                const comboArray = Array.isArray(currentCombo) ? currentCombo : [];
+                
+                const renderSelect = (slotIndex) => {
+                    const currentKey = comboArray[slotIndex] || '';
+                    const options = slotIndex === 0 ? [...modifiers, ...keys] : keys;
+                    
+                    return `
+                        <select onchange="
+                            let combo = ${JSON.stringify(comboArray)};
+                            if (this.value) {
+                                combo[${slotIndex}] = this.value;
+                            } else {
+                                combo.splice(${slotIndex}, 1);
+                            }
+                            combo = combo.filter(k => k);
+                            sequenceBuilders[${builderIndex}].updateStep(${index}, 'value', combo);
+                        ">
+                            <option value="">-</option>
+                            ${options.map(k => `<option value="${k}" ${currentKey === k ? 'selected' : ''}>${k}</option>`).join('')}
+                        </select>
+                    `;
+                };
+                
+                return `
+                    <div class="combo-key-selector">
+                        ${renderSelect(0)}
+                        ${comboArray.length > 0 ? ' + ' : ''}
+                        ${comboArray.length > 0 ? renderSelect(1) : ''}
+                        ${comboArray.length > 1 ? ' + ' : ''}
+                        ${comboArray.length > 1 ? renderSelect(2) : ''}
+                    </div>
+                `;
+            }
+            
+            renderMediaKeySelector(index, currentValue, builderIndex) {
+                return `
+                    <select onchange="sequenceBuilders[${builderIndex}].updateStep(${index}, 'value', this.value)">
+                        <option value="">Select Media Key</option>
+                        ${CONSUMER_CONTROLS.map(k => `<option value="${k}" ${currentValue === k ? 'selected' : ''}>${k}</option>`).join('')}
+                    </select>
+                `;
             }
         }
-        
-        function setupEventListeners() {
-            recorderBox.addEventListener('keydown', handleKeyDown);
-            recorderBox.addEventListener('keyup', handleKeyUp);
+
+        // ============================================
+        // KEY GENERATION - NEW EXPLICIT FORMAT
+        // ============================================
+        function generateKeyData(keyIndex, layerIndex) {
+            const keyType = getKeyType(keyIndex, layerIndex);
+            
+            if (keyType === 'none' || keyType === null) {
+                return null;
+            }
+            
+            if (keyType === 'string') {
+                const value = getStringValue(keyIndex, layerIndex);
+                if (!value) return null;
+                return {"type": "string", "value": value};
+            }
+            
+            if (keyType === 'key') {
+                const value = getKeyValue(keyIndex, layerIndex);
+                if (!value) return null;
+                return {"type": "key", "value": value};
+            }
+            
+            if (keyType === 'combo') {
+                const keys = getComboKeys(keyIndex, layerIndex);
+                const validKeys = keys.filter(k => k && k !== '');
+                if (validKeys.length === 0) return null;
+                return {"type": "combo", "value": validKeys};
+            }
+            
+            if (keyType === 'url') {
+                const value = getUrlValue(keyIndex, layerIndex);
+                if (!value) return null;
+                return {"type": "url", "value": value};
+            }
+            
+            if (keyType === 'app') {
+                const value = getAppValue(keyIndex, layerIndex);
+                if (!value) return null;
+                return {"type": "app", "value": value};
+            }
+            
+            if (keyType === 'cc') {
+                const value = getCCValue(keyIndex, layerIndex);
+                if (!value) return null;
+                return {"type": "cc", "value": value};
+            }
+            
+            if (keyType === 'sequence') {
+                if (sequenceBuilders[keyIndex]) {
+                    const sequence = sequenceBuilders[keyIndex].getSequence();
+                    if (sequence.length > 0) {
+                        return {"type": "sequence", "value": sequence};
+                    }
+                }
+                return null;
+            }
+            
+            if (keyType === 'user') {
+                const value = getUserValue(keyIndex, layerIndex);
+                return value;
+            }
+            
+            return null;
         }
-        
-        // Key mapping from event.code to MP1 format
-        const keyMap = {
-            'KeyA': 'A', 'KeyB': 'B', 'KeyC': 'C', 'KeyD': 'D', 'KeyE': 'E',
-            'KeyF': 'F', 'KeyG': 'G', 'KeyH': 'H', 'KeyI': 'I', 'KeyJ': 'J',
-            'KeyK': 'K', 'KeyL': 'L', 'KeyM': 'M', 'KeyN': 'N', 'KeyO': 'O',
-            'KeyP': 'P', 'KeyQ': 'Q', 'KeyR': 'R', 'KeyS': 'S', 'KeyT': 'T',
-            'KeyU': 'U', 'KeyV': 'V', 'KeyW': 'W', 'KeyX': 'X', 'KeyY': 'Y', 'KeyZ': 'Z',
-            'Digit1': 'ONE', 'Digit2': 'TWO', 'Digit3': 'THREE', 'Digit4': 'FOUR',
-            'Digit5': 'FIVE', 'Digit6': 'SIX', 'Digit7': 'SEVEN', 'Digit8': 'EIGHT',
-            'Digit9': 'NINE', 'Digit0': 'ZERO',
-            'Enter': 'ENTER', 'Escape': 'ESCAPE', 'Backspace': 'BACKSPACE',
-            'Tab': 'TAB', 'Space': 'SPACE',
-            'ControlLeft': 'CONTROL', 'ControlRight': 'CONTROL',
-            'ShiftLeft': 'SHIFT', 'ShiftRight': 'SHIFT',
-            'AltLeft': 'ALT', 'AltRight': 'ALT',
-            'MetaLeft': 'GUI', 'MetaRight': 'GUI',
-            'ArrowUp': 'UP_ARROW', 'ArrowDown': 'DOWN_ARROW',
-            'ArrowLeft': 'LEFT_ARROW', 'ArrowRight': 'RIGHT_ARROW',
-            'Delete': 'DELETE', 'Home': 'HOME', 'End': 'END',
-            'PageUp': 'PAGE_UP', 'PageDown': 'PAGE_DOWN'
-        };
-        
-        function focusRecorder() {
-            recorderBox.focus();
-            recorderBox.classList.add('ready');
-            document.getElementById('recorderHint').textContent = 'Ready to record - Press Start Recording';
-        }
-        
-        function startRecording() {
-            if (recording) return;
-            
-            recording = true;
-            events = [];
-            startTime = Date.now();
-            lastEventTime = startTime;
-            heldKeys.clear();
-            textBuffer = [];
-            lastTextTime = null;
-            captureTimingEnabled = document.getElementById('timingSwitch').checked;
-            
-            recorderBox.classList.add('recording');
-            recorderBox.classList.remove('ready');
-            document.getElementById('recorderStatus').innerHTML = '<span class="recording-indicator"></span>Recording...';
-            document.getElementById('recorderHint').textContent = captureTimingEnabled ? 
-                'Type your macro sequence (timing captured)' : 
-                'Type your macro sequence (no timing)';
-            
-            startBtn.disabled = true;
-            stopBtn.disabled = false;
-            
-            recorderBox.focus();
-            updateStats();
-        }
-        
-        function stopRecording() {
-            if (!recording) return;
-            
-            // Flush any remaining text
-            flushTextBuffer();
-            
-            recording = false;
-            
-            recorderBox.classList.remove('recording');
-            document.getElementById('recorderStatus').textContent = 'Recording Stopped';
-            document.getElementById('recorderHint').textContent = 'Click Generate Sequence JSON';
-            
-            startBtn.disabled = false;
-            stopBtn.disabled = true;
-            
-            updateStats();
-            displayEvents();
-        }
-        
-        function clearRecording() {
-            events = [];
-            heldKeys.clear();
-            textBuffer = [];
-            updateStats();
-            displayEvents();
-            document.getElementById('jsonOutput').value = '';
-        }
-        
-        function handleKeyDown(e) {
-            if (!recording) return;
-            
-            e.preventDefault();
-            
-            const now = Date.now();
-            const keyCode = keyMap[e.code];
-            
-            // Skip if already held (repeat)
-            if (heldKeys.has(keyCode)) return;
-            
-            // Skip standalone SHIFT key ONLY when timing is OFF
-            if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size === 0) {
-                heldKeys.add(keyCode);
+
+        // ============================================
+        // KEY LOADING - SUPPORTS BOTH FORMATS
+        // ============================================
+        function loadKeyData(keyData, keyIndex, layerIndex) {
+            if (!keyData) {
+                setKeyType(keyIndex, layerIndex, 'none');
                 return;
             }
             
-            // Add delay if timing is enabled and there's a gap
-            if (captureTimingEnabled) {
-                const timeSinceLast = (now - lastEventTime) / 1000;
-                if (timeSinceLast > 0.05) {
-                    flushTextBuffer();
-                    events.push({
-                        type: 'delay',
-                        time: now,
-                        delay: timeSinceLast
-                    });
+            // NEW EXPLICIT FORMAT
+            if (typeof keyData === 'object' && keyData.type) {
+                const keyType = keyData.type;
+                const value = keyData.value;
+                
+                setKeyType(keyIndex, layerIndex, keyType);
+                
+                if (keyType === 'string') {
+                    setStringValue(keyIndex, layerIndex, value);
+                }
+                else if (keyType === 'key') {
+                    setKeyValue(keyIndex, layerIndex, value);
+                }
+                else if (keyType === 'combo') {
+                    setComboKeys(keyIndex, layerIndex, value);
+                }
+                else if (keyType === 'url') {
+                    setUrlValue(keyIndex, layerIndex, value);
+                }
+                else if (keyType === 'app') {
+                    const cleanValue = value.startsWith('win:') ? value.substring(4) : value;
+                    setAppValue(keyIndex, layerIndex, cleanValue);
+                }
+                else if (keyType === 'cc') {
+                    setCCValue(keyIndex, layerIndex, value);
+                }
+                else if (keyType === 'sequence') {
+                    setKeyType(keyIndex, layerIndex, 'sequence');
+                    const containerId = `sequence-builder-${keyIndex}`;
+                    sequenceBuilders[keyIndex] = new SequenceBuilder(containerId, value);
+                }
+                
+                return;
+            }
+            
+            // LEGACY FORMAT DETECTION
+            if (typeof keyData === 'string') {
+                if (keyData.startsWith('http://') || keyData.startsWith('https://')) {
+                    setKeyType(keyIndex, layerIndex, 'url');
+                    setUrlValue(keyIndex, layerIndex, keyData);
+                }
+                else if (keyData.startsWith('win:')) {
+                    setKeyType(keyIndex, layerIndex, 'app');
+                    setAppValue(keyIndex, layerIndex, keyData.substring(4));
+                }
+                else if (isValidKeycode(keyData)) {
+                    if (CONSUMER_CONTROLS.includes(keyData)) {
+                        setKeyType(keyIndex, layerIndex, 'cc');
+                        setCCValue(keyIndex, layerIndex, keyData);
+                    } else {
+                        setKeyType(keyIndex, layerIndex, 'key');
+                        setKeyValue(keyIndex, layerIndex, keyData);
+                    }
+                }
+                else {
+                    setKeyType(keyIndex, layerIndex, 'string');
+                    setStringValue(keyIndex, layerIndex, keyData);
+                }
+            }
+            else if (Array.isArray(keyData)) {
+                setKeyType(keyIndex, layerIndex, 'combo');
+                setComboKeys(keyIndex, layerIndex, keyData);
+            }
+        }
+
+        function isValidKeycode(str) {
+            return KEYCODES.includes(str) || CONSUMER_CONTROLS.includes(str);
+        }
+
+        // ============================================
+        // UI FUNCTIONS
+        // ============================================
+        function updateLayerCount() {
+            const input = document.getElementById('numLayers');
+            let newCount = parseInt(input.value);
+            
+            // Enforce minimum of 2 layers
+            if (newCount < 2) {
+                newCount = 2;
+                input.value = 2;
+            }
+            
+            numLayers = newCount;
+            initializeKeymapData();
+            renderLayerTabs();
+            renderCurrentLayer();
+        }
+
+        function initializeKeymapData() {
+            // Initialize layer names
+            while (keymapData.layer_names.length < numLayers) {
+                keymapData.layer_names.push(`LAYER${keymapData.layer_names.length}`);
+            }
+            keymapData.layer_names = keymapData.layer_names.slice(0, numLayers);
+
+            // Ensure default and secret are different and valid
+            if (keymapData.secret_layer >= numLayers) {
+                keymapData.secret_layer = 0;
+            }
+            if (keymapData.default_layer >= numLayers) {
+                keymapData.default_layer = 1;
+            }
+            // Ensure they're not the same
+            if (keymapData.secret_layer === keymapData.default_layer) {
+                keymapData.secret_layer = 0;
+                keymapData.default_layer = 1;
+            }
+
+            // Initialize keymap
+            while (keymapData.keymap.length < numLayers) {
+                keymapData.keymap.push(Array(8).fill(null));
+            }
+            keymapData.keymap = keymapData.keymap.slice(0, numLayers);
+
+            // Initialize icons
+            while (keymapData.icons.length < numLayers) {
+                keymapData.icons.push(Array(8).fill('---'));
+            }
+            keymapData.icons = keymapData.icons.slice(0, numLayers);
+
+            // Initialize encoder
+            while (keymapData.encoder_icons.length < numLayers) {
+                keymapData.encoder_icons.push('----');
+            }
+            keymapData.encoder_icons = keymapData.encoder_icons.slice(0, numLayers);
+
+            while (keymapData.encoder_actions.length < numLayers) {
+                keymapData.encoder_actions.push(null);
+            }
+            keymapData.encoder_actions = keymapData.encoder_actions.slice(0, numLayers);
+        }
+
+        function renderLayerTabs() {
+            const tabsContainer = document.getElementById('layerTabs');
+            tabsContainer.innerHTML = '';
+            
+            for (let i = 0; i < numLayers; i++) {
+                const tab = document.createElement('div');
+                tab.className = 'layer-tab' + (i === currentLayer ? ' active' : '');
+                tab.textContent = keymapData.layer_names[i] || `Layer ${i}`;
+                tab.onclick = () => switchLayer(i);
+                tabsContainer.appendChild(tab);
+            }
+        }
+
+        function switchLayer(layerIndex) {
+            currentLayer = layerIndex;
+            renderLayerTabs();
+            renderCurrentLayer();
+        }
+
+        function renderCurrentLayer() {
+            const content = document.getElementById('layerContent');
+            
+            let html = `
+                <div class="input-group">
+                    <label>Layer Name:</label>
+                    <input type="text" value="${keymapData.layer_names[currentLayer]}" 
+                           onchange="keymapData.layer_names[${currentLayer}] = this.value; renderLayerTabs();">
+                </div>
+                
+                <div class="checkbox-inline">
+                    <input type="checkbox" id="defaultCheck-${currentLayer}" 
+                           ${keymapData.default_layer === currentLayer ? 'checked' : ''}
+                           onchange="setDefaultLayer(${currentLayer}, this.checked);">
+                    <label for="defaultCheck-${currentLayer}">Default Layer</label>
+                    
+                    <input type="checkbox" id="secretCheck-${currentLayer}" 
+                           ${keymapData.secret_layer === currentLayer ? 'checked' : ''}
+                           onchange="setSecretLayer(${currentLayer}, this.checked);"
+                           style="margin-left: 30px;">
+                    <label for="secretCheck-${currentLayer}">Secret Layer</label>
+                </div>
+
+                <div class="key-grid">
+            `;
+            
+            for (let i = 0; i < 8; i++) {
+                html += renderKeyConfig(i);
+            }
+            
+            html += '</div>';
+            
+            // Encoder configuration
+            html += `
+                <h3>Encoder</h3>
+                <div class="input-group">
+                    <label>Encoder icon:</label>
+                    <input type="text" maxlength="4" value="${keymapData.encoder_icons[currentLayer]}"
+                           onchange="keymapData.encoder_icons[${currentLayer}] = this.value.toUpperCase();">
+                </div>
+                
+                <div class="input-group">
+                    <label>Encoder Action:</label>
+                    <select id="encoderAction-${currentLayer}" onchange="updateEncoderAction(${currentLayer}, this.value)">
+                        <option value="none">None</option>
+                        <option value="volume">Volume</option>
+                        <option value="scroll">Scroll</option>
+                        <option value="zoom">Zoom</option>
+                    </select>
+                </div>
+            `;
+            
+            content.innerHTML = html;
+            
+            // Set encoder action dropdown value
+            const encoderAction = keymapData.encoder_actions[currentLayer];
+            const encoderSelect = document.getElementById(`encoderAction-${currentLayer}`);
+            if (encoderSelect && encoderAction) {
+                if (encoderAction.cc === "VOL_UP") {
+                    encoderSelect.value = "volume";
+                } else if (encoderAction.mouse_wheel) {
+                    encoderSelect.value = "scroll";
+                } else if (encoderAction.combo) {
+                    encoderSelect.value = "zoom";
                 }
             }
             
-            // Check if it's a modifier or printable character
-            const modifiers = ['CONTROL', 'SHIFT', 'ALT', 'GUI'];
-            const isPrintable = e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey;
-            
-            if (isPrintable) {
-                // Add to text buffer
-                textBuffer.push(e.key);
-                lastTextTime = now;
+            // Initialize sequence builders for visible keys
+            for (let i = 0; i < 8; i++) {
+                const keyData = keymapData.keymap[currentLayer][i];
+                if (keyData && keyData.type === 'sequence') {
+                    console.log(`Loading sequence for key ${i}:`, keyData.value);
+                    const containerId = `sequence-builder-${i}`;
+                    const container = document.getElementById(containerId);
+                    if (container) {
+                        container.dataset.index = i;
+                        // Deep clone the sequence data to avoid reference issues
+                        const sequenceData = JSON.parse(JSON.stringify(keyData.value || []));
+                        console.log(`Cloned sequence data for key ${i}:`, sequenceData);
+                        sequenceBuilders[i] = new SequenceBuilder(containerId, sequenceData);
+                    }
+                }
+            }
+        }
+
+        function setDefaultLayer(layerIndex, checked) {
+            if (checked) {
+                // If setting as default, unset as secret
+                if (keymapData.secret_layer === layerIndex) {
+                    // Find another layer to be secret (prefer layer 0)
+                    keymapData.secret_layer = layerIndex === 0 ? 1 : 0;
+                }
+                keymapData.default_layer = layerIndex;
             } else {
-                // Flush text before non-text key
-                flushTextBuffer();
-                
-                // When timing is OFF, don't record standalone SHIFT
-                if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size === 0) {
-                    heldKeys.add(keyCode);
+                // Can't uncheck default - must always have one
+                // Set to another layer (prefer layer 1, but not the secret layer)
+                let newDefault = layerIndex === 1 ? 0 : 1;
+                if (newDefault === keymapData.secret_layer) {
+                    // Find first layer that isn't secret
+                    for (let i = 0; i < numLayers; i++) {
+                        if (i !== keymapData.secret_layer) {
+                            newDefault = i;
+                            break;
+                        }
+                    }
+                }
+                keymapData.default_layer = newDefault;
+            }
+            renderCurrentLayer();
+        }
+
+        function setSecretLayer(layerIndex, checked) {
+            if (checked) {
+                // If setting as secret, unset as default
+                if (keymapData.default_layer === layerIndex) {
+                    // Find another layer to be default (prefer layer 1)
+                    keymapData.default_layer = layerIndex === 1 ? 0 : 1;
+                }
+                keymapData.secret_layer = layerIndex;
+            } else {
+                // Can't uncheck secret - must always have one
+                // Set to another layer (prefer layer 0, but not the default layer)
+                let newSecret = layerIndex === 0 ? 1 : 0;
+                if (newSecret === keymapData.default_layer) {
+                    // Find first layer that isn't default
+                    for (let i = 0; i < numLayers; i++) {
+                        if (i !== keymapData.default_layer) {
+                            newSecret = i;
+                            break;
+                        }
+                    }
+                }
+                keymapData.secret_layer = newSecret;
+            }
+            renderCurrentLayer();
+        }
+
+        function renderKeyConfig(keyIndex) {
+            const keyData = keymapData.keymap[currentLayer][keyIndex];
+            let keyType = 'none';
+            let keyValue = '';
+            
+            if (keyData !== null && typeof keyData === 'object' && keyData.type) {
+                keyType = keyData.type;
+                keyValue = keyData.value;
+            }
+            
+            const icon = keymapData.icons[currentLayer][keyIndex];
+            
+            return `
+                <div class="key-config">
+                    <h3>Key ${keyIndex}</h3>
+                    
+                    <label>Icon:</label>
+                    <input type="text" maxlength="4" value="${icon}" 
+                           onchange="keymapData.icons[${currentLayer}][${keyIndex}] = this.value.toUpperCase();">
+                    
+                    <label>Key Type:</label>
+                    <select id="keyType-${keyIndex}" onchange="changeKeyType(${keyIndex}, this.value)">
+                        <option value="none" ${keyType === 'none' ? 'selected' : ''}>None</option>
+                        <option value="string" ${keyType === 'string' ? 'selected' : ''}>String</option>
+                        <option value="key" ${keyType === 'key' ? 'selected' : ''}>Key</option>
+                        <option value="combo" ${keyType === 'combo' ? 'selected' : ''}>Combo</option>
+                        <option value="url" ${keyType === 'url' ? 'selected' : ''}>URL</option>
+                        <option value="app" ${keyType === 'app' ? 'selected' : ''}>App</option>
+                        <option value="cc" ${keyType === 'cc' ? 'selected' : ''}>Media Key</option>
+                        <option value="sequence" ${keyType === 'sequence' ? 'selected' : ''}>Sequence</option>
+                        <option value="user" ${keyType === 'user' ? 'selected' : ''}>User Defined</option>
+                    </select>
+                    
+                    <div id="keyInput-${keyIndex}">
+                        ${renderKeyInput(keyIndex, keyType, keyValue)}
+                    </div>
+                    
+                    <div id="sequence-builder-${keyIndex}" data-index="${keyIndex}" style="display:${keyType === 'sequence' ? 'block' : 'none'}"></div>
+                </div>
+            `;
+        }
+
+        function renderKeyInput(keyIndex, keyType, keyValue) {
+            if (keyType === 'none') return '';
+            
+            if (keyType === 'string') {
+                return `
+                    <label>Text to type:</label>
+                    <input type="text" id="keyValue-${keyIndex}" value="${keyValue || ''}" 
+                           placeholder="Enter text">
+                `;
+            }
+            
+            if (keyType === 'key') {
+                return `
+                    <label>Key:</label>
+                    <select id="keyValue-${keyIndex}">
+                        <option value="">Select Key</option>
+                        ${KEYCODES.map(k => `<option value="${k}" ${keyValue === k ? 'selected' : ''}>${k}</option>`).join('')}
+                    </select>
+                `;
+            }
+            
+            if (keyType === 'combo') {
+                const comboKeys = Array.isArray(keyValue) ? keyValue : [];
+                return `
+                    <label>Key Combination:</label>
+                    <div class="combo-selector">
+                        <select id="combo1-${keyIndex}">
+                            <option value="">-</option>
+                            ${['CONTROL', 'SHIFT', 'ALT', 'WINDOWS', 'GUI', ...KEYCODES].map(k => 
+                                `<option value="${k}" ${comboKeys[0] === k ? 'selected' : ''}>${k}</option>`
+                            ).join('')}
+                        </select>
+                        <span>+</span>
+                        <select id="combo2-${keyIndex}">
+                            <option value="">-</option>
+                            ${KEYCODES.map(k => 
+                                `<option value="${k}" ${comboKeys[1] === k ? 'selected' : ''}>${k}</option>`
+                            ).join('')}
+                        </select>
+                        <span>+</span>
+                        <select id="combo3-${keyIndex}">
+                            <option value="">-</option>
+                            ${KEYCODES.map(k => 
+                                `<option value="${k}" ${comboKeys[2] === k ? 'selected' : ''}>${k}</option>`
+                            ).join('')}
+                        </select>
+                    </div>
+                `;
+            }
+            
+            if (keyType === 'url') {
+                return `
+                    <label>URL:</label>
+                    <input type="text" id="keyValue-${keyIndex}" value="${keyValue || ''}" 
+                           placeholder="https://example.com">
+                `;
+            }
+            
+            if (keyType === 'app') {
+                return `
+                    <label>Application Path:</label>
+                    <input type="text" id="keyValue-${keyIndex}" value="${keyValue || ''}" 
+                           placeholder="C:\\Program Files\\App\\app.exe">
+                    <small>Full path to executable</small>
+                `;
+            }
+            
+            if (keyType === 'cc') {
+                return `
+                    <label>Media Control:</label>
+                    <select id="keyValue-${keyIndex}">
+                        <option value="">Select</option>
+                        ${CONSUMER_CONTROLS.map(k => 
+                            `<option value="${k}" ${keyValue === k ? 'selected' : ''}>${k}</option>`
+                        ).join('')}
+                    </select>
+                `;
+            }
+            
+            if (keyType === 'user') {
+                return `
+                    <div class="label-with-button">
+                        <label style="margin: 0;">User Defined (JSON):</label>
+                        <button class="macro-recorder-button" onclick="openMacroRecorder()">Macro Recorder</button>
+                    </div>
+                    <textarea id="keyValue-${keyIndex}" rows="3">${JSON.stringify(keyValue) || ''}</textarea>
+                    <small>Advanced: raw JSON format</small>
+                `;
+            }
+            
+            return '';
+        }
+
+        function changeKeyType(keyIndex, newType) {
+            // Save current data before changing type
+            saveCurrentKeyData(keyIndex);
+            
+            // Update display
+            const inputDiv = document.getElementById(`keyInput-${keyIndex}`);
+            inputDiv.innerHTML = renderKeyInput(keyIndex, newType, '');
+            
+            // Show/hide sequence builder
+            const seqBuilder = document.getElementById(`sequence-builder-${keyIndex}`);
+            if (newType === 'sequence') {
+                seqBuilder.style.display = 'block';
+                seqBuilder.dataset.index = keyIndex;
+                if (!sequenceBuilders[keyIndex]) {
+                    sequenceBuilders[keyIndex] = new SequenceBuilder(seqBuilder.id, []);
+                }
+            } else {
+                seqBuilder.style.display = 'none';
+            }
+        }
+
+        function saveCurrentKeyData(keyIndex) {
+            const keyType = document.getElementById(`keyType-${keyIndex}`).value;
+            
+            if (keyType === 'none') {
+                keymapData.keymap[currentLayer][keyIndex] = null;
+                return;
+            }
+            
+            let value = null;
+            
+            if (keyType === 'combo') {
+                const combo1 = document.getElementById(`combo1-${keyIndex}`)?.value;
+                const combo2 = document.getElementById(`combo2-${keyIndex}`)?.value;
+                const combo3 = document.getElementById(`combo3-${keyIndex}`)?.value;
+                value = [combo1, combo2, combo3].filter(k => k);
+            } else if (keyType === 'sequence') {
+                if (sequenceBuilders[keyIndex]) {
+                    value = sequenceBuilders[keyIndex].getSequence();
+                }
+            } else if (keyType === 'user') {
+                try {
+                    const textValue = document.getElementById(`keyValue-${keyIndex}`)?.value;
+                    value = textValue ? JSON.parse(textValue) : null;
+                } catch (e) {
+                    alert('Invalid JSON in user defined field');
                     return;
                 }
-                
-                // When timing is OFF and SHIFT is already held, only record if other non-SHIFT keys present
-                if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size > 0) {
-                    heldKeys.add(keyCode);
-                    events.push({
-                        type: 'keydown',
-                        key: keyCode,
-                        time: now
-                    });
-                } else if (keyCode && keyCode !== 'SHIFT') {
-                    // Always record non-SHIFT keys
-                    heldKeys.add(keyCode);
-                    events.push({
-                        type: 'keydown',
-                        key: keyCode,
-                        time: now
-                    });
-                } else if (captureTimingEnabled && keyCode === 'SHIFT') {
-                    // When timing is ON, record SHIFT normally
-                    heldKeys.add(keyCode);
-                    events.push({
-                        type: 'keydown',
-                        key: keyCode,
-                        time: now
-                    });
-                }
-            }
-            
-            lastEventTime = now;
-            updateStats();
-            displayEvents(); // Update live
-        }
-        
-        function handleKeyUp(e) {
-            if (!recording) return;
-            
-            e.preventDefault();
-            
-            const keyCode = keyMap[e.code];
-            if (keyCode && heldKeys.has(keyCode)) {
-                heldKeys.delete(keyCode);
-                
-                // Don't record keyup for standalone SHIFT when timing is OFF
-                if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size === 0) {
-                    // Check if there were any non-SHIFT keys recorded with this SHIFT
-                    const hasNonShiftEvents = events.some(e => 
-                        e.type === 'keydown' && e.key === 'SHIFT'
-                    );
-                    if (!hasNonShiftEvents) {
-                        return; // Skip recording this keyup
-                    }
-                }
-                
-                const now = Date.now();
-                events.push({
-                    type: 'keyup',
-                    key: keyCode,
-                    time: now
-                });
-                
-                lastEventTime = now;
-                displayEvents(); // Update live
-            }
-        }
-        
-        function flushTextBuffer() {
-            if (textBuffer.length > 0) {
-                events.push({
-                    type: 'text',
-                    text: textBuffer.join(''),
-                    time: lastTextTime || Date.now()
-                });
-                textBuffer = [];
-                displayEvents(); // Update when text is flushed
-            }
-        }
-        
-        function updateStats() {
-            document.getElementById('eventCount').textContent = events.length;
-            
-            if (events.length > 0) {
-                const duration = ((lastEventTime - startTime) / 1000).toFixed(1);
-                document.getElementById('duration').textContent = duration + 's';
             } else {
-                document.getElementById('duration').textContent = '0.0s';
+                value = document.getElementById(`keyValue-${keyIndex}`)?.value || '';
             }
             
-            const keyPresses = events.filter(e => e.type === 'keydown').length;
-            document.getElementById('keysPressed').textContent = keyPresses;
+            if (keyType && value !== null && value !== '') {
+                keymapData.keymap[currentLayer][keyIndex] = {
+                    type: keyType,
+                    value: value
+                };
+            } else {
+                keymapData.keymap[currentLayer][keyIndex] = null;
+            }
         }
-        
-        function displayEvents() {
-            const list = document.getElementById('eventsList');
-            
-            if (events.length === 0) {
-                list.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">No events recorded yet</div>';
-                return;
-            }
-            
-            list.innerHTML = events.map((event, i) => {
-                const relTime = ((event.time - startTime) / 1000).toFixed(3);
-                
-                if (event.type === 'delay') {
-                    return `<div class="event-item delay">
-                        <span class="event-time">[${relTime}s]</span>
-                        Delay: ${event.delay.toFixed(3)}s
-                    </div>`;
-                } else if (event.type === 'text') {
-                    return `<div class="event-item">
-                        <span class="event-time">[${relTime}s]</span>
-                        Text: <span class="event-key">"${event.text}"</span>
-                    </div>`;
-                } else if (event.type === 'keydown') {
-                    return `<div class="event-item keydown">
-                        <span class="event-time">[${relTime}s]</span>
-                        Key Down: <span class="event-key">${event.key}</span>
-                    </div>`;
-                } else if (event.type === 'keyup') {
-                    return `<div class="event-item keyup">
-                        <span class="event-time">[${relTime}s]</span>
-                        Key Up: <span class="event-key">${event.key}</span>
-                    </div>`;
-                }
-            }).join('');
-            
-            // Auto-scroll to bottom
-            list.scrollTop = list.scrollHeight;
+
+        // Getter functions
+        function getKeyType(keyIndex, layerIndex) {
+            const keyData = keymapData.keymap[layerIndex][keyIndex];
+            if (!keyData) return 'none';
+            if (typeof keyData === 'object' && keyData.type) return keyData.type;
+            return 'none';
         }
-        
-        function generateSequence() {
-            if (events.length === 0) {
-                alert('No events to generate! Record something first.');
-                return;
+
+        function getStringValue(keyIndex, layerIndex) {
+            return document.getElementById(`keyValue-${keyIndex}`)?.value || '';
+        }
+
+        function getKeyValue(keyIndex, layerIndex) {
+            return document.getElementById(`keyValue-${keyIndex}`)?.value || '';
+        }
+
+        function getComboKeys(keyIndex, layerIndex) {
+            const combo1 = document.getElementById(`combo1-${keyIndex}`)?.value;
+            const combo2 = document.getElementById(`combo2-${keyIndex}`)?.value;
+            const combo3 = document.getElementById(`combo3-${keyIndex}`)?.value;
+            return [combo1, combo2, combo3].filter(k => k);
+        }
+
+        function getUrlValue(keyIndex, layerIndex) {
+            return document.getElementById(`keyValue-${keyIndex}`)?.value || '';
+        }
+
+        function getAppValue(keyIndex, layerIndex) {
+            return document.getElementById(`keyValue-${keyIndex}`)?.value || '';
+        }
+
+        function getCCValue(keyIndex, layerIndex) {
+            return document.getElementById(`keyValue-${keyIndex}`)?.value || '';
+        }
+
+        function getUserValue(keyIndex, layerIndex) {
+            try {
+                const value = document.getElementById(`keyValue-${keyIndex}`)?.value;
+                return value ? JSON.parse(value) : null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        // Setter functions
+        function setKeyType(keyIndex, layerIndex, type) {
+            const select = document.getElementById(`keyType-${keyIndex}`);
+            if (select) select.value = type;
+        }
+
+        function setStringValue(keyIndex, layerIndex, value) {
+            const input = document.getElementById(`keyValue-${keyIndex}`);
+            if (input) input.value = value;
+        }
+
+        function setKeyValue(keyIndex, layerIndex, value) {
+            const select = document.getElementById(`keyValue-${keyIndex}`);
+            if (select) select.value = value;
+        }
+
+        function setComboKeys(keyIndex, layerIndex, keys) {
+            const combo1 = document.getElementById(`combo1-${keyIndex}`);
+            const combo2 = document.getElementById(`combo2-${keyIndex}`);
+            const combo3 = document.getElementById(`combo3-${keyIndex}`);
+            if (combo1 && keys[0]) combo1.value = keys[0];
+            if (combo2 && keys[1]) combo2.value = keys[1];
+            if (combo3 && keys[2]) combo3.value = keys[2];
+        }
+
+        function setUrlValue(keyIndex, layerIndex, value) {
+            const input = document.getElementById(`keyValue-${keyIndex}`);
+            if (input) input.value = value;
+        }
+
+        function setAppValue(keyIndex, layerIndex, value) {
+            const input = document.getElementById(`keyValue-${keyIndex}`);
+            if (input) input.value = value;
+        }
+
+        function setCCValue(keyIndex, layerIndex, value) {
+            const select = document.getElementById(`keyValue-${keyIndex}`);
+            if (select) select.value = value;
+        }
+
+        function updateEncoderAction(layerIndex, action) {
+            if (action === 'none') {
+                keymapData.encoder_actions[layerIndex] = null;
+            } else if (action === 'volume') {
+                keymapData.encoder_actions[layerIndex] = {"cc": "VOL_UP"};
+            } else if (action === 'scroll') {
+                keymapData.encoder_actions[layerIndex] = {"mouse_wheel": 1};
+            } else if (action === 'zoom') {
+                keymapData.encoder_actions[layerIndex] = {
+                    "combo": ["CONTROL", "KEYPAD_PLUS"],
+                    "combo_ccw": ["CONTROL", "KEYPAD_MINUS"]
+                };
+            }
+        }
+
+        function generateKeymap() {
+            // Save current layer data
+            for (let i = 0; i < 8; i++) {
+                saveCurrentKeyData(i);
             }
             
-            const timingWasEnabled = captureTimingEnabled;
-            const autoKeyDelay = parseFloat(document.getElementById('keyDelay').value) || 0.05;
+            // Generate complete keymap
+            const output = {
+                layer_names: keymapData.layer_names,
+                secret_layer: keymapData.secret_layer,
+                default_layer: keymapData.default_layer,
+                keymap: keymapData.keymap,
+                icons: keymapData.icons,
+                encoder_icons: keymapData.encoder_icons,
+                encoder_actions: keymapData.encoder_actions
+            };
             
-            const sequence = [];
-            const heldKeys = new Map(); // Track when keys were pressed
+            const jsonStr = JSON.stringify(output, null, 2);
+            document.getElementById('jsonOutput').value = jsonStr;
+        }
+
+        function saveKeymap() {
+            generateKeymap();
+            const jsonStr = document.getElementById('jsonOutput').value;
+            const blob = new Blob([jsonStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'keymap.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearAll() {
+            document.getElementById('jsonOutput').value = '';
+        }
+
+        // File loading
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
             
-            for (let i = 0; i < events.length; i++) {
-                const event = events[i];
-                
-                if (event.type === 'delay') {
-                    sequence.push({
-                        type: 'delay',
-                        value: parseFloat(event.delay.toFixed(2))
-                    });
-                } else if (event.type === 'text') {
-                    sequence.push({
-                        type: 'string',
-                        value: event.text
-                    });
-                } else if (event.type === 'keydown') {
-                    heldKeys.set(event.key, i);
-                } else if (event.type === 'keyup') {
-                    const downIndex = heldKeys.get(event.key);
-                    if (downIndex !== undefined) {
-                        // Check if other keys are still held (combo)
-                        const simultaneousKeys = [];
-                        for (const [key, index] of heldKeys) {
-                            if (index <= downIndex) {
-                                simultaneousKeys.push(key);
-                            }
-                        }
-                        
-                        if (simultaneousKeys.length > 1) {
-                            // Combo
-                            sequence.push({
-                                type: 'combo',
-                                value: simultaneousKeys
-                            });
-                            // Remove all keys in combo
-                            simultaneousKeys.forEach(k => heldKeys.delete(k));
-                            
-                            // Add auto-delay after combo if timing was OFF
-                            if (!timingWasEnabled && autoKeyDelay > 0) {
-                                sequence.push({
-                                    type: 'delay',
-                                    value: autoKeyDelay
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    
+                    console.log('=== LOADING KEYMAP ===');
+                    console.log('Full data:', data);
+                    
+                    // Load data
+                    keymapData = data;
+                    numLayers = data.layer_names.length;
+                    document.getElementById('numLayers').value = numLayers;
+                    
+                    // Clear existing sequence builders
+                    sequenceBuilders = [];
+                    
+                    // Log sequences in data
+                    data.keymap.forEach((layer, layerIdx) => {
+                        layer.forEach((key, keyIdx) => {
+                            if (key && key.type === 'sequence') {
+                                console.log(`Layer ${layerIdx}, Key ${keyIdx} has sequence:`, key.value);
+                                console.log(`  - Number of steps: ${key.value.length}`);
+                                key.value.forEach((step, stepIdx) => {
+                                    console.log(`  - Step ${stepIdx}:`, step);
                                 });
                             }
-                        } else {
-                            // Single key
-                            sequence.push({
-                                type: 'key',
-                                value: event.key
-                            });
-                            heldKeys.delete(event.key);
-                            
-                            // Add auto-delay after key if timing was OFF
-                            if (!timingWasEnabled && autoKeyDelay > 0) {
-                                sequence.push({
-                                    type: 'delay',
-                                    value: autoKeyDelay
-                                });
-                            }
-                        }
-                    }
-                }
-            }
-            
-            // MERGE CONSECUTIVE STRINGS (including those separated only by delays)
-            const mergedSequence = [];
-            let stringBuffer = '';
-            let pendingDelays = [];
-            
-            for (let i = 0; i < sequence.length; i++) {
-                const item = sequence[i];
-                
-                if (item.type === 'string') {
-                    // Add to buffer
-                    stringBuffer += item.value;
-                    // Clear pending delays (we're continuing the string)
-                    pendingDelays = [];
-                } else if (item.type === 'delay' && stringBuffer) {
-                    // Store delay temporarily - might be between strings
-                    pendingDelays.push(item);
-                } else {
-                    // Hit a key/combo - flush everything
-                    if (stringBuffer) {
-                        mergedSequence.push({
-                            type: 'string',
-                            value: stringBuffer
                         });
-                        stringBuffer = '';
-                    }
-                    // Add any pending delays
-                    pendingDelays.forEach(d => mergedSequence.push(d));
-                    pendingDelays = [];
-                    // Add the key/combo
-                    mergedSequence.push(item);
+                    });
+                    
+                    // Render
+                    renderLayerTabs();
+                    renderCurrentLayer();
+                    
+                    console.log('=== LOAD COMPLETE ===');
+                    alert('Keymap loaded successfully!\nCheck console (F12) for details.');
+                } catch (err) {
+                    alert('Error loading file: ' + err.message);
+                    console.error('Load error:', err);
                 }
-            }
-            
-            // Flush any remaining text
-            if (stringBuffer) {
-                mergedSequence.push({
-                    type: 'string',
-                    value: stringBuffer
-                });
-            }
-            // Add any remaining delays
-            pendingDelays.forEach(d => mergedSequence.push(d));
-            
-            const json = JSON.stringify(mergedSequence, null, 2);
-            document.getElementById('jsonOutput').value = json;
-        }
-        
-        function copyJSON() {
-            const textarea = document.getElementById('jsonOutput');
-            if (!textarea.value) {
-                alert('Generate sequence first!');
-                return;
-            }
-            
-            textarea.select();
-            document.execCommand('copy');
-            alert('Copied to clipboard!');
-        }
+            };
+            reader.readAsText(file);
+        });
+
+        // Initialize on load
+        initializeKeymapData();
+        renderLayerTabs();
+        renderCurrentLayer();
         
         function openHelp() {
-            console.log('openHelp called');
-            const modal = document.getElementById('helpModal');
-            console.log('Modal element:', modal);
-            if (modal) {
-                modal.style.display = 'block';
-            } else {
-                console.error('Modal element not found!');
-            }
+            window.open('https://mp1-help.theornerymaker.com', '_blank');
         }
         
-        function closeHelp(event) {
-            const modal = document.getElementById('helpModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
+        function openMacroRecorder() {
+            window.open('macro_recorder.html', '_blank');
         }
-        
-        // Close modal on Escape key
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                closeHelp();
-            }
-        });
     </script>
 </body>
 </html>
