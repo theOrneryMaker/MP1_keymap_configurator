@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP1 Macro Recorder</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0b1a;
+            color: #e0d8ff;
+            padding: 20px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #1a1625;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        
+        h1 {
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 3.5em;
+            color: #ff8c42;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255,140,66,0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #b19cd9;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .section {
+            background: #16213e;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ff8c42;
+        }
+        
+        .section h2 {
+            color: #ff8c42;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .recorder-box {
+            background: #0f0f1e;
+            border: 3px solid #555;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .recorder-box.ready {
+            border-color: #27ae60;
+        }
+        
+        .recorder-box.recording {
+            border-color: #ff8c42;
+            box-shadow: 0 0 30px rgba(255,140,66,0.6);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(255,140,66,0.6); }
+            50% { box-shadow: 0 0 50px rgba(255,140,66,0.9); }
+        }
+        
+        .recorder-status {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .recorder-hint {
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .recording-indicator {
+            width: 20px;
+            height: 20px;
+            background: #e74c3c;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        button {
+            background: #ff8c42;
+            color: #000;
+            border: none;
+            padding: 12px 12px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #ffa666;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,140,66,0.4);
+        }
+        
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        button.danger {
+            background: #c0392b;
+            color: white;
+        }
+        
+        button.danger:hover {
+            background: #e74c3c;
+        }
+        
+        button.success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        button.success:hover {
+            background: #2ecc71;
+        }
+        
+        .events-list {
+            background: #0f0f1e;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            scroll-behavior: smooth;
+        }
+        
+        .event-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #1a1a2e;
+            border-radius: 4px;
+            border-left: 3px solid #ff8c42;
+        }
+        
+        .event-item.keydown {
+            border-left-color: #27ae60;
+        }
+        
+        .event-item.keyup {
+            border-left-color: #c0392b;
+        }
+        
+        .event-item.delay {
+            border-left-color: #3498db;
+        }
+        
+        .event-time {
+            color: #888;
+            font-size: 0.85em;
+        }
+        
+        .event-key {
+            color: #ff8c42;
+            font-weight: bold;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            background: #0f0f1e;
+            border: 1px solid #555;
+            color: #e0d8ff;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            resize: vertical;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-box {
+            background: #0f0f1e;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            color: #ff8c42;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .note {
+            background: #221c33;
+            border-left: 5px solid #ff8c42;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .note strong {
+            color: #ff8c42;
+        }
+        
+        .help-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #f78b40;
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .help-button:hover {
+            background: #ff8c42;
+            transform: scale(1.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: #1a1625;
+            margin: 5% auto;
+            padding: 30px;
+            border: 2px solid #ff8c42;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.9);
+            animation: slideDown 0.3s;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ff8c42;
+            padding-bottom: 15px;
+        }
+        
+        .modal-header h2 {
+            color: #ff8c42;
+            margin: 0;
+        }
+        
+        .close-button {
+            background: #c0392b;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .close-button:hover {
+            background: #e74c3c;
+            transform: rotate(90deg);
+        }
+        
+        .recording-section {
+            position: relative;
+        }
+        
+        /* Sliding Switch Styles */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        
+        .switch-container > label:first-child {
+            color: #b19cd9;
+            font-weight: bold;
+            font-size: 1em;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #555;
+            transition: all 0.3s;
+            border-radius: 30px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: #e0d8ff;
+            transition: all 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .switch input:checked + .slider {
+            background-color: #ff8c42;
+            box-shadow: 0 0 15px rgba(255,140,66,0.4);
+        }
+        
+        .switch input:checked + .slider:before {
+            transform: translateX(30px);
+            background-color: #fff;
+        }
+        
+        .switch:hover .slider {
+            background-color: #666;
+        }
+        
+        .switch input:checked:hover + .slider {
+            background-color: #ffa666;
+            box-shadow: 0 0 20px rgba(255,140,66,0.6);
+        }
+        
+        .input-group {
+            margin: 15px 0;
+        }
+        
+        .input-group label {
+            display: block;
+            color: #b19cd9;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .input-group input[type="number"] {
+            width: 100%;
+            max-width: 200px;
+            padding: 8px 12px;
+            background: #0f0f1e;
+            border: 1px solid #555;
+            color: #e0d8ff;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        
+        .input-group input[type="number"]:focus {
+            outline: none;
+            border-color: #ff8c42;
+        }
+        
+        .recorder-controls {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        
+        .switch-container {
+            min-width: 200px;
+        }
+        
+        .input-group.key-delay {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            min-width: 300px;
+        }
+        
+        .input-group.key-delay label {
+            margin: 0;
+            white-space: nowrap;
+        }
+        
+        .input-group.key-delay input[type="number"] {
+            width: 80px;
+            max-width: 80px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Macro Recorder</h1>        
+        <div class="section recording-section">
+            <h2>Recording Tool</h2>
+            <button class="help-button" onclick="event.stopPropagation(); openHelp();" title="Instructions">?</button>
+            
+            <div id="recorderBox" class="recorder-box" onclick="focusRecorder()">
+                <div class="recorder-status" id="recorderStatus">Click to Focus</div>
+                <div class="recorder-hint" id="recorderHint">Click here, then press keys to record</div>
+            </div>
+            
+            <div class="recorder-controls">
+                <div class="switch-container">
+                    <label>Capture Timing</label>
+                    <label class="switch">
+                        <input type="checkbox" id="timingSwitch" onchange="toggleKeyDelayVisibility()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="input-group key-delay" id="keyDelayGroup">
+                    <label for="keyDelay">Auto-delay after keys (s):</label>
+                    <input type="number" id="keyDelay" min="0" max="2" step="0.01" value="0.05">
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="startBtn" onclick="startRecording()" class="success">Start Recording</button>
+                <button id="stopBtn" onclick="stopRecording()" disabled class="danger">Stop Recording</button>
+                <button onclick="clearRecording()">Clear Recording</button>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="eventCount">0</div>
+                    <div class="stat-label">Events Recorded</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="duration">0.0s</div>
+                    <div class="stat-label">Total Duration</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="keysPressed">0</div>
+                    <div class="stat-label">Keys Pressed</div>
+                </div>
+            </div>
+
+            <div class="events-list" id="eventsList">
+                <div style="color: #888; text-align: center; padding: 20px;">
+                    No events recorded yet
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Generator Output</h2>
+		            <div class="controls">
+                <button onclick="generateSequence()">Generate Sequence JSON</button>
+                <button onclick="clearRecording()">Clear Recording</button>
+                <button onclick="copyJSON()">Copy to Clipboard</button>
+                <button onclick="downloadJSON()">Download JSON</button>
+				</div>
+        </div>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal" onclick="closeHelp(event)">
+        <div class="modal-content" onclick="event.stopPropagation();">
+            <div class="modal-header">
+                <h2>Macro Recorder Instructions</h2>
+                <button class="close-button" onclick="closeHelp()">×</button>
+            </div>
+            
+            <div style="line-height: 1.8;">
+                <h3 style="color: #ff8c42; margin-top: 20px;">How to Use</h3>
+                <ol style="padding-left: 30px; color: #e0d8ff;">
+                    <li><strong>Click the recorder box</strong> to focus it (or click "Start Recording")</li>
+                    <li><strong>Press "Start Recording"</strong> button</li>
+                    <li><strong>Type your macro</strong> - all keypresses will be captured</li>
+                    <li><strong>Press "Stop Recording"</strong> when done</li>
+                    <li><strong>Click "Generate Sequence JSON"</strong> to create MP1 format</li>
+                    <li><strong>Copy the JSON</strong> and paste into the Configurator's "User Defined" field</li>
+                </ol>
+                
+                <h3 style="color: #ff8c42; margin-top: 20px;">Capture Timing Switch</h3>
+                <p><strong style="color: #ff8c42;">OFF (Default):</strong></p>
+                <ul style="padding-left: 30px; color: #e0d8ff;">
+                    <li>Records keypresses without timing information</li>
+                    <li>Adds a small auto-delay after special keys (TAB, ENTER, etc.)</li>
+                    <li>SHIFT key is filtered out when typing capitals (cleaner output)</li>
+                    <li>Best for simple macros and login sequences</li>
+                </ul>
+                
+                <p><strong style="color: #ff8c42;">ON:</strong></p>
+                <ul style="padding-left: 30px; color: #e0d8ff;">
+                    <li>Records exact timing between keypresses</li>
+                    <li>Captures all keys including SHIFT</li>
+                    <li>Best for complex macros where timing matters</li>
+                    <li>Creates larger sequences with delay steps</li>
+                </ul>
+                
+                <h3 style="color: #ff8c42; margin-top: 20px;">Auto-delay Setting</h3>
+                <p style="color: #e0d8ff;">
+                    Only visible when Capture Timing is <strong>OFF</strong>. Sets the delay (in seconds) 
+                    automatically added after special keys like TAB, ENTER, etc. Default is 0.05 seconds.
+                </p>
+                
+                <h3 style="color: #ff8c42; margin-top: 20px;">Tips</h3>
+                <ul style="padding-left: 30px; color: #e0d8ff;">
+                    <li>Start with Capture Timing OFF for simpler macros</li>
+                    <li>Use Capture Timing ON if you need precise delays</li>
+                    <li>The recorder automatically merges consecutive text into single strings</li>
+                    <li>Very short delays (&lt; 0.05s) are ignored for cleaner output</li>
+                    <li>Key combinations (Ctrl+C, etc.) are automatically detected</li>
+                </ul>
+                
+                <div class="note" style="margin-top: 20px;">
+                    <strong>Note:</strong> The recorder must have focus to capture keys. Click the recorder box 
+                    if keys aren't being captured.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let recording = false;
+        let events = [];
+        let startTime = null;
+        let lastEventTime = null;
+        let heldKeys = new Set();
+        let textBuffer = [];
+        let lastTextTime = null;
+        let captureTimingEnabled = false;
+        
+        // Wait for DOM to be ready before accessing elements
+        let recorderBox, startBtn, stopBtn;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            recorderBox = document.getElementById('recorderBox');
+            startBtn = document.getElementById('startBtn');
+            stopBtn = document.getElementById('stopBtn');
+            
+            // Make recorder focusable
+            recorderBox.tabIndex = 0;
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Set initial visibility for keyDelay
+            toggleKeyDelayVisibility();
+        });
+        
+        function toggleKeyDelayVisibility() {
+            const timingSwitch = document.getElementById('timingSwitch');
+            const keyDelayGroup = document.getElementById('keyDelayGroup');
+            
+            // Show keyDelay only when timing is OFF (unchecked)
+            // Use visibility instead of display to maintain layout space
+            if (timingSwitch && keyDelayGroup) {
+                keyDelayGroup.style.visibility = timingSwitch.checked ? 'hidden' : 'visible';
+            }
+        }
+        
+        function setupEventListeners() {
+            recorderBox.addEventListener('keydown', handleKeyDown);
+            recorderBox.addEventListener('keyup', handleKeyUp);
+        }
+        
+        // Key mapping from event.code to MP1 format
+        const keyMap = {
+            'KeyA': 'A', 'KeyB': 'B', 'KeyC': 'C', 'KeyD': 'D', 'KeyE': 'E',
+            'KeyF': 'F', 'KeyG': 'G', 'KeyH': 'H', 'KeyI': 'I', 'KeyJ': 'J',
+            'KeyK': 'K', 'KeyL': 'L', 'KeyM': 'M', 'KeyN': 'N', 'KeyO': 'O',
+            'KeyP': 'P', 'KeyQ': 'Q', 'KeyR': 'R', 'KeyS': 'S', 'KeyT': 'T',
+            'KeyU': 'U', 'KeyV': 'V', 'KeyW': 'W', 'KeyX': 'X', 'KeyY': 'Y', 'KeyZ': 'Z',
+            'Digit1': 'ONE', 'Digit2': 'TWO', 'Digit3': 'THREE', 'Digit4': 'FOUR',
+            'Digit5': 'FIVE', 'Digit6': 'SIX', 'Digit7': 'SEVEN', 'Digit8': 'EIGHT',
+            'Digit9': 'NINE', 'Digit0': 'ZERO',
+            'Enter': 'ENTER', 'Escape': 'ESCAPE', 'Backspace': 'BACKSPACE',
+            'Tab': 'TAB', 'Space': 'SPACE',
+            'ControlLeft': 'CONTROL', 'ControlRight': 'CONTROL',
+            'ShiftLeft': 'SHIFT', 'ShiftRight': 'SHIFT',
+            'AltLeft': 'ALT', 'AltRight': 'ALT',
+            'MetaLeft': 'GUI', 'MetaRight': 'GUI',
+            'ArrowUp': 'UP_ARROW', 'ArrowDown': 'DOWN_ARROW',
+            'ArrowLeft': 'LEFT_ARROW', 'ArrowRight': 'RIGHT_ARROW',
+            'Delete': 'DELETE', 'Home': 'HOME', 'End': 'END',
+            'PageUp': 'PAGE_UP', 'PageDown': 'PAGE_DOWN'
+        };
+        
+        function focusRecorder() {
+            recorderBox.focus();
+            recorderBox.classList.add('ready');
+            document.getElementById('recorderHint').textContent = 'Ready to record - Press Start Recording';
+        }
+        
+        function startRecording() {
+            if (recording) return;
+            
+            recording = true;
+            events = [];
+            startTime = Date.now();
+            lastEventTime = startTime;
+            heldKeys.clear();
+            textBuffer = [];
+            lastTextTime = null;
+            captureTimingEnabled = document.getElementById('timingSwitch').checked;
+            
+            recorderBox.classList.add('recording');
+            recorderBox.classList.remove('ready');
+            document.getElementById('recorderStatus').innerHTML = '<span class="recording-indicator"></span>Recording...';
+            document.getElementById('recorderHint').textContent = captureTimingEnabled ? 
+                'Type your macro sequence (timing captured)' : 
+                'Type your macro sequence (no timing)';
+            
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            recorderBox.focus();
+            updateStats();
+        }
+        
+        function stopRecording() {
+            if (!recording) return;
+            
+            // Flush any remaining text
+            flushTextBuffer();
+            
+            recording = false;
+            
+            recorderBox.classList.remove('recording');
+            document.getElementById('recorderStatus').textContent = 'Recording Stopped';
+            document.getElementById('recorderHint').textContent = 'Click Generate Sequence JSON';
+            
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            
+            updateStats();
+            displayEvents();
+        }
+        
+        function clearRecording() {
+            events = [];
+            heldKeys.clear();
+            textBuffer = [];
+            updateStats();
+            displayEvents();
+            document.getElementById('jsonOutput').value = '';
+        }
+        
+        function handleKeyDown(e) {
+            if (!recording) return;
+            
+            e.preventDefault();
+            
+            const now = Date.now();
+            const keyCode = keyMap[e.code];
+            
+            // Skip if already held (repeat)
+            if (heldKeys.has(keyCode)) return;
+            
+            // Skip standalone SHIFT key ONLY when timing is OFF
+            if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size === 0) {
+                heldKeys.add(keyCode);
+                return;
+            }
+            
+            // Add delay if timing is enabled and there's a gap
+            if (captureTimingEnabled) {
+                const timeSinceLast = (now - lastEventTime) / 1000;
+                if (timeSinceLast > 0.05) {
+                    flushTextBuffer();
+                    events.push({
+                        type: 'delay',
+                        time: now,
+                        delay: timeSinceLast
+                    });
+                }
+            }
+            
+            // Check if it's a modifier or printable character
+            const modifiers = ['CONTROL', 'SHIFT', 'ALT', 'GUI'];
+            const isPrintable = e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey;
+            
+            if (isPrintable) {
+                // Add to text buffer
+                textBuffer.push(e.key);
+                lastTextTime = now;
+            } else {
+                // Flush text before non-text key
+                flushTextBuffer();
+                
+                // When timing is OFF, don't record standalone SHIFT
+                if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size === 0) {
+                    heldKeys.add(keyCode);
+                    return;
+                }
+                
+                // When timing is OFF and SHIFT is already held, only record if other non-SHIFT keys present
+                if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size > 0) {
+                    heldKeys.add(keyCode);
+                    events.push({
+                        type: 'keydown',
+                        key: keyCode,
+                        time: now
+                    });
+                } else if (keyCode && keyCode !== 'SHIFT') {
+                    // Always record non-SHIFT keys
+                    heldKeys.add(keyCode);
+                    events.push({
+                        type: 'keydown',
+                        key: keyCode,
+                        time: now
+                    });
+                } else if (captureTimingEnabled && keyCode === 'SHIFT') {
+                    // When timing is ON, record SHIFT normally
+                    heldKeys.add(keyCode);
+                    events.push({
+                        type: 'keydown',
+                        key: keyCode,
+                        time: now
+                    });
+                }
+            }
+            
+            lastEventTime = now;
+            updateStats();
+            displayEvents(); // Update live
+        }
+        
+        function handleKeyUp(e) {
+            if (!recording) return;
+            
+            e.preventDefault();
+            
+            const keyCode = keyMap[e.code];
+            if (keyCode && heldKeys.has(keyCode)) {
+                heldKeys.delete(keyCode);
+                
+                // Don't record keyup for standalone SHIFT when timing is OFF
+                if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size === 0) {
+                    // Check if there were any non-SHIFT keys recorded with this SHIFT
+                    const hasNonShiftEvents = events.some(e => 
+                        e.type === 'keydown' && e.key === 'SHIFT'
+                    );
+                    if (!hasNonShiftEvents) {
+                        return; // Skip recording this keyup
+                    }
+                }
+                
+                const now = Date.now();
+                events.push({
+                    type: 'keyup',
+                    key: keyCode,
+                    time: now
+                });
+                
+                lastEventTime = now;
+                displayEvents(); // Update live
+            }
+        }
+        
+        function flushTextBuffer() {
+            if (textBuffer.length > 0) {
+                events.push({
+                    type: 'text',
+                    text: textBuffer.join(''),
+                    time: lastTextTime || Date.now()
+                });
+                textBuffer = [];
+                displayEvents(); // Update when text is flushed
+            }
+        }
+        
+        function updateStats() {
+            document.getElementById('eventCount').textContent = events.length;
+            
+            if (events.length > 0) {
+                const duration = ((lastEventTime - startTime) / 1000).toFixed(1);
+                document.getElementById('duration').textContent = duration + 's';
+            } else {
+                document.getElementById('duration').textContent = '0.0s';
+            }
+            
+            const keyPresses = events.filter(e => e.type === 'keydown').length;
+            document.getElementById('keysPressed').textContent = keyPresses;
+        }
+        
+        function displayEvents() {
+            const list = document.getElementById('eventsList');
+            
+            if (events.length === 0) {
+                list.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">No events recorded yet</div>';
+                return;
+            }
+            
+            list.innerHTML = events.map((event, i) => {
+                const relTime = ((event.time - startTime) / 1000).toFixed(3);
+                
+                if (event.type === 'delay') {
+                    return `<div class="event-item delay">
+                        <span class="event-time">[${relTime}s]</span>
+                        Delay: ${event.delay.toFixed(3)}s
+                    </div>`;
+                } else if (event.type === 'text') {
+                    return `<div class="event-item">
+                        <span class="event-time">[${relTime}s]</span>
+                        Text: <span class="event-key">"${event.text}"</span>
+                    </div>`;
+                } else if (event.type === 'keydown') {
+                    return `<div class="event-item keydown">
+                        <span class="event-time">[${relTime}s]</span>
+                        Key Down: <span class="event-key">${event.key}</span>
+                    </div>`;
+                } else if (event.type === 'keyup') {
+                    return `<div class="event-item keyup">
+                        <span class="event-time">[${relTime}s]</span>
+                        Key Up: <span class="event-key">${event.key}</span>
+                    </div>`;
+                }
+            }).join('');
+            
+            // Auto-scroll to bottom
+            list.scrollTop = list.scrollHeight;
+        }
+        
+        function generateSequence() {
+            if (events.length === 0) {
+                alert('No events to generate! Record something first.');
+                return;
+            }
+            
+            const timingWasEnabled = captureTimingEnabled;
+            const autoKeyDelay = parseFloat(document.getElementById('keyDelay').value) || 0.05;
+            
+            const sequence = [];
+            const heldKeys = new Map(); // Track when keys were pressed
+            
+            for (let i = 0; i < events.length; i++) {
+                const event = events[i];
+                
+                if (event.type === 'delay') {
+                    sequence.push({
+                        type: 'delay',
+                        value: parseFloat(event.delay.toFixed(2))
+                    });
+                } else if (event.type === 'text') {
+                    sequence.push({
+                        type: 'string',
+                        value: event.text
+                    });
+                } else if (event.type === 'keydown') {
+                    heldKeys.set(event.key, i);
+                } else if (event.type === 'keyup') {
+                    const downIndex = heldKeys.get(event.key);
+                    if (downIndex !== undefined) {
+                        // Check if other keys are still held (combo)
+                        const simultaneousKeys = [];
+                        for (const [key, index] of heldKeys) {
+                            if (index <= downIndex) {
+                                simultaneousKeys.push(key);
+                            }
+                        }
+                        
+                        if (simultaneousKeys.length > 1) {
+                            // Combo
+                            sequence.push({
+                                type: 'combo',
+                                value: simultaneousKeys
+                            });
+                            // Remove all keys in combo
+                            simultaneousKeys.forEach(k => heldKeys.delete(k));
+                            
+                            // Add auto-delay after combo if timing was OFF
+                            if (!timingWasEnabled && autoKeyDelay > 0) {
+                                sequence.push({
+                                    type: 'delay',
+                                    value: autoKeyDelay
+                                });
+                            }
+                        } else {
+                            // Single key
+                            sequence.push({
+                                type: 'key',
+                                value: event.key
+                            });
+                            heldKeys.delete(event.key);
+                            
+                            // Add auto-delay after key if timing was OFF
+                            if (!timingWasEnabled && autoKeyDelay > 0) {
+                                sequence.push({
+                                    type: 'delay',
+                                    value: autoKeyDelay
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            
+            // MERGE CONSECUTIVE STRINGS (including those separated only by delays)
+            const mergedSequence = [];
+            let stringBuffer = '';
+            let pendingDelays = [];
+            
+            for (let i = 0; i < sequence.length; i++) {
+                const item = sequence[i];
+                
+                if (item.type === 'string') {
+                    // Add to buffer
+                    stringBuffer += item.value;
+                    // Clear pending delays (we're continuing the string)
+                    pendingDelays = [];
+                } else if (item.type === 'delay' && stringBuffer) {
+                    // Store delay temporarily - might be between strings
+                    pendingDelays.push(item);
+                } else {
+                    // Hit a key/combo - flush everything
+                    if (stringBuffer) {
+                        mergedSequence.push({
+                            type: 'string',
+                            value: stringBuffer
+                        });
+                        stringBuffer = '';
+                    }
+                    // Add any pending delays
+                    pendingDelays.forEach(d => mergedSequence.push(d));
+                    pendingDelays = [];
+                    // Add the key/combo
+                    mergedSequence.push(item);
+                }
+            }
+            
+            // Flush any remaining text
+            if (stringBuffer) {
+                mergedSequence.push({
+                    type: 'string',
+                    value: stringBuffer
+                });
+            }
+            // Add any remaining delays
+            pendingDelays.forEach(d => mergedSequence.push(d));
+            
+            const json = JSON.stringify(mergedSequence, null, 2);
+            document.getElementById('jsonOutput').value = json;
+        }
+        
+        function copyJSON() {
+            const textarea = document.getElementById('jsonOutput');
+            if (!textarea.value) {
+                alert('Generate sequence first!');
+                return;
+            }
+            
+            textarea.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
+        }
+        
+        function openHelp() {
+            console.log('openHelp called');
+            const modal = document.getElementById('helpModal');
+            console.log('Modal element:', modal);
+            if (modal) {
+                modal.style.display = 'block';
+            } else {
+                console.error('Modal element not found!');
+            }
+        }
+        
+        function closeHelp(event) {
+            const modal = document.getElementById('helpModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeHelp();
+            }
+        });
+    </script>
+</body>
+</html>
