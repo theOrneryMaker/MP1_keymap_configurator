@@ -2,506 +2,1078 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>MP1 Macropad Configurator</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Orbitron + Fira Code -->
+    <title>MP1 Macro Recorder</title>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/fira@4.0.1/fira.css" rel="stylesheet">
     <style>
-        * { box-sizing: border-box; }
-        body { margin:0; padding:20px; background:#0f0b1a; color:#e0d8ff; font-family:Arial,sans-serif; min-height:100vh; }
-        h1 { text-align:center; font-family:'Orbitron',sans-serif; font-weight:900; font-size:3.4em; letter-spacing:4px; margin:0 0 30px; color:#ff8c42;
-            text-shadow:0 0 10px rgba(255,140,66,0.6),0 0 20px rgba(255,140,66,0.5),0 0 40px rgba(255,140,66,0.4); transition:all 0.4s; }
-        h1:hover { text-shadow:0 0 20px rgba(255,140,66,0.9),0 0 40px rgba(255,140,66,0.8),0 0 80px rgba(255,140,66,0.6); transform:scale(1.02); }
-
-        .top-bar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; background:#1a1625; padding:18px 32px; border-radius:18px; margin-bottom:40px; box-shadow:0 8px 30px rgba(0,0,0,0.7); }
-        .top-left { display:flex; align-items:center; gap:16px; }
-        .top-left button { background:#444; height:52px; padding:0 30px; border-radius:12px; font-weight:bold; }
-        .top-left button:hover { background:#666; }
-        .top-right { display:flex; align-items:center; gap:14px; }
-        .file-input-wrapper { position:relative; overflow:hidden; display:inline-block; }
-        .file-input-wrapper input[type=file] { position:absolute; left:-9999px; }
-        .file-input-wrapper label { display:block; padding:12px 30px; background:#6b4e8c; color:white; border-radius:12px; cursor:pointer; font-weight:bold; }
-        .file-input-wrapper label:hover { background:#8c63b8; }
-        .file-name { color:#a6e22e; font-family:Consolas; min-width:160px; }
-
-        .layers-control { text-align:center; margin:30px 0; }
-        .layers-control label { color:#ff8c42; font-weight:bold; margin-right:12px; font-size:1.1em; }
-        #num_layers { width:90px; height:52px; padding:0 16px; background:#221c33; color:#ff8c42; border:1px solid #443355; border-radius:12px; font-family:Consolas; font-size:18px; text-align:center; }
-
-        #layers_container { width:100%; padding:0 10px; }
-        .layer { width:100%; max-width:none; background:#1a1625; border:2px solid #443355; border-radius:20px; padding:36px 48px; margin-bottom:60px; box-shadow:0 12px 40px rgba(0,0,0,0.8); }
-        .layer:nth-child(1) { border-left:12px solid #ffffff; }
-        .layer:nth-child(2) { border-left:12px solid #b19cd9; }
-        .layer:nth-child(3) { border-left:12px solid #ff8c42; }
-
-        .layer-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:28px; margin-bottom:36px; }
-        .layer-title { display:flex; align-items:center; gap:30px; flex-wrap:wrap; }
-        .layer-name-input { height:56px; padding:0 24px; font-family:Consolas,monospace; font-size:18px; font-weight:bold; background:#221c33; color:#ff8c42; border:1px solid #443355; border-radius:14px; width:320px; }
-        .checkboxes { display:flex; gap:30px; align-items:center; }
-        .checkboxes label { display:flex; align-items:center; gap:10px; font-size:1.05em; cursor:pointer; }
-        .checkboxes input[type="radio"] { width:20px; height:20px; cursor:pointer; }
-
-        .encoder-box { background:#221c33; border:1px solid #443355; border-radius:16px; padding:20px; min-width:280px; text-align:center; }
-        .encoder-box strong { color:#b19cd9; display:block; margin-bottom:12px; font-size:1.15em; }
-        .encoder-icon-row { display:none; margin-top:12px; align-items:center; justify-content:center; gap:10px; }
-        .encoder-icon-row label { color:#b19cd9; font-size:0.95em; }
-        .encoder-icon-input { width:70px; height:42px; text-align:center; font-weight:bold; color:#ff8c42; }
-
-        .key-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:32px; width:100%; }
-        @media (max-width:1200px) { .key-grid { grid-template-columns:repeat(2,1fr); } }
-        @media (max-width:700px) { .key-grid { grid-template-columns:1fr; } .layer { padding:28px 24px; } .layer-header { flex-direction:column; align-items:stretch; } .encoder-box { min-width:auto; width:100%; } }
-
-        .key-block { background:#221c33; border:1px solid #555; border-radius:18px; padding:24px; text-align:center; min-height:190px; display:flex; flex-direction:column; transition:all 0.3s; }
-        .key-block:hover { border-color:#ff8c42; box-shadow:0 0 30px rgba(255,140,66,0.45); transform:translateY(-5px); }
-        .key-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:12px; }
-        .key-number { font-weight:bold; font-size:1.8em; color:#ff8c42; }
-        .type-select { flex:1; height:46px; font-size:1em; }
-        .icon-row { display:flex; align-items:center; gap:8px; font-size:0.95em; }
-        .icon-row label { color:#b19cd9; }
-        .key-icon { width:70px; height:42px; text-align:center; font-weight:bold; color:#ff8c42; }
-        .key-fields { margin-top:auto; padding-top:14px; }
-
-        .key-fields input, .key-fields select, .key-fields .single_line, .key-fields .combo_keys select { color:#a6e22e !important; background:#2a2238 !important; }
-
-        input, select { height:48px; padding:0 18px; font-family:Consolas,monospace; font-size:15px; background:#221c33; color:#a6e22e; border:1px solid #555; border-radius:12px; width:100%; }
-        input:focus, select:focus { outline:none; border-color:#ff8c42; box-shadow:0 0 18px rgba(255,140,66,0.6); }
-
-        .bottom-controls { text-align:center; margin:60px 0; }
-        button { height:60px; padding:0 40px; margin:0 18px; background:#6b4e8c; color:white; border:none; border-radius:14px; font-weight:bold; font-size:1.2em; cursor:pointer; transition:0.3s; }
-        button:hover { background:#8c63b8; transform:translateY(-4px); }
-        #save_btn { background:#ff6b35; }
-        #save_btn:hover { background:#ff8c42; box-shadow:0 12px 35px rgba(255,107,53,0.7); }
-        #clear_btn { background:#555; }
-        #clear_btn:hover { background:#777; }
-
-        #output { width:100%; height:540px; margin:50px 0; padding:24px; background:#111; color:#d4d4d4; font-family:'Fira Code',Consolas,monospace; font-size:14.5px; line-height:1.5; border:1px solid #444; border-radius:16px; box-shadow:inset 0 4px 20px rgba(0,0,0,0.6); white-space:pre; overflow:auto; resize:vertical; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f0b1a;
+            color: #e0d8ff;
+            padding: 20px;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #1a1625;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+        }
+        
+        h1 {
+            text-align: center;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 3.5em;
+            color: #ff8c42;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(255,140,66,0.5);
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #b19cd9;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        
+        .section {
+            background: #16213e;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #ff8c42;
+        }
+        
+        .section h2 {
+            color: #ff8c42;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+        }
+        
+        .recorder-box {
+            background: #0f0f1e;
+            border: 3px solid #555;
+            border-radius: 10px;
+            padding: 40px;
+            text-align: center;
+            margin: 20px 0;
+            min-height: 150px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .recorder-box.ready {
+            border-color: #27ae60;
+        }
+        
+        .recorder-box.recording {
+            border-color: #ff8c42;
+            box-shadow: 0 0 30px rgba(255,140,66,0.6);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 30px rgba(255,140,66,0.6); }
+            50% { box-shadow: 0 0 50px rgba(255,140,66,0.9); }
+        }
+        
+        .recorder-status {
+            font-size: 2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .recorder-hint {
+            color: #888;
+            font-size: 0.9em;
+        }
+        
+        .recording-indicator {
+            width: 20px;
+            height: 20px;
+            background: #e74c3c;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 10px;
+            animation: blink 1s infinite;
+        }
+        
+        @keyframes blink {
+            0%, 50% { opacity: 1; }
+            51%, 100% { opacity: 0.3; }
+        }
+        
+        button {
+            background: #ff8c42;
+            color: #000;
+            border: none;
+            padding: 12px 12px;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            transition: all 0.3s;
+        }
+        
+        button:hover {
+            background: #ffa666;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255,140,66,0.4);
+        }
+        
+        button:disabled {
+            background: #555;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        button.danger {
+            background: #c0392b;
+            color: white;
+        }
+        
+        button.danger:hover {
+            background: #e74c3c;
+        }
+        
+        button.success {
+            background: #27ae60;
+            color: white;
+        }
+        
+        button.success:hover {
+            background: #2ecc71;
+        }
+        
+        .events-list {
+            background: #0f0f1e;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            scroll-behavior: smooth;
+        }
+        
+        .event-item {
+            padding: 8px;
+            margin: 5px 0;
+            background: #1a1a2e;
+            border-radius: 4px;
+            border-left: 3px solid #ff8c42;
+        }
+        
+        .event-item.keydown {
+            border-left-color: #27ae60;
+        }
+        
+        .event-item.keyup {
+            border-left-color: #c0392b;
+        }
+        
+        .event-item.delay {
+            border-left-color: #3498db;
+        }
+        
+        .event-time {
+            color: #888;
+            font-size: 0.85em;
+        }
+        
+        .event-key {
+            color: #ff8c42;
+            font-weight: bold;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 300px;
+            background: #0f0f1e;
+            border: 1px solid #555;
+            color: #e0d8ff;
+            border-radius: 5px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            resize: vertical;
+        }
+        
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+        
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-box {
+            background: #0f0f1e;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 2em;
+            color: #ff8c42;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            color: #888;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+        
+        .note {
+            background: #221c33;
+            border-left: 5px solid #ff8c42;
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+        }
+        
+        .note strong {
+            color: #ff8c42;
+        }
+        
+        .help-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #f78b40;
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            z-index: 10;
+        }
+        
+        .help-button:hover {
+            background: #ff8c42;
+            transform: scale(1.1);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.8);
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .modal-content {
+            background: #1a1625;
+            margin: 5% auto;
+            padding: 30px;
+            border: 2px solid #ff8c42;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.9);
+            animation: slideDown 0.3s;
+        }
+        
+        @keyframes slideDown {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #ff8c42;
+            padding-bottom: 15px;
+        }
+        
+        .modal-header h2 {
+            color: #ff8c42;
+            margin: 0;
+        }
+        
+        .close-button {
+            background: #c0392b;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .close-button:hover {
+            background: #e74c3c;
+            transform: rotate(90deg);
+        }
+        
+        .recording-section {
+            position: relative;
+        }
+        
+        /* Sliding Switch Styles */
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            justify-content: center;
+        }
+        
+        .switch-container > label:first-child {
+            color: #b19cd9;
+            font-weight: bold;
+            font-size: 1em;
+        }
+        
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #555;
+            transition: all 0.3s;
+            border-radius: 30px;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: #e0d8ff;
+            transition: all 0.3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .switch input:checked + .slider {
+            background-color: #ff8c42;
+            box-shadow: 0 0 15px rgba(255,140,66,0.4);
+        }
+        
+        .switch input:checked + .slider:before {
+            transform: translateX(30px);
+            background-color: #fff;
+        }
+        
+        .switch:hover .slider {
+            background-color: #666;
+        }
+        
+        .switch input:checked:hover + .slider {
+            background-color: #ffa666;
+            box-shadow: 0 0 20px rgba(255,140,66,0.6);
+        }
+        
+        .input-group {
+            margin: 15px 0;
+        }
+        
+        .input-group label {
+            display: block;
+            color: #b19cd9;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .input-group input[type="number"] {
+            width: 100%;
+            max-width: 200px;
+            padding: 8px 12px;
+            background: #0f0f1e;
+            border: 1px solid #555;
+            color: #e0d8ff;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        
+        .input-group input[type="number"]:focus {
+            outline: none;
+            border-color: #ff8c42;
+        }
+        
+        .recorder-controls {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+        }
+        
+        .switch-container {
+            min-width: 200px;
+        }
+        
+        .input-group.key-delay {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 0;
+            min-width: 300px;
+        }
+        
+        .input-group.key-delay label {
+            margin: 0;
+            white-space: nowrap;
+        }
+        
+        .input-group.key-delay input[type="number"] {
+            width: 80px;
+            max-width: 80px;
+        }
     </style>
 </head>
 <body>
-    <h1>MP1 Macropad Configurator</h1>
-
-    <div class="top-bar">
-        <div class="top-left">
-            <button id="help_btn" onclick="toggleHelp()">User Guide</button>
-        </div>
-        <div class="top-right">
-            <div class="file-name" id="file-name">No file chosen</div>
-            <div class="file-input-wrapper">
-                <label for="fileInput">Choose File</label>
-                <input type="file" id="fileInput" accept=".json">
+    <div class="container">
+        <h1>Macro Recorder</h1>        
+        <div class="section recording-section">
+            <h2>Recording Tool</h2>
+            <button class="help-button" onclick="event.stopPropagation(); openHelp();" title="Instructions">?</button>
+            
+            <div id="recorderBox" class="recorder-box" onclick="focusRecorder()">
+                <div class="recorder-status" id="recorderStatus">Click to Focus</div>
+                <div class="recorder-hint" id="recorderHint">Click here, then press keys to record</div>
             </div>
-            <button onclick="loadKeymap()">Load Existing keymap.json</button>
+            
+            <div class="recorder-controls">
+                <div class="switch-container">
+                    <label>Capture Timing</label>
+                    <label class="switch">
+                        <input type="checkbox" id="timingSwitch" onchange="toggleKeyDelayVisibility()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
+                <div class="input-group key-delay" id="keyDelayGroup">
+                    <label for="keyDelay">Auto-delay after keys (s):</label>
+                    <input type="number" id="keyDelay" min="0" max="2" step="0.01" value="0.05">
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="startBtn" onclick="startRecording()" class="success">Start Recording</button>
+                <button id="stopBtn" onclick="stopRecording()" disabled class="danger">Stop Recording</button>
+                <button onclick="clearRecording()">Clear Recording</button>
+            </div>
+            
+            <div class="stats">
+                <div class="stat-box">
+                    <div class="stat-value" id="eventCount">0</div>
+                    <div class="stat-label">Events Recorded</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="duration">0.0s</div>
+                    <div class="stat-label">Total Duration</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="keysPressed">0</div>
+                    <div class="stat-label">Keys Pressed</div>
+                </div>
+            </div>
+
+            <div class="events-list" id="eventsList">
+                <div style="color: #888; text-align: center; padding: 20px;">
+                    No events recorded yet
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2>Generator Output</h2>
+		            <div class="controls">
+                <button onclick="generateSequence()">Generate Sequence JSON</button>
+                <button onclick="clearRecording()">Clear Recording</button>
+                <button onclick="copyJSON()">Copy to Clipboard</button>
+                <button onclick="downloadJSON()">Download JSON</button>
+				</div>
         </div>
     </div>
 
-    <div class="layers-control">
-        <label for="num_layers">Number of Layers:</label>
-        <input type="number" id="num_layers" min="1" value="2" onchange="updateLayerCount()">
+    <!-- Help Modal -->
+    <div id="helpModal" class="modal" onclick="closeHelp(event)">
+        <div class="modal-content" onclick="event.stopPropagation();">
+            <div class="modal-header">
+                <h2>Macro Recorder Instructions</h2>
+                <button class="close-button" onclick="closeHelp()">×</button>
+            </div>
+            
+            <div style="line-height: 1.8;">
+                <h3 style="color: #ff8c42; margin-top: 20px;">How to Use</h3>
+                <ol style="padding-left: 30px; color: #e0d8ff;">
+                    <li><strong>Click the recorder box</strong> to focus it (or click "Start Recording")</li>
+                    <li><strong>Press "Start Recording"</strong> button</li>
+                    <li><strong>Type your macro</strong> - all keypresses will be captured</li>
+                    <li><strong>Press "Stop Recording"</strong> when done</li>
+                    <li><strong>Click "Generate Sequence JSON"</strong> to create MP1 format</li>
+                    <li><strong>Copy the JSON</strong> and paste into the Configurator's "User Defined" field</li>
+                </ol>
+                
+                <h3 style="color: #ff8c42; margin-top: 20px;">Capture Timing Switch</h3>
+                <p><strong style="color: #ff8c42;">OFF (Default):</strong></p>
+                <ul style="padding-left: 30px; color: #e0d8ff;">
+                    <li>Records keypresses without timing information</li>
+                    <li>Adds a small auto-delay after special keys (TAB, ENTER, etc.)</li>
+                    <li>SHIFT key is filtered out when typing capitals (cleaner output)</li>
+                    <li>Best for simple macros and login sequences</li>
+                </ul>
+                
+                <p><strong style="color: #ff8c42;">ON:</strong></p>
+                <ul style="padding-left: 30px; color: #e0d8ff;">
+                    <li>Records exact timing between keypresses</li>
+                    <li>Captures all keys including SHIFT</li>
+                    <li>Best for complex macros where timing matters</li>
+                    <li>Creates larger sequences with delay steps</li>
+                </ul>
+                
+                <h3 style="color: #ff8c42; margin-top: 20px;">Auto-delay Setting</h3>
+                <p style="color: #e0d8ff;">
+                    Only visible when Capture Timing is <strong>OFF</strong>. Sets the delay (in seconds) 
+                    automatically added after special keys like TAB, ENTER, etc. Default is 0.05 seconds.
+                </p>
+                
+                <h3 style="color: #ff8c42; margin-top: 20px;">Tips</h3>
+                <ul style="padding-left: 30px; color: #e0d8ff;">
+                    <li>Start with Capture Timing OFF for simpler macros</li>
+                    <li>Use Capture Timing ON if you need precise delays</li>
+                    <li>The recorder automatically merges consecutive text into single strings</li>
+                    <li>Very short delays (&lt; 0.05s) are ignored for cleaner output</li>
+                    <li>Key combinations (Ctrl+C, etc.) are automatically detected</li>
+                </ul>
+                
+                <div class="note" style="margin-top: 20px;">
+                    <strong>Note:</strong> The recorder must have focus to capture keys. Click the recorder box 
+                    if keys aren't being captured.
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div id="layers_container"></div>
-
-    <div class="bottom-controls">
-        <button onclick="generateKeymap()">Generate keymap.json</button>
-        <button id="save_btn" onclick="saveKeymap()">Save keymap.json</button>
-        <button id="clear_btn" onclick="document.getElementById('output').value=''">Clear</button>
-    </div>
-
-    <textarea id="output" placeholder="Your beautiful keymap will appear here..."></textarea>
 
     <script>
-        document.getElementById('fileInput').addEventListener('change', e => {
-            document.getElementById('file-name').textContent = e.target.files[0] ? e.target.files[0].name : 'No file chosen';
+        let recording = false;
+        let events = [];
+        let startTime = null;
+        let lastEventTime = null;
+        let heldKeys = new Set();
+        let textBuffer = [];
+        let lastTextTime = null;
+        let captureTimingEnabled = false;
+        
+        // Wait for DOM to be ready before accessing elements
+        let recorderBox, startBtn, stopBtn;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            recorderBox = document.getElementById('recorderBox');
+            startBtn = document.getElementById('startBtn');
+            stopBtn = document.getElementById('stopBtn');
+            
+            // Make recorder focusable
+            recorderBox.tabIndex = 0;
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Set initial visibility for keyDelay
+            toggleKeyDelayVisibility();
         });
-
-        let defaultLayer = 1;
-        let secretLayer = 0;
-
-        const keyTypes = ['None','Website','App','String','Key Combo','Consumer Control','User Defined'];
-        const consumerControls = ['PREV','PLAYPAUSE','NEXT','MUTE','VOL_DN','VOL_UP'];
-        const keycodes = ['CONTROL','LEFT_CONTROL','RIGHT_CONTROL','SHIFT','LEFT_SHIFT','RIGHT_SHIFT','ALT','LEFT_ALT','RIGHT_ALT','GUI','WINDOWS','COMMAND','TAB','ENTER','BACKSPACE','DELETE','ESCAPE','SPACE','A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','F1','F2','F3','F4','F5','F6','F7','F8','F9','F10','F11','F12','LEFT_ARROW','RIGHT_ARROW','UP_ARROW','DOWN_ARROW','KEYPAD_PLUS','KEYPAD_MINUS','KEYPAD_ENTER'];
-
-        // NEW: Smart layer count that PRESERVES ALL USER SETTINGS
-        function updateLayerCount() {
-            const desired = Math.max(2, parseInt(document.getElementById('num_layers').value) || 2);
-            const container = document.getElementById('layers_container');
-            const currentCount = container.children.length;
-
-            // Save current state before any changes
-            const savedState = [];
-            for (let l = 0; l < currentCount; l++) {
-                const layer = container.children[l];
-                const name = layer.querySelector('.layer-name-input').value;
-                const isDefault = layer.querySelector('.default_layer').checked;
-                const isSecret = layer.querySelector('.secret_layer').checked;
-                const encType = layer.querySelector('.encoder_type').value;
-                const encCustom = layer.querySelector('.custom_encoder_action')?.value || '';
-                const encIcon = layer.querySelector('.encoder-icon-input')?.value || '----';
-
-                const keys = [];
-                for (let k = 0; k < 8; k++) {
-                    const type = layer.querySelectorAll('.key_type_select')[k].value;
-                    const icon = layer.querySelectorAll('.key-icon')[k].value;
-                    const field = document.getElementById(`key_fields_${l}_${k}`).firstElementChild;
-                    let value = '';
-                    if (field) {
-                        if (type === 'Key Combo') {
-                            value = Array.from(field.querySelectorAll('select')).map(s => s.value).filter(v => v);
-                        } else {
-                            value = field.value;
-                        }
-                    }
-                    keys.push({ type, icon, value });
-                }
-                savedState.push({ name, isDefault, isSecret, encType, encCustom, encIcon, keys });
+        
+        function toggleKeyDelayVisibility() {
+            const timingSwitch = document.getElementById('timingSwitch');
+            const keyDelayGroup = document.getElementById('keyDelayGroup');
+            
+            // Show keyDelay only when timing is OFF (unchecked)
+            // Use visibility instead of display to maintain layout space
+            if (timingSwitch && keyDelayGroup) {
+                keyDelayGroup.style.visibility = timingSwitch.checked ? 'hidden' : 'visible';
             }
-
-            // Now rebuild layers
-            container.innerHTML = '';
-            for (let l = 0; l < desired; l++) {
-                const d = document.createElement('div'); d.className = 'layer';
-                d.innerHTML = `
-                    <div class="layer-header">
-                        <div class="layer-title">
-                            <input type="text" class="layer-name-input" value="LAYER_${l}" maxlength="14">
-                            <div class="checkboxes">
-                                <label><input type="radio" name="default_layer" class="default_layer" value="${l}"> Default</label>
-                                <label><input type="radio" name="secret_layer" class="secret_layer" value="${l}"> Secret</label>
-                            </div>
-                        </div>
-                        <div class="encoder-box">
-                            <strong>Encoder Action</strong>
-                            <select class="encoder_type" onchange="toggleCustomEncoder(${l})">
-                                <option value="None">None</option>
-                                <option value="Volume">Volume</option>
-                                <option value="Zoom">Zoom</option>
-                                <option value="Scroll">Scroll</option>
-                                <option value="Custom">Custom</option>
-                            </select>
-                            <div class="custom_encoder" style="display:none;margin-top:12px;">
-                                <input type="text" class="custom_encoder_action single_line" placeholder='e.g. {"mouse_wheel": 1}'>
-                            </div>
-                            <div class="encoder-icon-row" id="encoder_icon_row_${l}" style="display:none;">
-                                <label>Encoder Icon</label>
-                                <input type="text" class="encoder-icon-input" maxlength="4" value="----" style="text-transform:uppercase;">
-                            </div>
-                        </div>
-                    </div>
-                    <div class="key-grid">
-                        ${[0,1,2,3,4,5,6,7].map(i=>`
-                            <div class="key-block">
-                                <div class="key-header">
-                                    <div class="key-number">K${i}</div>
-                                    <select class="type-select key_type_select" onchange="handleTypeChange(${l},${i})">
-                                        ${keyTypes.map(t=>`<option value="${t}" ${t==='None'?'selected':''}>${t}</option>`).join('')}
-                                    </select>
-                                    <div class="icon-row" id="icon_row_${l}_${i}" style="display:none;">
-                                        <label>Icon</label>
-                                        <input type="text" class="key-icon" maxlength="4" value="---">
-                                    </div>
-                                </div>
-                                <div class="key-fields" id="key_fields_${l}_${i}"></div>
-                            </div>
-                        `).join('')}
+        }
+        
+        function setupEventListeners() {
+            recorderBox.addEventListener('keydown', handleKeyDown);
+            recorderBox.addEventListener('keyup', handleKeyUp);
+        }
+        
+        // Key mapping from event.code to MP1 format
+        const keyMap = {
+            'KeyA': 'A', 'KeyB': 'B', 'KeyC': 'C', 'KeyD': 'D', 'KeyE': 'E',
+            'KeyF': 'F', 'KeyG': 'G', 'KeyH': 'H', 'KeyI': 'I', 'KeyJ': 'J',
+            'KeyK': 'K', 'KeyL': 'L', 'KeyM': 'M', 'KeyN': 'N', 'KeyO': 'O',
+            'KeyP': 'P', 'KeyQ': 'Q', 'KeyR': 'R', 'KeyS': 'S', 'KeyT': 'T',
+            'KeyU': 'U', 'KeyV': 'V', 'KeyW': 'W', 'KeyX': 'X', 'KeyY': 'Y', 'KeyZ': 'Z',
+            'Digit1': 'ONE', 'Digit2': 'TWO', 'Digit3': 'THREE', 'Digit4': 'FOUR',
+            'Digit5': 'FIVE', 'Digit6': 'SIX', 'Digit7': 'SEVEN', 'Digit8': 'EIGHT',
+            'Digit9': 'NINE', 'Digit0': 'ZERO',
+            'Enter': 'ENTER', 'Escape': 'ESCAPE', 'Backspace': 'BACKSPACE',
+            'Tab': 'TAB', 'Space': 'SPACE',
+            'ControlLeft': 'CONTROL', 'ControlRight': 'CONTROL',
+            'ShiftLeft': 'SHIFT', 'ShiftRight': 'SHIFT',
+            'AltLeft': 'ALT', 'AltRight': 'ALT',
+            'MetaLeft': 'GUI', 'MetaRight': 'GUI',
+            'ArrowUp': 'UP_ARROW', 'ArrowDown': 'DOWN_ARROW',
+            'ArrowLeft': 'LEFT_ARROW', 'ArrowRight': 'RIGHT_ARROW',
+            'Delete': 'DELETE', 'Home': 'HOME', 'End': 'END',
+            'PageUp': 'PAGE_UP', 'PageDown': 'PAGE_DOWN'
+        };
+        
+        function focusRecorder() {
+            recorderBox.focus();
+            recorderBox.classList.add('ready');
+            document.getElementById('recorderHint').textContent = 'Ready to record - Press Start Recording';
+        }
+        
+        function startRecording() {
+            if (recording) return;
+            
+            recording = true;
+            events = [];
+            startTime = Date.now();
+            lastEventTime = startTime;
+            heldKeys.clear();
+            textBuffer = [];
+            lastTextTime = null;
+            captureTimingEnabled = document.getElementById('timingSwitch').checked;
+            
+            recorderBox.classList.add('recording');
+            recorderBox.classList.remove('ready');
+            document.getElementById('recorderStatus').innerHTML = '<span class="recording-indicator"></span>Recording...';
+            document.getElementById('recorderHint').textContent = captureTimingEnabled ? 
+                'Type your macro sequence (timing captured)' : 
+                'Type your macro sequence (no timing)';
+            
+            startBtn.disabled = true;
+            stopBtn.disabled = false;
+            
+            recorderBox.focus();
+            updateStats();
+        }
+        
+        function stopRecording() {
+            if (!recording) return;
+            
+            // Flush any remaining text
+            flushTextBuffer();
+            
+            recording = false;
+            
+            recorderBox.classList.remove('recording');
+            document.getElementById('recorderStatus').textContent = 'Recording Stopped';
+            document.getElementById('recorderHint').textContent = 'Click Generate Sequence JSON';
+            
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+            
+            updateStats();
+            displayEvents();
+        }
+        
+        function clearRecording() {
+            events = [];
+            heldKeys.clear();
+            textBuffer = [];
+            updateStats();
+            displayEvents();
+            document.getElementById('jsonOutput').value = '';
+        }
+        
+        function handleKeyDown(e) {
+            if (!recording) return;
+            
+            e.preventDefault();
+            
+            const now = Date.now();
+            const keyCode = keyMap[e.code];
+            
+            // Skip if already held (repeat)
+            if (heldKeys.has(keyCode)) return;
+            
+            // Skip standalone SHIFT key ONLY when timing is OFF
+            if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size === 0) {
+                heldKeys.add(keyCode);
+                return;
+            }
+            
+            // Add delay if timing is enabled and there's a gap
+            if (captureTimingEnabled) {
+                const timeSinceLast = (now - lastEventTime) / 1000;
+                if (timeSinceLast > 0.05) {
+                    flushTextBuffer();
+                    events.push({
+                        type: 'delay',
+                        time: now,
+                        delay: timeSinceLast
+                    });
+                }
+            }
+            
+            // Check if it's a modifier or printable character
+            const modifiers = ['CONTROL', 'SHIFT', 'ALT', 'GUI'];
+            const isPrintable = e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey;
+            
+            if (isPrintable) {
+                // Add to text buffer
+                textBuffer.push(e.key);
+                lastTextTime = now;
+            } else {
+                // Flush text before non-text key
+                flushTextBuffer();
+                
+                // When timing is OFF, don't record standalone SHIFT
+                if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size === 0) {
+                    heldKeys.add(keyCode);
+                    return;
+                }
+                
+                // When timing is OFF and SHIFT is already held, only record if other non-SHIFT keys present
+                if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size > 0) {
+                    heldKeys.add(keyCode);
+                    events.push({
+                        type: 'keydown',
+                        key: keyCode,
+                        time: now
+                    });
+                } else if (keyCode && keyCode !== 'SHIFT') {
+                    // Always record non-SHIFT keys
+                    heldKeys.add(keyCode);
+                    events.push({
+                        type: 'keydown',
+                        key: keyCode,
+                        time: now
+                    });
+                } else if (captureTimingEnabled && keyCode === 'SHIFT') {
+                    // When timing is ON, record SHIFT normally
+                    heldKeys.add(keyCode);
+                    events.push({
+                        type: 'keydown',
+                        key: keyCode,
+                        time: now
+                    });
+                }
+            }
+            
+            lastEventTime = now;
+            updateStats();
+            displayEvents(); // Update live
+        }
+        
+        function handleKeyUp(e) {
+            if (!recording) return;
+            
+            e.preventDefault();
+            
+            const keyCode = keyMap[e.code];
+            if (keyCode && heldKeys.has(keyCode)) {
+                heldKeys.delete(keyCode);
+                
+                // Don't record keyup for standalone SHIFT when timing is OFF
+                if (!captureTimingEnabled && keyCode === 'SHIFT' && heldKeys.size === 0) {
+                    // Check if there were any non-SHIFT keys recorded with this SHIFT
+                    const hasNonShiftEvents = events.some(e => 
+                        e.type === 'keydown' && e.key === 'SHIFT'
+                    );
+                    if (!hasNonShiftEvents) {
+                        return; // Skip recording this keyup
+                    }
+                }
+                
+                const now = Date.now();
+                events.push({
+                    type: 'keyup',
+                    key: keyCode,
+                    time: now
+                });
+                
+                lastEventTime = now;
+                displayEvents(); // Update live
+            }
+        }
+        
+        function flushTextBuffer() {
+            if (textBuffer.length > 0) {
+                events.push({
+                    type: 'text',
+                    text: textBuffer.join(''),
+                    time: lastTextTime || Date.now()
+                });
+                textBuffer = [];
+                displayEvents(); // Update when text is flushed
+            }
+        }
+        
+        function updateStats() {
+            document.getElementById('eventCount').textContent = events.length;
+            
+            if (events.length > 0) {
+                const duration = ((lastEventTime - startTime) / 1000).toFixed(1);
+                document.getElementById('duration').textContent = duration + 's';
+            } else {
+                document.getElementById('duration').textContent = '0.0s';
+            }
+            
+            const keyPresses = events.filter(e => e.type === 'keydown').length;
+            document.getElementById('keysPressed').textContent = keyPresses;
+        }
+        
+        function displayEvents() {
+            const list = document.getElementById('eventsList');
+            
+            if (events.length === 0) {
+                list.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">No events recorded yet</div>';
+                return;
+            }
+            
+            list.innerHTML = events.map((event, i) => {
+                const relTime = ((event.time - startTime) / 1000).toFixed(3);
+                
+                if (event.type === 'delay') {
+                    return `<div class="event-item delay">
+                        <span class="event-time">[${relTime}s]</span>
+                        Delay: ${event.delay.toFixed(3)}s
                     </div>`;
-                container.appendChild(d);
-            }
-
-            // Restore saved state
-            for (let l = 0; l < Math.min(desired, savedState.length); l++) {
-                const layer = container.children[l];
-                const state = savedState[l];
-
-                layer.querySelector('.layer-name-input').value = state.name;
-                if (state.isDefault) layer.querySelector('.default_layer').checked = true;
-                if (state.isSecret) layer.querySelector('.secret_layer').checked = true;
-                layer.querySelector('.encoder_type').value = state.encType;
-                if (state.encType === 'Custom') {
-                    layer.querySelector('.custom_encoder_action').value = state.encCustom;
-                    layer.querySelector('.encoder-icon-input').value = state.encIcon;
+                } else if (event.type === 'text') {
+                    return `<div class="event-item">
+                        <span class="event-time">[${relTime}s]</span>
+                        Text: <span class="event-key">"${event.text}"</span>
+                    </div>`;
+                } else if (event.type === 'keydown') {
+                    return `<div class="event-item keydown">
+                        <span class="event-time">[${relTime}s]</span>
+                        Key Down: <span class="event-key">${event.key}</span>
+                    </div>`;
+                } else if (event.type === 'keyup') {
+                    return `<div class="event-item keyup">
+                        <span class="event-time">[${relTime}s]</span>
+                        Key Up: <span class="event-key">${event.key}</span>
+                    </div>`;
                 }
-
-                state.keys.forEach((key, k) => {
-                    const select = layer.querySelectorAll('.key_type_select')[k];
-                    select.value = key.type;
-                    const iconIn = layer.querySelectorAll('.key-icon')[k];
-                    iconIn.value = key.icon;
-                    if (key.type !== 'None') iconIn.dataset.prev = key.icon;
-
-                    handleTypeChange(l, k);
-                    const field = document.getElementById(`key_fields_${l}_${k}`).firstElementChild;
-                    if (field && key.type !== 'None') {
-                        if (key.type === 'Key Combo') {
-                            const selects = field.querySelectorAll('select');
-                            key.value.forEach((v, i) => { if (selects[i]) selects[i].value = v; });
-                        } else {
-                            field.value = key.value;
-                        }
-                    }
-                });
-
-                toggleCustomEncoder(l);
+            }).join('');
+            
+            // Auto-scroll to bottom
+            list.scrollTop = list.scrollHeight;
+        }
+        
+        function generateSequence() {
+            if (events.length === 0) {
+                alert('No events to generate! Record something first.');
+                return;
             }
-
-            attachRadioListeners();
-        }
-
-        function toggleCustomEncoder(l) {
-            const select = document.querySelectorAll('.encoder_type')[l];
-            const customDiv = document.querySelectorAll('.custom_encoder')[l];
-            const iconRow = document.getElementById(`encoder_icon_row_${l}`);
-            const show = select.value === 'Custom';
-            customDiv.style.display = show ? 'block' : 'none';
-            iconRow.style.display = show ? 'flex' : 'none';
-        }
-
-        function handleTypeChange(l,k){
-            const sel = document.querySelectorAll('.key_type_select')[l*8+k];
-            const iconRow = document.getElementById(`icon_row_${l}_${k}`);
-            const iconIn = iconRow.querySelector('.key-icon');
-            const fields = document.getElementById(`key_fields_${l}_${k}`);
-            const v = sel.value;
-            if(v==='None'){iconRow.style.display='none';iconIn.value='---';fields.innerHTML='';}
-            else{
-                iconRow.style.display='flex';
-                if(iconIn.dataset.prev)iconIn.value=iconIn.dataset.prev;
-                fields.innerHTML='';
-                if(v==='Website')fields.innerHTML=`<input type="text" class="single_line" placeholder="https://example.com">`;
-                else if(v==='App')fields.innerHTML=`<input type="text" class="single_line" placeholder="C:\\Program Files\\App\\app.exe">`;
-                else if(v==='String')fields.innerHTML=`<input type="text" class="single_line" placeholder="Plain text to type">`;
-                else if(v==='Key Combo')fields.innerHTML=`<div class="combo_keys"><select><option value="">None</option>${keycodes.map(k=>`<option>${k}</option>`).join('')}</select><span class="plus">+</span><select><option value="">None</option>${keycodes.map(k=>`<option>${k}</option>`).join('')}</select><span class="plus">+</span><select><option value="">None</option>${keycodes.map(k=>`<option>${k}</option>`).join('')}</select></div>`;
-                else if(v==='Consumer Control')fields.innerHTML=`<select class="single_line">${consumerControls.map(c=>`<option>${c}</option>`).join('')}</select>`;
-                else if(v==='User Defined')fields.innerHTML=`<input type="text" class="single_line" placeholder="e.g. Keycode.TAB or (Keycode.CONTROL, Keycode.C)">`;
-            }
-            if(v!=='None'&&iconIn.value!=='---')iconIn.dataset.prev=iconIn.value;
-        }
-
-        function attachRadioListeners(){
-            document.querySelectorAll('.default_layer').forEach(r=>r.addEventListener('change',()=>{if(r.checked){defaultLayer=+r.value;if(defaultLayer===secretLayer){r.checked=false;alert("Cannot be both Default and Secret.");}}}));
-            document.querySelectorAll('.secret_layer').forEach(r=>r.addEventListener('change',()=>{if(r.checked){secretLayer=+r.value;if(secretLayer===defaultLayer){r.checked=false;alert("Cannot be both Default and Secret.");}}}));
-        }
-
-        // (loadKeymap, parseJsonKeymap, generateKeymap, saveKeymap remain 100% unchanged)
-
-        function loadKeymap() {
-            const file = document.getElementById('fileInput').files[0];
-            if (!file) return alert('Select a file');
-            const reader = new FileReader();
-            reader.onload = e => {
-                try { parseJsonKeymap(JSON.parse(e.target.result)); }
-                catch (err) { alert('Invalid JSON: ' + err); }
-            };
-            reader.readAsText(file);
-        }
-
-        function parseJsonKeymap(data) {
-            const numLayers = data.layer_names.length;
-            document.getElementById('num_layers').value = numLayers;
-            updateLayerCount(); // Uses the new smart function
-
-            setTimeout(() => {
-                document.querySelectorAll('.layer-name-input').forEach((el, i) => el.value = data.layer_names[i] || '');
-
-                defaultLayer = data.default_layer ?? 1;
-                secretLayer = data.secret_layer ?? 0;
-                document.querySelectorAll('.default_layer').forEach(r => r.checked = parseInt(r.value) === defaultLayer);
-                document.querySelectorAll('.secret_layer').forEach(r => r.checked = parseInt(r.value) === secretLayer);
-
-                data.keymap.forEach((layer, l) => {
-                    layer.forEach((action, k) => {
-                        const select = document.querySelectorAll('.key_type_select')[l * 8 + k];
-                        const iconInput = document.querySelectorAll('.key-icon')[l * 8 + k];
-
-                        if (action === null) {
-                            select.value = 'None';
-                            iconInput.value = '---';
-                        } else {
-                            if (typeof action === 'string' && (action.startsWith('http') || action.startsWith('win:'))) {
-                                select.value = action.startsWith('http') ? 'Website' : 'App';
-                            } else if (typeof action === 'string' && !consumerControls.includes(action) && !keycodes.includes(action)) {
-                                select.value = 'String';
-                            } else if (consumerControls.includes(action)) {
-                                select.value = 'Consumer Control';
-                            } else if (Array.isArray(action)) {
-                                select.value = 'Key Combo';
-                            } else {
-                                select.value = 'User Defined';
-                            }
-                            if (data.icons?.[l]?.[k]) {
-                                iconInput.value = data.icons[l][k];
-                                iconInput.dataset.previousValue = data.icons[l][k];
-                            }
-                        }
-                        handleTypeChange(l, k);
-
-                        if (action !== null) {
-                            const field = document.getElementById(`key_fields_${l}_${k}`).firstElementChild;
-                            if (!field) return;
-
-                            if (select.value === 'Website' || select.value === 'App' || select.value === 'String') {
-                                field.value = typeof action === 'string' ? action : '';
-                            } else if (select.value === 'Consumer Control') {
-                                field.value = action;
-                            } else if (select.value === 'Key Combo') {
-                                const selects = field.querySelectorAll('select');
-                                action.forEach((key, i) => { if (selects[i]) selects[i].value = key; });
-                            } else if (select.value === 'User Defined') {
-                                let code = '';
-                                if (typeof action === 'string') {
-                                    if (action.startsWith('http') || action.startsWith('win:')) code = `"${action}"`;
-                                    else if (consumerControls.includes(action)) code = `ConsumerControlCode.${action}`;
-                                    else if (keycodes.includes(action)) code = `Keycode.${action}`;
-                                    else code = `"${action}"`;
-                                } else if (Array.isArray(action)) {
-                                    code = `(${action.map(k => `Keycode.${k}`).join(', ')})`;
-                                }
-                                field.value = code;
-                            }
-                        }
+            
+            const timingWasEnabled = captureTimingEnabled;
+            const autoKeyDelay = parseFloat(document.getElementById('keyDelay').value) || 0.05;
+            
+            const sequence = [];
+            const heldKeys = new Map(); // Track when keys were pressed
+            
+            for (let i = 0; i < events.length; i++) {
+                const event = events[i];
+                
+                if (event.type === 'delay') {
+                    sequence.push({
+                        type: 'delay',
+                        value: parseFloat(event.delay.toFixed(2))
                     });
-                });
-
-                if (data.encoder_actions) {
-                    data.encoder_actions.forEach((enc, l) => {
-                        const select = document.querySelectorAll('.encoder_type')[l];
-                        const custom = document.querySelectorAll('.custom_encoder_action')[l];
-                        const iconInput = document.querySelectorAll('.encoder-icon-input')[l];
-                        if (!enc) {
-                            select.value = 'None';
-                        } else if (enc.cc) {
-                            select.value = 'Volume';
-                        } else if (enc.mouse_wheel) {
-                            select.value = 'Scroll';
-                        } else if (enc.combo) {
-                            select.value = 'Zoom';
-                        } else {
-                            select.value = 'Custom';
-                            custom.value = JSON.stringify(enc, null, 2);
-                        }
-                        if (data.encoder_icons?.[l]) {
-                            iconInput.value = data.encoder_icons[l];
-                        }
-                        toggleCustomEncoder(l);
+                } else if (event.type === 'text') {
+                    sequence.push({
+                        type: 'string',
+                        value: event.text
                     });
-                }
-            }, 100);
-        }
-
-        function generateKeymap() {
-            const numLayers = document.querySelectorAll('.layer').length;
-
-            const layer_names = [];
-            const icons = [];
-            const keymap = [];
-            const encoder_actions = [];
-            const encoder_icons = [];
-
-            for (let l = 0; l < numLayers; l++) {
-                layer_names.push(document.querySelectorAll('.layer-name-input')[l].value.trim() || `LAYER_${l}`);
-
-                const layerIcons = [];
-                const layerKeys = [];
-
-                for (let k = 0; k < 8; k++) {
-                    const typeSelect = document.querySelectorAll('.key_type_select')[l * 8 + k];
-                    const type = typeSelect.value;
-
-                    const iconInput = document.querySelectorAll('.key-icon')[l * 8 + k];
-                    let icon = (iconInput.value || '').trim().toUpperCase();
-                    if (type === 'None') icon = '---';
-                    else icon = (icon + '----').slice(0, 4);
-                    layerIcons.push(icon);
-
-                    if (type === 'None') {
-                        layerKeys.push(null);
-                        continue;
-                    }
-
-                    const field = document.getElementById(`key_fields_${l}_${k}`).firstElementChild;
-                    let action = null;
-
-                    if (type === 'Website' || type === 'String') {
-                        action = field.value.trim() || null;
-                    } else if (type === 'App') {
-                        let path = field.value.trim();
-                        if (path && !path.toLowerCase().startsWith('win:')) {
-                            action = 'win:' + path;
-                        } else {
-                            action = path || null;
+                } else if (event.type === 'keydown') {
+                    heldKeys.set(event.key, i);
+                } else if (event.type === 'keyup') {
+                    const downIndex = heldKeys.get(event.key);
+                    if (downIndex !== undefined) {
+                        // Check if other keys are still held (combo)
+                        const simultaneousKeys = [];
+                        for (const [key, index] of heldKeys) {
+                            if (index <= downIndex) {
+                                simultaneousKeys.push(key);
+                            }
                         }
-                    } else if (type === 'Consumer Control') {
-                        action = field.value;
-                    } else if (type === 'Key Combo') {
-                        const vals = Array.from(field.querySelectorAll('select')).map(s => s.value).filter(v => v);
-                        action = vals.length ? vals : null;
-                    } else if (type === 'User Defined') {
-                        const code = field.value.trim();
-                        if (!code || code === 'None') action = null;
-                        else if (code.startsWith('"') && code.endsWith('"')) action = code.slice(1, -1);
-                        else if (code.startsWith('Keycode.')) action = code.replace('Keycode.', '').trim();
-                        else if (code.startsWith('ConsumerControlCode.')) action = code.replace('ConsumerControlCode.', '').trim();
-                        else if (code.startsWith('(') && code.endsWith(')')) {
-                            action = code.slice(1, -1).split(',').map(s => s.trim()).filter(s => s.startsWith('Keycode.')).map(s => s.replace('Keycode.', '').trim());
-                            action = action.length ? action : null;
-                        } else action = code;
+                        
+                        if (simultaneousKeys.length > 1) {
+                            // Combo
+                            sequence.push({
+                                type: 'combo',
+                                value: simultaneousKeys
+                            });
+                            // Remove all keys in combo
+                            simultaneousKeys.forEach(k => heldKeys.delete(k));
+                            
+                            // Add auto-delay after combo if timing was OFF
+                            if (!timingWasEnabled && autoKeyDelay > 0) {
+                                sequence.push({
+                                    type: 'delay',
+                                    value: autoKeyDelay
+                                });
+                            }
+                        } else {
+                            // Single key
+                            sequence.push({
+                                type: 'key',
+                                value: event.key
+                            });
+                            heldKeys.delete(event.key);
+                            
+                            // Add auto-delay after key if timing was OFF
+                            if (!timingWasEnabled && autoKeyDelay > 0) {
+                                sequence.push({
+                                    type: 'delay',
+                                    value: autoKeyDelay
+                                });
+                            }
+                        }
                     }
-
-                    layerKeys.push(action);
                 }
-
-                icons.push(layerIcons);
-                keymap.push(layerKeys);
-
-                const encSelect = document.querySelectorAll('.encoder_type')[l];
-                const customInput = document.querySelectorAll('.custom_encoder_action')[l];
-                const encIconInput = document.querySelectorAll('.encoder-icon-input')[l];
-                let enc = null;
-                let enc_icon = '----';
-
-                if (encSelect.value === 'Custom') {
-                    if (customInput.value.trim()) {
-                        try { enc = JSON.parse(customInput.value.trim()); } catch(e) {}
-                    }
-                    enc_icon = (encIconInput.value || '').trim().toUpperCase().slice(0,4) || '----';
+            }
+            
+            // MERGE CONSECUTIVE STRINGS (including those separated only by delays)
+            const mergedSequence = [];
+            let stringBuffer = '';
+            let pendingDelays = [];
+            
+            for (let i = 0; i < sequence.length; i++) {
+                const item = sequence[i];
+                
+                if (item.type === 'string') {
+                    // Add to buffer
+                    stringBuffer += item.value;
+                    // Clear pending delays (we're continuing the string)
+                    pendingDelays = [];
+                } else if (item.type === 'delay' && stringBuffer) {
+                    // Store delay temporarily - might be between strings
+                    pendingDelays.push(item);
                 } else {
-                    switch (encSelect.value) {
-                        case 'Volume': enc = { "cc": "VOL_UP" }; enc_icon = 'VOL'; break;
-                        case 'Scroll': enc = { "mouse_wheel": 1 }; enc_icon = 'SCRL'; break;
-                        case 'Zoom':   enc = { "combo": ["CONTROL", "KEYPAD_PLUS"], "combo_ccw": ["CONTROL", "KEYPAD_MINUS"] }; enc_icon = 'ZOOM'; break;
-                        default: enc = null; enc_icon = '----';
+                    // Hit a key/combo - flush everything
+                    if (stringBuffer) {
+                        mergedSequence.push({
+                            type: 'string',
+                            value: stringBuffer
+                        });
+                        stringBuffer = '';
                     }
+                    // Add any pending delays
+                    pendingDelays.forEach(d => mergedSequence.push(d));
+                    pendingDelays = [];
+                    // Add the key/combo
+                    mergedSequence.push(item);
                 }
-                encoder_actions.push(enc);
-                encoder_icons.push(enc_icon);
             }
-
-            const jsonOutput = { layer_names, secret_layer: secretLayer, default_layer: defaultLayer, keymap, icons, encoder_icons, encoder_actions };
-            let output = JSON.stringify(jsonOutput, null, 2);
-            output = output.replace(/ {4}/g, '  ')
-                           .replace(/default_layer": 1,/g, 'default_layer": 1,\n\n')
-                           .replace(/\],\n  "icons"/g, '],\n\n  "icons"')
-                           .replace(/\],\n  "encoder_icons"/g, '],\n\n  "encoder_icons"')
-                           .replace(/\],\n  "encoder_actions"/g, '],\n\n  "encoder_actions"');
-
-            document.getElementById('output').value = output;
+            
+            // Flush any remaining text
+            if (stringBuffer) {
+                mergedSequence.push({
+                    type: 'string',
+                    value: stringBuffer
+                });
+            }
+            // Add any remaining delays
+            pendingDelays.forEach(d => mergedSequence.push(d));
+            
+            const json = JSON.stringify(mergedSequence, null, 2);
+            document.getElementById('jsonOutput').value = json;
         }
-
-        function saveKeymap() {
-            const text = document.getElementById('output').value.trim();
-            if (!text) return alert('Generate first!');
-            const blob = new Blob([text], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `keymap_${new Date().toISOString().slice(0,10)}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
+        
+        function copyJSON() {
+            const textarea = document.getElementById('jsonOutput');
+            if (!textarea.value) {
+                alert('Generate sequence first!');
+                return;
+            }
+            
+            textarea.select();
+            document.execCommand('copy');
+            alert('Copied to clipboard!');
         }
-
-        function toggleHelp() { window.open('help.html', '_blank'); }
-
-        updateLayerCount();
+        
+        function openHelp() {
+            console.log('openHelp called');
+            const modal = document.getElementById('helpModal');
+            console.log('Modal element:', modal);
+            if (modal) {
+                modal.style.display = 'block';
+            } else {
+                console.error('Modal element not found!');
+            }
+        }
+        
+        function closeHelp(event) {
+            const modal = document.getElementById('helpModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Close modal on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeHelp();
+            }
+        });
     </script>
 </body>
 </html>
