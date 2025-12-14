@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <title>MP1 Macropad User Guide</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Orbitron + Fira Code -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/fira@4.0.1/fira.css" rel="stylesheet">
     <style>
         * { box-sizing: border-box; }
         body {
@@ -22,7 +20,7 @@
             text-align:center;
             font-family:'Orbitron',sans-serif;
             font-weight:900;
-            font-size:3.6em;
+            font-size:3.5em;
             letter-spacing:5px;
             margin:0 0 40px;
             color:#ff8c42;
@@ -37,159 +35,564 @@
             background:#1a1625;
             padding:40px 50px;
             border-radius:20px;
-            border-left:12px solid #ff8c42;
             box-shadow:0 12px 50px rgba(0,0,0,0.9);
         }
         h2 {
-            color:#b19cd9;
+            color:#ff8c42;
             font-size:2em;
             margin-top:50px;
             border-bottom:2px solid #443355;
             padding-bottom:10px;
         }
-        pre {
-            background:#111;
-            color:#d4d4d4;
-            padding:20px;
-            border-radius:12px;
-            border:1px solid #444;
-            overflow-x:auto;
-            font-family:'Fira Code',Consolas,monospace;
-            font-size:1em;
-            line-height:1.5;
-            box-shadow:inset 0 4px 20px rgba(0,0,0,0.6);
+        h3 {
+            color:#b19cd9;
+            font-size:1.4em;
+            margin-top:30px;
         }
-        code {
-            background:#333;
-            padding:2px 8px;
-            border-radius:6px;
-            color:#a6e22e;
+        h4 {
+            color:#9d87c4;
+            font-size:1.1em;
+            margin-top:20px;
         }
-        ul {
+        p { margin:15px 0; }
+        ul, ol {
+            margin:10px 0;
             padding-left:30px;
         }
-        li {
-            margin:12px 0;
+        li { margin:8px 0; }
+        code {
+            background:#0f0f1e;
+            padding:2px 6px;
+            border-radius:4px;
+            color:#ffa666;
+            font-family:monospace;
+        }
+        pre {
+            background:#0f0f1e;
+            padding:20px;
+            border-radius:8px;
+            border:1px solid #444;
+            overflow-x:auto;
+            font-family:monospace;
+            color:#e0d8ff;
+        }
+        a {
+            color:#ffa666;
+            text-decoration:none;
+            transition:color 0.2s;
+        }
+        a:hover {
+            color:#ff8c42;
+            text-decoration:underline;
+        }
+        .toc {
+            background:#16213e;
+            padding:25px 30px;
+            border-radius:12px;
+            margin-bottom:40px;
+            border:2px solid #2d3a5f;
+			border-left: 4px solid #ff8c42;
+        }
+        .toc h2 {
+            margin-top:0;
+            border-bottom:none;
+            font-size:1.8em;
+        }
+        .toc ul {
+            list-style:none;
+            padding-left:0;
+        }
+        .toc li {
+            margin:10px 0;
+            padding-left:20px;
+        }
+        .toc li::before {
+            content:"▸ ";
+            color:#ff8c42;
+            margin-right:10px;
+        }
+        .toc a {
+            font-size:1.1em;
+            color:#b19cd9;
+        }
+        .toc a:hover {
+            color:#ff8c42;
+        }
+        table {
+            width:100%;
+            border-collapse:collapse;
+            margin:20px 0;
+        }
+        th, td {
+            border:1px solid #443355;
+            padding:12px;
+            text-align:left;
+        }
+        th {
+            background:#2d2139;
+            color:#ff8c42;
         }
         .highlight {
             color:#ff8c42;
             font-weight:bold;
         }
         .note {
-            background:#221c33;
-            border-left:5px solid #ff8c42;
-            padding:15px 20px;
-            margin:25px 0;
-            border-radius:8px;
+            background:#1f1829;
+            border-left:4px solid #ff8c42;
+            padding:15px;
+            margin:20px 0;
+            border-radius:4px;
         }
-        .footer {
+        footer {
             text-align:center;
-            margin-top:80px;
-            color:#888;
-            font-size:0.9em;
+            margin-top:60px;
+            padding-top:30px;
+            border-top:2px solid #443355;
+            color:#9d87c4;
         }
     </style>
 </head>
 <body>
-    <h1>MP1 USER GUIDE</h1>
+    <h1>MP1 MACROPAD</h1>
+    
     <div class="container">
-        <pre>
-=== GESTURES ===
-• Short tap encoder button (< 0.4s) → Open Menu 1 (Layer selection)
-• Long press encoder button (≥ 1.5s) → Open Menu 2 (Utilities)
-• Hold encoder button + turn clockwise → Toggle Jiggle (mouse wiggle)
-• Hold encoder button + turn counter-clockwise → Enter Secret Layer
-
-=== SECRET LAYER ===
-• Accessed by hold + counter-clockwise turn
-• Automatically exits after 15 seconds of inactivity
-• All activity (keys, encoder, menus) resets the timer
-
-=== USING THE CONFIGURATOR ===
-1. Load your current keymap.json (optional)
-2. Edit layers, keys, icons, encoder actions
-3. Click "<span class="highlight">Generate keymap.json</span>"
-4. Click "<span class="highlight">Save keymap.json</span>"
-5. Copy the file to your MP1 macropad
-6. Eject and reset – changes are live!
-
-  +-----------------------------------+
-  |                                   |
-  |     ___       +----------------+  |
-  |   /     \     |                |  |
-  |  |       |    |                |  |
-  |   \_____/     +----------------+  |
-  |                                   |
-  |   +---+   +---+   +---+   +---+   |
-  |   | 0 |   | 1 |   | 2 |   | 3 |   |
-  |   +---+   +---+   +---+   +---+   |
-  |                                   |
-  |   +---+   +---+   +---+   +---+   |
-  |   | 4 |   | 5 |   | 6 |   | 7 |   |
-  |   +---+   +---+   +---+   +---+   |
-  +-----------------------------------+
-
-=== KEY TYPES ===
-<span class="highlight">Website</span>
-• Full URL starting with http:// or https://
-• Example: https://github.com
-
-<span class="highlight">App (Windows only)</span>
-• Just type or paste the full path – <span class="highlight">win:</span> prefix is added automatically
-• Example: C:\Program Files\Google\Chrome\Application\chrome.exe
-
-<span class="highlight">String</span>
-• Plain text that will be typed
-• Perfect for emails, passwords, snippets
-
-<span class="highlight">Key Combo</span>
-• Up to 3 keys from dropdowns
-• Use LEFT_/RIGHT_ versions for side-specific modifiers
-• Example: CONTROL + SHIFT + T
-
-<span class="highlight">Consumer Control</span>
-• Media keys: PREV, PLAYPAUSE, NEXT, MUTE, VOL_DN, VOL_UP
-
-<span class="highlight">User Defined</span>
-• Raw Python / CircuitPython code
-• Examples:
-  - Keycode.F13
-  - (Keycode.CONTROL, Keycode.SHIFT, Keycode.ESCAPE)
-
-=== ICON FIELD ===
-• Max 4 characters (shown on OLED next to key)
-• Uppercase recommended for best readability
-• "---" = no icon
-
-=== ENCODER ACTIONS ===
-<span class="highlight">None</span> – disabled
-<span class="highlight">Volume</span> – turn for volume
-<span class="highlight">Zoom</span> – turn for zoom in/out
-<span class="highlight">Scroll</span> – turn for page up/down
-<span class="highlight">Custom</span> – write your own dictionary
-  • Also supports custom 4-character icon (e.g. MOUSE, VOL+, ZOOM)
-
-
-=== DEFAULT & SECRET LAYERS ===
-• Only one Default layer (boot layer)
-• Only one Secret layer
-• A layer cannot be both
-
-=== QUICK START EXAMPLE ===
-Want a media + app launcher layer?
-1. Set Layer 0 as Default
-2. Key 0 → App → C:\Program Files\Spotify\Spotify.exe (win: added automatically)
-3. Key 1 → Consumer Control → PLAYPAUSE
-4. Key 2 → Consumer Control → NEXT
-5. Encoder → Volume
-6. Generate → Save → Flash → Done!
-
-Enjoy your fully customized MP1 macropad!
-        </pre>
-
-        <div class="footer">
-
+	
+	        <!-- Overview -->
+        <h2 id="overview">Overview</h2>
+        <p>The MP1 Macropad is a programmable input device with 8 keys, a rotary encoder, and an OLED display. It can type text, run keyboard shortcuts, control media, open applications, and more.</p>
+	
+        <!-- Quick Reference -->
+        <h2 id="quick-reference">Quick Reference Card</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>Command</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Open layers menu</td>
+                    <td>Short press encoder</td>
+                </tr>
+                <tr>
+                    <td>Open settings</td>
+                    <td>Long press encoder (1.5s)</td>
+                </tr>
+                <tr>
+                    <td>Exit menu</td>
+                    <td>Medium press encoder (0.4s)</td>
+                </tr>
+                <tr>
+                    <td>Toggle jiggle</td>
+                    <td>Hold + turn clockwise</td>
+                </tr>
+                <tr>
+                    <td>Toggle secret</td>
+                    <td>Hold + turn counter-clockwise</td>
+                </tr>
+                <tr>
+                    <td>Config menu</td>
+                    <td>Settings → CONFIG</td>
+                </tr>
+                <tr>
+                    <td>Timer</td>
+                    <td>Settings → POMODORO</td>
+                </tr>
+                <tr>
+                    <td>Edit keymap</td>
+                    <td>Settings → KEYMAPPER</td>
+                </tr>
+            </tbody>
+        </table>
+	
+        <!-- Table of Contents -->
+        <div class="toc">
+            <h2>Contents</h2>
+            <ul>
+                <li><a href="#basic-controls">Basic Controls</a></li>
+                <li><a href="#layers">Layers</a></li>
+                <li><a href="#settings-menu">Settings Menu</a></li>
+                <li><a href="#pomodoro-timer">Pomodoro Timer</a></li>
+                <li><a href="#mouse-jiggle">Mouse Jiggle</a></li>
+                <li><a href="#secret-layer">Secret Layer</a></li>
+                <li><a href="#configuration-menu">Configuration Menu</a></li>
+                <li><a href="#keymap-configurator">Keymap Configurator (Web Tool)</a></li>
+                <li><a href="#macro-recorder">Macro Recorder (Web Tool)</a></li>
+                <li><a href="#tips-tricks">Tips & Tricks</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+                <li><a href="#file-structure">File Structure Reference</a></li>
+            </ul>
         </div>
+
+        <!-- Basic Controls -->
+        <h2 id="basic-controls">Basic Controls</h2>
+        
+        <h3>The Encoder (Rotary Knob)</h3>
+        <p><strong>Turn:</strong> Performs the action assigned to the current layer (scroll, adjust volume, zoom, etc.)</p>
+        
+        <p><strong>Press:</strong></p>
+        <ul>
+            <li><strong>Short press</strong> (&lt; 0.4s): Opens the Layers menu</li>
+            <li><strong>Medium press</strong> (0.4-1.5s): Exits current menu</li>
+            <li><strong>Long press</strong> (&gt; 1.5s): Opens Settings menu</li>
+        </ul>
+        
+        <p><strong>Turn while holding:</strong></p>
+        <ul>
+            <li><strong>Hold + turn clockwise:</strong> Toggle mouse jiggle on/off</li>
+            <li><strong>Hold + turn counter-clockwise:</strong> Toggle secret layer</li>
+        </ul>
+
+        <h3>The 8 Keys</h3>
+        <p>Each key can be programmed to:</p>
+        <ul>
+            <li>Type text or passwords</li>
+            <li>Execute keyboard shortcuts</li>
+            <li>Open URLs</li>
+            <li>Launch applications</li>
+            <li>Control media playback</li>
+            <li>Run complex macro sequences</li>
+        </ul>
+        <p>The OLED display shows icons or labels for what each key does.</p>
+
+        <!-- Layers -->
+        <h2 id="layers">Layers</h2>
+        <p>Layers are different "pages" of key assignments. Think of them like function keys on a keyboard - the same physical keys do different things on each layer.</p>
+
+        <h3>Switching Layers</h3>
+        <ol>
+            <li><strong>Short press</strong> the encoder</li>
+            <li>Turn the encoder to select a layer</li>
+            <li><strong>Short press</strong> again to switch to that layer</li>
+        </ol>
+
+        <p><strong>Default Layers (as configured):</strong></p>
+        <ul>
+            <li><strong>LOGINS:</strong> Quick access to credentials and password manager</li>
+            <li><strong>DATA:</strong> Text snippets, formatting shortcuts</li>
+            <li><strong>MEDIA:</strong> Media controls and volume</li>
+            <li><strong>SEQUENCES:</strong> Complex macro sequences</li>
+        </ul>
+
+        <!-- Settings Menu -->
+        <h2 id="settings-menu">Settings Menu</h2>
+        <p>Access advanced features and tools.</p>
+
+        <h3>Opening Settings</h3>
+        <p><strong>Long press</strong> the encoder (hold for 1.5+ seconds)</p>
+
+        <h3>Settings Options</h3>
+        <ul>
+            <li><strong>POMODORO</strong> - Opens the Pomodoro timer</li>
+            <li><strong>CONFIG</strong> - Adjust timing and behavior settings</li>
+            <li><strong>KEYMAPPER</strong> - Opens the web-based keymap configurator</li>
+            <li><strong>ABOUT</strong> - Opens the help documentation</li>
+            <li><strong>EXIT</strong> - Close the settings menu</li>
+        </ul>
+
+        <h3>Navigation</h3>
+        <ul>
+            <li><strong>Turn encoder:</strong> Scroll through options</li>
+            <li><strong>Short press:</strong> Select the highlighted option</li>
+            <li><strong>Medium press:</strong> Exit settings menu</li>
+        </ul>
+
+        <!-- Pomodoro Timer -->
+        <h2 id="pomodoro-timer">Pomodoro Timer</h2>
+        <p>A productivity timer built into your macropad.</p>
+
+        <h3>Opening the Timer</h3>
+        <ol>
+            <li>Long press encoder → Settings menu</li>
+            <li>Select <strong>POMODORO</strong></li>
+            <li>Press encoder to open</li>
+        </ol>
+
+        <h3>Timer Controls</h3>
+        <p>The display shows 8 key controls:</p>
+        <ul>
+            <li><strong>SET:</strong> Adjust timer duration (turn encoder while this is selected)</li>
+            <li><strong>START:</strong> Begin countdown</li>
+            <li><strong>PAUSE:</strong> Pause/resume timer</li>
+            <li><strong>RESET:</strong> Reset to set duration</li>
+            <li><strong>+5:</strong> Add 5 minutes</li>
+            <li><strong>-5:</strong> Subtract 5 minutes</li>
+            <li><em>(empty keys):</em> Not assigned</li>
+        </ul>
+
+        <p><strong>Encoder actions in timer:</strong></p>
+        <ul>
+            <li><strong>Turn:</strong> Adjust time when SET is active</li>
+            <li><strong>Press:</strong> Exit timer</li>
+        </ul>
+
+        <h3>When Timer Completes</h3>
+        <p>The display flashes "DONE" on a blank screen.</p>
+        <ul>
+            <li><strong>Single tap encoder:</strong> Dismiss alert and return to last layer (timer clears to 00:00)</li>
+            <li><strong>Double tap encoder:</strong> Dismiss alert and return to timer menu</li>
+        </ul>
+        <div class="note">
+            <strong>Note:</strong> During the alert, all keys and encoder rotation are blocked until you press the encoder.
+        </div>
+
+        <!-- Mouse Jiggle -->
+        <h2 id="mouse-jiggle">Mouse Jiggle</h2>
+        <p>Prevents your computer from going to sleep by moving the mouse cursor periodically.</p>
+
+        <h3>Activating Jiggle</h3>
+        <p><strong>Hold encoder + turn clockwise</strong></p>
+        <p>The display briefly shows "JIGGLE" and a "J" indicator appears in the top-right corner.</p>
+
+        <h3>Deactivating Jiggle</h3>
+        <p><strong>Hold encoder + turn clockwise</strong> again</p>
+        <p>The "J" indicator disappears.</p>
+
+        <h3>How It Works</h3>
+        <ul>
+            <li>Mouse moves 1 pixel in a random direction every 25-40 seconds</li>
+            <li>Movement is subtle and won't interfere with work</li>
+            <li>Immediately returns cursor to original position</li>
+        </ul>
+
+        <!-- Secret Layer -->
+        <h2 id="secret-layer">Secret Layer</h2>
+        <p>A hidden layer that times out after 15 seconds of inactivity. Perfect for sensitive functions.</p>
+
+        <h3>Accessing Secret Layer</h3>
+        <p><strong>Hold encoder + turn counter-clockwise</strong></p>
+
+        <h3>Exiting Secret Layer</h3>
+        <ul>
+            <li>Wait 15 seconds (automatic timeout)</li>
+            <li><strong>Hold encoder + turn counter-clockwise</strong> again (manual toggle)</li>
+        </ul>
+        <p>After timeout or manual exit, returns to your previous layer.</p>
+
+        <!-- Configuration Menu -->
+        <h2 id="configuration-menu">Configuration Menu</h2>
+        <p>Adjust timing, speeds, and timeouts to customize your macropad's behavior.</p>
+
+        <h3>Opening Config</h3>
+        <ol>
+            <li>Long press encoder → Settings menu</li>
+            <li>Select <strong>CONFIG</strong></li>
+            <li>Press encoder to open</li>
+        </ol>
+
+        <h3>Navigating Config</h3>
+        <ul>
+            <li><strong>Turn encoder:</strong> Scroll through settings</li>
+            <li><strong>Short press:</strong> Enter edit mode for selected setting</li>
+            <li><strong>Turn (while editing):</strong> Adjust value up/down</li>
+            <li><strong>Short press (while editing):</strong> Save and exit edit mode</li>
+        </ul>
+
+        <h3>Available Settings</h3>
+        <ul>
+            <li><strong>LONG PRESS</strong> - Duration for long press detection (0.5-3.0s)</li>
+            <li><strong>MED PRESS</strong> - Duration for medium press detection (0.1-1.0s)</li>
+            <li><strong>HOLD TURN</strong> - Rotations needed for hold+turn gestures (1-10)</li>
+            <li><strong>HOLD MIN</strong> - Minimum hold duration for gestures (0.1-1.0s)</li>
+            <li><strong>SECRET T O</strong> - Secret layer timeout (5-60s)</li>
+            <li><strong>LAYER T O</strong> - Layers menu timeout (3-30s)</li>
+            <li><strong>UTILS T O</strong> - Settings menu timeout (5-60s)</li>
+            <li><strong>ENC SP FS</strong> - Encoder fast speed threshold (0.01-0.1s)</li>
+			<li><strong>ENC * FAST</strong> - Fast rotation multiplier (1-10)</li>
+            <li><strong>ENC SP MED</strong> - Encoder medium speed threshold (0.02-0.2s)</li>
+            <li><strong>ENC * MED</strong> - Medium rotation multiplier (1-5)</li>
+        </ul>
+        <ul>
+            <li><strong>RESET DFLT</strong> - Restore all settings to defaults (from default.json)</li>
+            <li><strong>EXIT</strong> - Close configuration menu</li>
+        </ul>
+
+        <!-- Keymap Configurator -->
+        <h2 id="keymap-configurator">Keymap Configurator (Web Tool)</h2>
+        <p>A web-based tool for customizing your key assignments without coding.</p>
+
+        <h3>Opening the Configurator</h3>
+        <ol>
+            <li>Visit: <a href="https://mp1-configurator.theornerymaker.com" target="_blank">https://mp1-configurator.theornerymaker.com</a></li>
+            <li>Or from Settings → <strong>KEYMAPPER</strong></li>
+        </ol>
+
+        <h3>Using the Configurator</h3>
+        <ol>
+            <li><strong>Select a layer</strong> from the dropdown</li>
+            <li><strong>Click a key</strong> to edit it</li>
+            <li><strong>Choose action type:</strong>
+                <ul>
+                    <li>String (type text)</li>
+                    <li>Key (single key press)</li>
+                    <li>Combo (keyboard shortcut)</li>
+                    <li>URL (open website)</li>
+                    <li>App (launch application)</li>
+                    <li>Consumer Control (media keys)</li>
+                    <li>Sequence (Allows mapping of multiple keys, combos, strings and delays)</li>
+                    <li>User Defined (advanced JSON editing)</li>
+                </ul>
+            </li>
+            <li><strong>Set the icon</strong> (1-3 characters to display on OLED)</li>
+            <li><strong>Assign encoder action</strong> for the layer</li>
+            <li><strong>Download keymap.json</strong> when finished</li>
+            <li><strong>Copy to CIRCUITPY drive</strong> (replaces existing keymap.json)
+                <ul>
+                    <li>To enable programming mode, hold encoder button on boot</li>
+                    <li>Device will show up as a USB storage device</li>
+                    <li>Rename existing keymap.json to save as backup in case of errors in new file</li>
+                    <li>Copy new keymap.json to the root of the drive (will not load from sub-folders)</li>
+                </ul>
+            </li>
+        </ol>
+
+        <!-- Macro Recorder -->
+        <h2 id="macro-recorder">Macro Recorder (Web Tool)</h2>
+        <p>Record keyboard and mouse actions, then convert them to macros.</p>
+
+        <h3>Opening the Recorder</h3>
+        <ol>
+            <li>Visit: <a href="https://mp1-macrorecorder.theornerymaker.com" target="_blank">https://mp1-macrorecorder.theornerymaker.com</a></li>
+            <li>Or from Keymap Configurator → "Macro Recorder" button</li>
+        </ol>
+
+        <h3>Recording a Macro</h3>
+        <ol>
+            <li><strong>Click "Start Recording"</strong></li>
+            <li><strong>Perform your actions</strong> (type, click, shortcuts, etc.)</li>
+            <li><strong>Click "Stop Recording"</strong></li>
+            <li>Review the captured sequence</li>
+        </ol>
+
+        <h3>Capture Timing Options</h3>
+        <ul>
+            <li><strong>ON:</strong> Records exact delays between actions</li>
+            <li><strong>OFF:</strong> Uses a fixed delay (adjustable, default 100ms)</li>
+        </ul>
+
+        <h3>Editing the Macro</h3>
+        <ul>
+            <li><strong>Delete actions:</strong> Click the ✕ button</li>
+            <li><strong>Edit delays:</strong> Change the number in delay boxes</li>
+            <li><strong>Reorder:</strong> (Manual editing of JSON)</li>
+        </ul>
+
+        <h3>Using the Macro</h3>
+        <ol>
+            <li><strong>Copy the JSON</strong> from the output box</li>
+            <li><strong>Paste into Keymap Configurator</strong> as a User Defined action</li>
+            <li>Assign to a key</li>
+            <li>Download and install keymap</li>
+        </ol>
+
+        <!-- Tips & Tricks -->
+        <h2 id="tips-tricks">Tips & Tricks</h2>
+
+        <h3>Avoid Locking Yourself Out</h3>
+        <p>Always keep at least one key as TAB or ENTER so you can navigate if something goes wrong.</p>
+
+        <h3>Layer Organization</h3>
+        <ul>
+            <li><strong>Layer 1 (default):</strong> Most frequently used actions</li>
+            <li><strong>Secret layer:</strong> Sensitive credentials</li>
+            <li><strong>Other layers:</strong> Organized by context (work, media, gaming, etc.)</li>
+        </ul>
+
+        <h3>Encoder Functions</h3>
+        <p>Make your encoder context-aware:</p>
+        <ul>
+            <li><strong>Work layer:</strong> Zoom in/out</li>
+            <li><strong>Media layer:</strong> Volume control</li>
+            <li><strong>Browser layer:</strong> Scroll or tab switching</li>
+        </ul>
+
+        <h3>Timeout Adjustments</h3>
+        <ul>
+            <li><strong>Short timeouts (3-5s):</strong> Faster workflow, less accidental triggers</li>
+            <li><strong>Long timeouts (10-30s):</strong> More forgiving, better for browsing</li>
+        </ul>
+
+        <h3>File Management</h3>
+        <ul>
+            <li><strong>Always backup keymap.json</strong> before making changes</li>
+            <li>Keep <strong>default.json</strong> safe - it's your reset point</li>
+            <li><strong>settings.json</strong> stores your timing preferences</li>
+        </ul>
+
+        <h3>Macro Best Practices</h3>
+        <ul>
+            <li>Add small delays (50-100ms) between actions for reliability</li>
+            <li>Test macros on non-critical tasks first</li>
+            <li>Use TAB instead of mouse clicks when possible (more reliable)</li>
+        </ul>
+
+        <!-- Troubleshooting -->
+        <h2 id="troubleshooting">Troubleshooting</h2>
+
+        <h4>Keys not working:</h4>
+        <ul>
+            <li>Check that keymap.json is on the CIRCUITPY drive</li>
+            <li>Verify the JSON syntax is valid</li>
+            <li>Try the default keymap</li>
+        </ul>
+
+        <h4>Timer not visible:</h4>
+        <ul>
+            <li>Timer shows in top bar on all layers</li>
+            <li>Only visible when timer is running or set</li>
+        </ul>
+
+        <h4>Encoder feels unresponsive:</h4>
+        <ul>
+            <li>Adjust encoder speed settings in CONFIG menu</li>
+            <li>Check that you're not in a menu (medium press to exit)</li>
+        </ul>
+
+        <h4>Settings reset on power cycle:</h4>
+        <ul>
+            <li>Settings must be saved to settings.json</li>
+            <li>Use CONFIG menu to adjust and save</li>
+        </ul>
+
+        <h4>Mouse jiggle not working:</h4>
+        <ul>
+            <li>Check for "J" indicator in top-right</li>
+            <li>Some systems may ignore very small movements</li>
+        </ul>
+
+        <!-- File Structure -->
+        <h2 id="file-structure">File Structure Reference</h2>
+        <p><strong>On CIRCUITPY drive:</strong></p>
+        <pre>/
+├── code.py              (Main program)
+├── keymap.json          (Your key assignments)
+├── settings.json        (Timing and behavior settings)
+├── default.json         (Default settings backup)
+├── boot.py              (Disables USB Storage access)
+├── keymap.py            (Processes keymapping)
+├── wiring.py            (Hardware pin definitions)
+└── lib/
+    └── macropad/
+        ├── display.py
+        ├── encoder.py
+        ├── keys.py
+        ├── launcher.py
+        ├── menu.py
+        ├── pomodoro.py
+        └── menus/
+            ├── config_menu.py
+            ├── layers.py
+            ├── pomodoro_menu.py
+            └── settings.py</pre>
+
+
+        <footer>
+            <p><strong>Need Help?</strong><br>
+            Visit: <a href="https://mp1-help.theornerymaker.com" target="_blank">https://mp1-help.theornerymaker.com</a></p>
+            <p><strong>Version:</strong> 1.0<br>
+            <strong>Last Updated:</strong> December 2025</p>
+        </footer>
     </div>
 </body>
 </html>
