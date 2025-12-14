@@ -175,6 +175,51 @@
             background: #1a1a2e;
             border-radius: 4px;
             border-left: 3px solid #ff8c42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .event-content {
+            flex: 1;
+        }
+        
+        .event-actions {
+            display: flex;
+            gap: 5px;
+            margin-left: 10px;
+        }
+        
+        .event-actions button {
+            padding: 4px 8px;
+            font-size: 0.8em;
+            min-width: auto;
+            background: #555;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        
+        .event-actions button:hover {
+            transform: translateY(-1px);
+        }
+        
+        .event-actions .edit-btn {
+            background: #3498db;
+        }
+        
+        .event-actions .edit-btn:hover {
+            background: #5dade2;
+        }
+        
+        .event-actions .delete-btn {
+            background: #e74c3c;
+        }
+        
+        .event-actions .delete-btn:hover {
+            background: #ec7063;
         }
         
         .event-item.keydown {
@@ -496,10 +541,12 @@
         <div class="section recording-section">
             <h2>Recording Tool</h2>
             <button class="help-button" onclick="event.stopPropagation(); openHelp();" title="Instructions">?</button>
+
             
-            <div id="recorderBox" class="recorder-box" onclick="focusRecorder()">
-                <div class="recorder-status" id="recorderStatus">Click to Focus</div>
-                <div class="recorder-hint" id="recorderHint">Click here, then press keys to record</div>
+            <div class="controls">
+                <button id="startBtn" onclick="startRecording()" class="success">Start Recording</button>
+                <button id="stopBtn" onclick="stopRecording()" disabled class="danger">Stop Recording</button>
+                <button onclick="clearRecording()">Clear Recording</button>
             </div>
             
             <div class="recorder-controls">
@@ -516,11 +563,11 @@
                     <input type="number" id="keyDelay" min="0" max="2" step="0.01" value="0.05">
                 </div>
             </div>
-            
-            <div class="controls">
-                <button id="startBtn" onclick="startRecording()" class="success">Start Recording</button>
-                <button id="stopBtn" onclick="stopRecording()" disabled class="danger">Stop Recording</button>
-                <button onclick="clearRecording()">Clear Recording</button>
+
+				            
+            <div id="recorderBox" class="recorder-box" onclick="focusRecorder()">
+                <div class="recorder-status" id="recorderStatus">Click to Focus</div>
+                <div class="recorder-hint" id="recorderHint">Click here, then press keys to record</div>
             </div>
             
             <div class="stats">
@@ -553,6 +600,7 @@
                 <button onclick="copyJSON()">Copy to Clipboard</button>
                 <button onclick="downloadJSON()">Download JSON</button>
 				</div>
+            <textarea id="jsonOutput" readonly placeholder="Generated JSON will appear here..."></textarea>
         </div>
     </div>
 
@@ -889,32 +937,77 @@
             
             list.innerHTML = events.map((event, i) => {
                 const relTime = ((event.time - startTime) / 1000).toFixed(3);
+                let content = '';
                 
                 if (event.type === 'delay') {
-                    return `<div class="event-item delay">
+                    content = `
                         <span class="event-time">[${relTime}s]</span>
-                        Delay: ${event.delay.toFixed(3)}s
-                    </div>`;
+                        Delay: <span class="event-key">${event.delay.toFixed(3)}s</span>`;
                 } else if (event.type === 'text') {
-                    return `<div class="event-item">
+                    content = `
                         <span class="event-time">[${relTime}s]</span>
-                        Text: <span class="event-key">"${event.text}"</span>
-                    </div>`;
+                        Text: <span class="event-key">"${event.text}"</span>`;
                 } else if (event.type === 'keydown') {
-                    return `<div class="event-item keydown">
+                    content = `
                         <span class="event-time">[${relTime}s]</span>
-                        Key Down: <span class="event-key">${event.key}</span>
-                    </div>`;
+                        Key Down: <span class="event-key">${event.key}</span>`;
                 } else if (event.type === 'keyup') {
-                    return `<div class="event-item keyup">
+                    content = `
                         <span class="event-time">[${relTime}s]</span>
-                        Key Up: <span class="event-key">${event.key}</span>
-                    </div>`;
+                        Key Up: <span class="event-key">${event.key}</span>`;
                 }
+                
+                const borderClass = event.type === 'keydown' ? 'keydown' : 
+                                   event.type === 'keyup' ? 'keyup' : 
+                                   event.type === 'delay' ? 'delay' : '';
+                
+                return `<div class="event-item ${borderClass}">
+                    <div class="event-content">${content}</div>
+                    <div class="event-actions">
+                        <button class="edit-btn" onclick="editEvent(${i})">✎</button>
+                        <button class="delete-btn" onclick="deleteEvent(${i})">✕</button>
+                    </div>
+                </div>`;
             }).join('');
             
             // Auto-scroll to bottom
             list.scrollTop = list.scrollHeight;
+        }
+        
+        function deleteEvent(index) {
+            if (confirm('Delete this event?')) {
+                events.splice(index, 1);
+                displayEvents();
+            }
+        }
+        
+        function editEvent(index) {
+            const event = events[index];
+            
+            if (event.type === 'delay') {
+                const newDelay = prompt('Edit delay (seconds):', event.delay.toFixed(3));
+                if (newDelay !== null) {
+                    const parsed = parseFloat(newDelay);
+                    if (!isNaN(parsed) && parsed >= 0) {
+                        events[index].delay = parsed;
+                        displayEvents();
+                    } else {
+                        alert('Invalid delay value. Must be a positive number.');
+                    }
+                }
+            } else if (event.type === 'text') {
+                const newText = prompt('Edit text:', event.text);
+                if (newText !== null) {
+                    events[index].text = newText;
+                    displayEvents();
+                }
+            } else if (event.type === 'keydown' || event.type === 'keyup') {
+                const newKey = prompt(`Edit key (${event.type}):`, event.key);
+                if (newKey !== null && newKey.trim() !== '') {
+                    events[index].key = newKey.trim();
+                    displayEvents();
+                }
+            }
         }
         
         function generateSequence() {
