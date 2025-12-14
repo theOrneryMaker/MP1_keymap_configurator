@@ -35,6 +35,7 @@
             background:#1a1625;
             padding:40px 50px;
             border-radius:20px;
+            border-left:12px solid #ff8c42;
             box-shadow:0 12px 50px rgba(0,0,0,0.9);
         }
         h2 {
@@ -91,7 +92,6 @@
             border-radius:12px;
             margin-bottom:40px;
             border:2px solid #2d3a5f;
-			border-left: 4px solid #ff8c42;
         }
         .toc h2 {
             margin-top:0;
@@ -156,74 +156,10 @@
     <h1>MP1 MACROPAD</h1>
     
     <div class="container">
-	
-	        <!-- Overview -->
+
+        <!-- Overview -->
         <h2 id="overview">Overview</h2>
         <p>The MP1 Macropad is a programmable input device with 8 keys, a rotary encoder, and an OLED display. It can type text, run keyboard shortcuts, control media, open applications, and more.</p>
-	
-        <!-- Quick Reference -->
-        <h2 id="quick-reference">Quick Reference Card</h2>
-        <table>
-            <thead>
-                <tr>
-                    <th>Action</th>
-                    <th>Command</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr>
-                    <td>Open layers menu</td>
-                    <td>Short press encoder</td>
-                </tr>
-                <tr>
-                    <td>Open settings</td>
-                    <td>Long press encoder (1.5s)</td>
-                </tr>
-                <tr>
-                    <td>Exit menu</td>
-                    <td>Medium press encoder (0.4s)</td>
-                </tr>
-                <tr>
-                    <td>Toggle jiggle</td>
-                    <td>Hold + turn clockwise</td>
-                </tr>
-                <tr>
-                    <td>Toggle secret</td>
-                    <td>Hold + turn counter-clockwise</td>
-                </tr>
-                <tr>
-                    <td>Config menu</td>
-                    <td>Settings → CONFIG</td>
-                </tr>
-                <tr>
-                    <td>Timer</td>
-                    <td>Settings → POMODORO</td>
-                </tr>
-                <tr>
-                    <td>Edit keymap</td>
-                    <td>Settings → KEYMAPPER</td>
-                </tr>
-            </tbody>
-        </table>
-	
-        <!-- Table of Contents -->
-        <div class="toc">
-            <h2>Contents</h2>
-            <ul>
-                <li><a href="#basic-controls">Basic Controls</a></li>
-                <li><a href="#layers">Layers</a></li>
-                <li><a href="#settings-menu">Settings Menu</a></li>
-                <li><a href="#pomodoro-timer">Pomodoro Timer</a></li>
-                <li><a href="#mouse-jiggle">Mouse Jiggle</a></li>
-                <li><a href="#secret-layer">Secret Layer</a></li>
-                <li><a href="#configuration-menu">Configuration Menu</a></li>
-                <li><a href="#keymap-configurator">Keymap Configurator (Web Tool)</a></li>
-                <li><a href="#macro-recorder">Macro Recorder (Web Tool)</a></li>
-                <li><a href="#tips-tricks">Tips & Tricks</a></li>
-                <li><a href="#troubleshooting">Troubleshooting</a></li>
-                <li><a href="#file-structure">File Structure Reference</a></li>
-            </ul>
-        </div>
 
         <!-- Basic Controls -->
         <h2 id="basic-controls">Basic Controls</h2>
@@ -244,6 +180,26 @@
             <li><strong>Hold + turn counter-clockwise:</strong> Toggle secret layer</li>
         </ul>
 
+        <!-- Table of Contents -->
+        <div class="toc">
+
+        <h2>Contents</h2>
+			<ul>
+				<li><a href="#layers">Layers</a></li>
+				<li><a href="#settings-menu">Settings Menu</a></li>
+				<li><a href="#pomodoro-timer">Pomodoro Timer</a></li>
+				<li><a href="#mouse-jiggle">Mouse Jiggle</a></li>
+				<li><a href="#secret-layer">Secret Layer</a></li>
+				<li><a href="#configuration-menu">Configuration Menu</a></li>
+				<li><a href="#keymap-configurator">Keymap Configurator (Web Tool)</a></li>
+				<li><a href="#macro-recorder">Macro Recorder (Web Tool)</a></li>
+				<li><a href="#tips-tricks">Tips & Tricks</a></li>
+				<li><a href="#troubleshooting">Troubleshooting</a></li>
+				<li><a href="#file-structure">File Structure Reference</a></li>
+				<li><a href="#quick-reference">Quick Reference Card</a></li>
+			</ul>
+		</div>
+		
         <h3>The 8 Keys</h3>
         <p>Each key can be programmed to:</p>
         <ul>
@@ -395,13 +351,13 @@
             <li><strong>MED PRESS</strong> - Duration for medium press detection (0.1-1.0s)</li>
             <li><strong>HOLD TURN</strong> - Rotations needed for hold+turn gestures (1-10)</li>
             <li><strong>HOLD MIN</strong> - Minimum hold duration for gestures (0.1-1.0s)</li>
-            <li><strong>SECRET T O</strong> - Secret layer timeout (5-60s)</li>
-            <li><strong>LAYER T O</strong> - Layers menu timeout (3-30s)</li>
-            <li><strong>UTILS T O</strong> - Settings menu timeout (5-60s)</li>
-            <li><strong>ENC SP FS</strong> - Encoder fast speed threshold (0.01-0.1s)</li>
-			<li><strong>ENC * FAST</strong> - Fast rotation multiplier (1-10)</li>
-            <li><strong>ENC SP MED</strong> - Encoder medium speed threshold (0.02-0.2s)</li>
-            <li><strong>ENC * MED</strong> - Medium rotation multiplier (1-5)</li>
+            <li><strong>SECRET TO</strong> - Secret layer timeout (5-60s)</li>
+            <li><strong>LAYER TO</strong> - Layers menu timeout (3-30s)</li>
+            <li><strong>UTILS TO</strong> - Settings menu timeout (5-60s)</li>
+            <li><strong>ENC FAST</strong> - Encoder fast speed threshold (0.01-0.1s)</li>
+            <li><strong>ENC MED</strong> - Encoder medium speed threshold (0.02-0.2s)</li>
+            <li><strong>MULT FAST</strong> - Fast rotation multiplier (1-10)</li>
+            <li><strong>MULT MED</strong> - Medium rotation multiplier (1-5)</li>
         </ul>
         <ul>
             <li><strong>RESET DFLT</strong> - Restore all settings to defaults (from default.json)</li>
@@ -447,6 +403,9 @@
             </li>
         </ol>
 
+        <h4>User-Defined JSON Mode</h4>
+        <p>For advanced users who want to paste in complete keymap JSON directly.</p>
+
         <!-- Macro Recorder -->
         <h2 id="macro-recorder">Macro Recorder (Web Tool)</h2>
         <p>Record keyboard and mouse actions, then convert them to macros.</p>
@@ -481,7 +440,7 @@
         <h3>Using the Macro</h3>
         <ol>
             <li><strong>Copy the JSON</strong> from the output box</li>
-            <li><strong>Paste into Keymap Configurator</strong> as a User Defined action</li>
+            <li><strong>Paste into Keymap Configurator</strong> as a Sequence action</li>
             <li>Assign to a key</li>
             <li>Download and install keymap</li>
         </ol>
@@ -586,6 +545,50 @@
             ├── pomodoro_menu.py
             └── settings.py</pre>
 
+        <!-- Quick Reference -->
+        <h2 id="quick-reference">Quick Reference Card</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Action</th>
+                    <th>Command</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Open layers menu</td>
+                    <td>Short press encoder</td>
+                </tr>
+                <tr>
+                    <td>Open settings</td>
+                    <td>Long press encoder (1.5s)</td>
+                </tr>
+                <tr>
+                    <td>Exit menu</td>
+                    <td>Medium press encoder (0.4s)</td>
+                </tr>
+                <tr>
+                    <td>Toggle jiggle</td>
+                    <td>Hold + turn clockwise</td>
+                </tr>
+                <tr>
+                    <td>Toggle secret</td>
+                    <td>Hold + turn counter-clockwise</td>
+                </tr>
+                <tr>
+                    <td>Config menu</td>
+                    <td>Settings → CONFIG</td>
+                </tr>
+                <tr>
+                    <td>Timer</td>
+                    <td>Settings → POMODORO</td>
+                </tr>
+                <tr>
+                    <td>Edit keymap</td>
+                    <td>Settings → KEYMAPPER</td>
+                </tr>
+            </tbody>
+        </table>
 
         <footer>
             <p><strong>Need Help?</strong><br>
