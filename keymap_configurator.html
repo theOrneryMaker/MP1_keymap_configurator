@@ -77,6 +77,131 @@
             border-color: #ff8c42;
         }
         
+        /* Textarea wrapper for positioning expand button */
+        .textarea-wrapper {
+            position: relative;
+        }
+        
+        /* Expand button in bottom-right corner */
+        .expand-button {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            width: 28px;
+            height: 28px;
+            background: #ff8c42;
+            border: none;
+            border-radius: 4px;
+            color: #0f0b1a;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        
+        .expand-button:hover {
+            background: #ffa666;
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,140,66,0.6);
+        }
+        
+        /* Modal overlay */
+        .json-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .json-modal.active {
+            display: flex;
+        }
+        
+        /* Modal content */
+        .json-modal-content {
+            background: #1a1625;
+            border-radius: 15px;
+            border: 2px solid #ff8c42;
+            width: 90%;
+            max-width: 1000px;
+            height: 80%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 10px 50px rgba(0,0,0,0.9);
+        }
+        
+        /* Modal header */
+        .json-modal-header {
+            padding: 20px 25px;
+            border-bottom: 2px solid #443355;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .json-modal-header h3 {
+            color: #ff8c42;
+            margin: 0;
+            font-size: 1.5em;
+        }
+        
+        .json-modal-close {
+            background: #ff4444;
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+        
+        .json-modal-close:hover {
+            background: #ff6666;
+            transform: rotate(90deg);
+        }
+        
+        /* Modal body */
+        .json-modal-body {
+            padding: 25px;
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .json-modal-body textarea {
+            flex: 1;
+            resize: none;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        /* Modal footer */
+        .json-modal-footer {
+            padding: 20px 25px;
+            border-top: 2px solid #443355;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+        }
+        
         button {
             background: #ff8c42;
             color: #000;
@@ -472,7 +597,8 @@
             addStep(type = 'string') {
                 this.sequence.push({
                     type: type,
-                    value: type === 'delay' ? 0.1 : (type === 'combo' ? [] : '')
+                    value: type === 'delay' ? 0.1 : (type === 'combo' ? [] : ''),
+                    multiplier: 1
                 });
                 this.render();
             }
@@ -501,7 +627,17 @@
             }
             
             getSequence() {
-                return this.sequence;
+                // Expand multipliers - if a step has multiplier > 1, duplicate it
+                const expandedSequence = [];
+                for (const step of this.sequence) {
+                    const multiplier = parseInt(step.multiplier) || 1;
+                    for (let i = 0; i < multiplier; i++) {
+                        // Create a copy without the multiplier field
+                        const { multiplier: _, ...stepWithoutMultiplier } = step;
+                        expandedSequence.push(stepWithoutMultiplier);
+                    }
+                }
+                return expandedSequence;
             }
             
             render() {
@@ -523,6 +659,9 @@
             }
             
             renderStep(step, index, builderIndex) {
+                // Ensure step has multiplier (default to 1 for older sequences)
+                if (!step.multiplier) step.multiplier = 1;
+                
                 const typeOptions = `
                     <option value="string" ${step.type === 'string' ? 'selected' : ''}>Type String</option>
                     <option value="key" ${step.type === 'key' ? 'selected' : ''}>Press Key</option>
@@ -563,6 +702,14 @@
                                 ${typeOptions}
                             </select>
                             ${valueInput}
+                            <div style="display: flex; align-items: center; gap: 5px; margin-left: 10px;">
+                                <label style="font-size: 0.9em; color: #b19cd9; white-space: nowrap;">×</label>
+                                <input type="number" value="${step.multiplier || 1}" 
+                                    min="1" max="100" 
+                                    title="Repeat this step X times"
+                                    onchange="sequenceBuilders[${builderIndex}].updateStep(${index}, 'multiplier', parseInt(this.value) || 1)"
+                                    style="width: 60px;">
+                            </div>
                         </div>
                     </div>
                 `;
@@ -999,9 +1146,14 @@
             let keyType = 'none';
             let keyValue = '';
             
+            console.log(`renderKeyConfig - Layer ${currentLayer}, Key ${keyIndex}:`, keyData);
+            
             if (keyData !== null && typeof keyData === 'object' && keyData.type) {
                 keyType = keyData.type;
                 keyValue = keyData.value;
+                console.log(`  - Detected type: ${keyType}, value:`, keyValue);
+            } else {
+                console.log(`  - No valid keyData (null, not object, or no type property)`);
             }
             
             const icon = keymapData.icons[currentLayer][keyIndex];
@@ -1024,7 +1176,7 @@
                         <option value="app" ${keyType === 'app' ? 'selected' : ''}>App</option>
                         <option value="cc" ${keyType === 'cc' ? 'selected' : ''}>Media Key</option>
                         <option value="sequence" ${keyType === 'sequence' ? 'selected' : ''}>Sequence</option>
-                        <option value="user" ${keyType === 'user' ? 'selected' : ''}>User Defined</option>
+                        <option value="user" ${keyType === 'user' ? 'selected' : ''}>Macro Recorder</option>
                     </select>
                     
                     <div id="keyInput-${keyIndex}">
@@ -1118,11 +1270,15 @@
             if (keyType === 'user') {
                 return `
                     <div class="label-with-button">
-                        <label style="margin: 0;">User Defined (JSON):</label>
+                        <label style="margin: 0;">Macro Recorder JSON:</label>
                         <button class="macro-recorder-button" onclick="openMacroRecorder()">Macro Recorder</button>
+                        <button class="macro-recorder-button" onclick="validateMacroJSON(${keyIndex})" style="background: #3498db;">Validate</button>
                     </div>
-                    <textarea id="keyValue-${keyIndex}" rows="3">${JSON.stringify(keyValue) || ''}</textarea>
-                    <small>Advanced: raw JSON format</small>
+                    <div class="textarea-wrapper">
+                        <textarea id="keyValue-${keyIndex}" rows="3">${JSON.stringify(keyValue) || ''}</textarea>
+                        <button class="expand-button" onclick="openJsonModal(${keyIndex})" title="Expand editor">⛶</button>
+                    </div>
+                    <small>Paste JSON from Macro Recorder here (auto-detects sequences)</small>
                 `;
             }
             
@@ -1151,7 +1307,7 @@
         }
 
         function saveCurrentKeyData(keyIndex) {
-            const keyType = document.getElementById(`keyType-${keyIndex}`).value;
+            let keyType = document.getElementById(`keyType-${keyIndex}`).value;
             
             if (keyType === 'none') {
                 keymapData.keymap[currentLayer][keyIndex] = null;
@@ -1172,9 +1328,47 @@
             } else if (keyType === 'user') {
                 try {
                     const textValue = document.getElementById(`keyValue-${keyIndex}`)?.value;
-                    value = textValue ? JSON.parse(textValue) : null;
+                    
+                    // Debug logging
+                    console.log('=== MACRO RECORDER FIELD DEBUG ===');
+                    console.log('Raw text value:', textValue);
+                    console.log('Text length:', textValue?.length);
+                    
+                    if (!textValue || textValue.trim() === '') {
+                        console.log('Field is empty');
+                        value = null;
+                    } else {
+                        // Try to parse
+                        value = JSON.parse(textValue);
+                        console.log('Parsed successfully:', value);
+                        console.log('Is array:', Array.isArray(value));
+                        
+                        // Auto-detect if this is a sequence (array of step objects)
+                        if (Array.isArray(value) && value.length > 0) {
+                            console.log('Checking if looks like sequence...');
+                            console.log('First element:', value[0]);
+                            
+                            // Check if it looks like a sequence (has type/value properties)
+                            const looksLikeSequence = value.every(step => 
+                                step && typeof step === 'object' && 'type' in step
+                            );
+                            
+                            console.log('Looks like sequence:', looksLikeSequence);
+                            
+                            if (looksLikeSequence) {
+                                // This is a sequence from the Macro Recorder
+                                // Change keyType to 'sequence' so it saves correctly
+                                keyType = 'sequence';
+                                console.log(`Auto-detected sequence in Macro Recorder field for key ${keyIndex}`);
+                            }
+                        }
+                    }
+                    console.log('=== END DEBUG ===');
                 } catch (e) {
-                    alert('Invalid JSON in user defined field');
+                    console.error('JSON Parse Error:', e);
+                    console.error('Error message:', e.message);
+                    console.error('Failed text:', document.getElementById(`keyValue-${keyIndex}`)?.value);
+                    alert('Invalid JSON in Macro Recorder field\n\nError: ' + e.message + '\n\nCheck browser console (F12) for details.');
                     return;
                 }
             } else {
@@ -1339,14 +1533,170 @@
                     
                     console.log('=== LOADING KEYMAP ===');
                     console.log('Full data:', data);
+                    console.log('Keymap structure check:');
+                    console.log('  - data.keymap exists:', !!data.keymap);
+                    console.log('  - data.keymap is array:', Array.isArray(data.keymap));
+                    if (data.keymap && data.keymap[0]) {
+                        console.log('  - Layer 0:', data.keymap[0]);
+                        console.log('  - Layer 0 is array:', Array.isArray(data.keymap[0]));
+                        console.log('  - Layer 0, Key 0:', data.keymap[0][0]);
+                    }
                     
                     // Load data
                     keymapData = data;
+                    
+                    // AUTO-CONVERT shorthand format to full format
+                    console.log('=== CHECKING FORMAT ===');
+                    let needsConversion = false;
+                    
+                    // Check if any key uses shorthand format
+                    if (data.keymap && Array.isArray(data.keymap)) {
+                        for (let layer of data.keymap) {
+                            if (Array.isArray(layer)) {
+                                for (let key of layer) {
+                                    if (key !== null && typeof key !== 'object') {
+                                        needsConversion = true;
+                                        break;
+                                    }
+                                    if (Array.isArray(key)) {
+                                        needsConversion = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (needsConversion) break;
+                        }
+                    }
+                    
+                    if (needsConversion) {
+                        console.log('Shorthand format detected - converting to full format...');
+                        
+                        // Convert keymap
+                        const mediaKeys = ['MUTE', 'VOL_UP', 'VOL_DOWN', 'PLAY_PAUSE', 'PLAYPAUSE', 
+                                          'PREV', 'NEXT', 'STOP', 'EJECT', 'FAST_FORWARD', 'REWIND'];
+                        
+                        let conversionStats = {
+                            string: 0,
+                            key: 0,
+                            combo: 0,
+                            url: 0,
+                            app: 0,
+                            cc: 0,
+                            null: 0
+                        };
+                        
+                        keymapData.keymap = data.keymap.map((layer, layerIdx) => {
+                            return layer.map((key, keyIdx) => {
+                                // null stays null
+                                if (key === null) {
+                                    conversionStats.null++;
+                                    return null;
+                                }
+                                
+                                // Already in full format
+                                if (typeof key === 'object' && !Array.isArray(key) && key.type) {
+                                    return key;
+                                }
+                                
+                                // Array = combo
+                                if (Array.isArray(key)) {
+                                    conversionStats.combo++;
+                                    console.log(`  Layer ${layerIdx}, Key ${keyIdx}: [${key.join(', ')}] → combo`);
+                                    return {type: 'combo', value: key};
+                                }
+                                
+                                // String - need to detect what type
+                                if (typeof key === 'string') {
+                                    // URL
+                                    if (key.startsWith('http://') || key.startsWith('https://')) {
+                                        conversionStats.url++;
+                                        console.log(`  Layer ${layerIdx}, Key ${keyIdx}: "${key.substring(0, 30)}..." → url`);
+                                        return {type: 'url', value: key};
+                                    }
+                                    // App (Windows app format)
+                                    if (key.startsWith('win:') || key.startsWith('mac:') || key.startsWith('linux:')) {
+                                        conversionStats.app++;
+                                        console.log(`  Layer ${layerIdx}, Key ${keyIdx}: "${key.substring(0, 30)}..." → app`);
+                                        return {type: 'app', value: key};
+                                    }
+                                    // Media key (check against known list)
+                                    if (mediaKeys.includes(key.toUpperCase())) {
+                                        conversionStats.cc++;
+                                        console.log(`  Layer ${layerIdx}, Key ${keyIdx}: "${key}" → media key (cc)`);
+                                        return {type: 'cc', value: key.toUpperCase()};
+                                    }
+                                    // Known keycode = key
+                                    if (KEYCODES.includes(key.toUpperCase())) {
+                                        conversionStats.key++;
+                                        console.log(`  Layer ${layerIdx}, Key ${keyIdx}: "${key}" → key`);
+                                        return {type: 'key', value: key.toUpperCase()};
+                                    }
+                                    // Everything else = string to type
+                                    conversionStats.string++;
+                                    console.log(`  Layer ${layerIdx}, Key ${keyIdx}: "${key}" → string`);
+                                    return {type: 'string', value: key};
+                                }
+                                
+                                // Unknown format - return null
+                                console.warn('Unknown key format:', key);
+                                return null;
+                            });
+                        });
+                        
+                        console.log('Conversion complete!');
+                        console.log('Stats:', conversionStats);
+                    } else {
+                        console.log('Full format detected - no conversion needed');
+                    }
+                    
                     numLayers = data.layer_names.length;
                     document.getElementById('numLayers').value = numLayers;
                     
+                    // Validate loaded data structure
+                    console.log('=== VALIDATING LOADED DATA ===');
+                    let validationPassed = true;
+                    
+                    // Check if keymap exists and has correct number of layers
+                    if (!keymapData.keymap || !Array.isArray(keymapData.keymap)) {
+                        console.error('ERROR: keymap is missing or not an array');
+                        validationPassed = false;
+                    } else if (keymapData.keymap.length !== numLayers) {
+                        console.warn(`WARNING: keymap has ${keymapData.keymap.length} layers but layer_names has ${numLayers}`);
+                    }
+                    
+                    // Check each layer
+                    for (let i = 0; i < Math.min(numLayers, keymapData.keymap?.length || 0); i++) {
+                        if (!Array.isArray(keymapData.keymap[i])) {
+                            console.error(`ERROR: Layer ${i} is not an array:`, keymapData.keymap[i]);
+                            validationPassed = false;
+                        } else if (keymapData.keymap[i].length !== 8) {
+                            console.warn(`WARNING: Layer ${i} has ${keymapData.keymap[i].length} keys (expected 8)`);
+                        } else {
+                            // Check each key in the layer
+                            for (let j = 0; j < 8; j++) {
+                                const key = keymapData.keymap[i][j];
+                                if (key !== null && typeof key === 'object' && key.type) {
+                                    console.log(`  ✓ Layer ${i}, Key ${j}: type=${key.type}, value=`, key.value);
+                                } else if (key === null) {
+                                    console.log(`  - Layer ${i}, Key ${j}: null (unassigned)`);
+                                } else {
+                                    console.warn(`  ⚠ Layer ${i}, Key ${j}: unexpected format:`, key);
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (!validationPassed) {
+                        alert('WARNING: Loaded keymap has structural issues. Check console (F12) for details.');
+                    }
+                    
+                    console.log('=== END VALIDATION ===');
+                    
                     // Clear existing sequence builders
                     sequenceBuilders = [];
+                    
+                    // Reset to layer 0 to avoid out-of-bounds
+                    currentLayer = 0;
                     
                     // Log sequences in data
                     data.keymap.forEach((layer, layerIdx) => {
@@ -1384,9 +1734,154 @@
             window.open('https://mp1-help.theornerymaker.com', '_blank');
         }
         
+        function validateMacroJSON(keyIndex) {
+            const textValue = document.getElementById(`keyValue-${keyIndex}`)?.value;
+            
+            console.log('=== VALIDATING MACRO JSON ===');
+            console.log('Raw value:', textValue);
+            console.log('Length:', textValue?.length);
+            
+            if (!textValue || textValue.trim() === '') {
+                alert('Field is empty. Paste JSON from Macro Recorder first.');
+                return;
+            }
+            
+            try {
+                const parsed = JSON.parse(textValue);
+                console.log('✓ Valid JSON');
+                console.log('Parsed value:', parsed);
+                console.log('Type:', typeof parsed);
+                console.log('Is array:', Array.isArray(parsed));
+                
+                if (Array.isArray(parsed)) {
+                    console.log('Array length:', parsed.length);
+                    
+                    // Check if it looks like a sequence
+                    const hasTypeProperty = parsed.every(item => 
+                        item && typeof item === 'object' && 'type' in item
+                    );
+                    
+                    if (hasTypeProperty) {
+                        console.log('✓ Looks like a sequence from Macro Recorder');
+                        console.log('First item:', parsed[0]);
+                        alert('✓ Valid JSON!\n\n' +
+                              'Format: Sequence array\n' +
+                              'Length: ' + parsed.length + ' steps\n' +
+                              'First step type: ' + parsed[0].type + '\n\n' +
+                              'This will be auto-detected as a sequence when you download.');
+                    } else {
+                        console.warn('⚠ Array but does not look like a sequence');
+                        alert('✓ Valid JSON (array with ' + parsed.length + ' items)\n\n' +
+                              '⚠ Warning: Does not look like a Macro Recorder sequence.\n' +
+                              'Expected objects with "type" property.');
+                    }
+                } else if (typeof parsed === 'object') {
+                    console.log('✓ Valid object');
+                    alert('✓ Valid JSON (object)\n\n' +
+                          'Note: Macro Recorder outputs arrays. This is an object.\n' +
+                          'It will be saved as-is.');
+                } else {
+                    console.log('✓ Valid but not array or object');
+                    alert('✓ Valid JSON\n\nType: ' + typeof parsed);
+                }
+                
+                console.log('=== END VALIDATION ===');
+            } catch (e) {
+                console.error('✗ Invalid JSON');
+                console.error('Error:', e.message);
+                console.error('Error at position:', e.message.match(/position (\d+)/)?.[1]);
+                
+                // Try to highlight the error location
+                let errorMsg = '✗ Invalid JSON\n\n' +
+                              'Error: ' + e.message + '\n\n';
+                
+                // Show first 100 chars of the text
+                if (textValue.length > 100) {
+                    errorMsg += 'First 100 characters:\n' + textValue.substring(0, 100) + '...\n\n';
+                }
+                
+                errorMsg += 'Check console (F12) for details.';
+                
+                alert(errorMsg);
+                console.log('=== END VALIDATION ===');
+            }
+        }
+        
         function openMacroRecorder() {
             window.open('macro_recorder.html', '_blank');
         }
+        
+        // JSON Modal functions
+        let currentModalKeyIndex = null;
+        
+        function openJsonModal(keyIndex) {
+            currentModalKeyIndex = keyIndex;
+            const textarea = document.getElementById(`keyValue-${keyIndex}`);
+            const modal = document.getElementById('jsonModal');
+            const modalTextarea = document.getElementById('modalJsonTextarea');
+            
+            if (textarea && modal && modalTextarea) {
+                modalTextarea.value = textarea.value;
+                modal.classList.add('active');
+            }
+        }
+        
+        function closeJsonModal() {
+            const modal = document.getElementById('jsonModal');
+            modal.classList.remove('active');
+            currentModalKeyIndex = null;
+        }
+        
+        function saveJsonModal() {
+            if (currentModalKeyIndex !== null) {
+                const textarea = document.getElementById(`keyValue-${currentModalKeyIndex}`);
+                const modalTextarea = document.getElementById('modalJsonTextarea');
+                
+                if (textarea && modalTextarea) {
+                    textarea.value = modalTextarea.value;
+                }
+            }
+            closeJsonModal();
+        }
+        
+        // Close modal when clicking outside
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('jsonModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeJsonModal();
+                    }
+                });
+            }
+        });
+        
+        // Close modal with ESC key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('jsonModal');
+                if (modal && modal.classList.contains('active')) {
+                    closeJsonModal();
+                }
+            }
+        });
     </script>
+    
+    <!-- JSON Editor Modal -->
+    <div id="jsonModal" class="json-modal">
+        <div class="json-modal-content">
+            <div class="json-modal-header">
+                <h3>JSON Editor</h3>
+                <button class="json-modal-close" onclick="closeJsonModal()">×</button>
+            </div>
+            <div class="json-modal-body">
+                <textarea id="modalJsonTextarea" placeholder="Enter JSON here..."></textarea>
+            </div>
+            <div class="json-modal-footer">
+                <button onclick="closeJsonModal()" style="background: #555;">Cancel</button>
+                <button onclick="saveJsonModal()">Save</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
