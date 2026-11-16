@@ -33,6 +33,13 @@ dt { color: var(--muted); } dd { margin: 0; font-family: var(--mono); overflow-w
 .rows div:first-child { border-top: 0; }
 .bad { color: var(--error); } .good { color: var(--ok); }
 .bar { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; margin: 10px 0 4px; }
+.files .f { display: flex; align-items: center; gap: 10px; padding: 6px 0; border-top: 1px solid var(--border); }
+.files .f:first-child { border-top: 0; }
+.files .f .n { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.files .f small { display: block; color: var(--muted); font-family: var(--mono); }
+.files .f button { width: auto; margin: 0; padding: 8px 12px; min-height: 40px; font-size: .9em; }
+.files h3 { font-size: .85em; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin: 10px 0 2px; }
+select { font: 1em var(--font); padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--panel); color: var(--text); }
 .bar i { display: block; height: 100%; width: 0; background: var(--orange); transition: width .2s; }
 </style>
 </head>
@@ -54,6 +61,15 @@ dt { color: var(--muted); } dd { margin: 0; font-family: var(--mono); overflow-w
     <button id="zipBtn" disabled>Choose firmware zip…</button>
     <input type="file" id="zipFile" accept=".zip,application/zip" hidden>
     <div id="fwOut"></div>
+  </div>
+
+  <div class="card">
+    <h2>Layers &amp; keys</h2>
+    <p class="hint">The macropad's layer files and QUICK KEYS key files. Save one to the phone to share it, or add files from the phone.</p>
+    <div id="lkList" class="files"><span class="hint">Connect to see them.</span></div>
+    <button id="lkAddBtn" disabled>Add from phone…</button>
+    <input type="file" id="lkFile" accept=".json,application/json" multiple hidden>
+    <div id="lkOut"></div>
   </div>
 
   <div class="card">
@@ -243,7 +259,7 @@ async function send(obj) {
     try { await writer.write(enc.encode(JSON.stringify(obj) + '\n')); } catch (e) { /* the read loop notices */ }
 }
 function onMessage(m) {
-    if (m.t === 'hello') { pad = m; if (helloWaiter) helloWaiter(true); }
+    if (m.t === 'hello') { pad = m; lk = null; if (helloWaiter) helloWaiter(true); setTimeout(loadLayerKeys, 600); }
     else if (m.t === 'state' && pad) Object.assign(pad, {layer: m.layer, free: m.free});
     else if (m.t === 'r') { const done = pending[m.id]; delete pending[m.id]; if (done) done(m); return; }
     else if (m.t === 'open') { send({c: 'opened', id: m.id, ok: false}); return; }     // (URL keys: the computer's job)
@@ -410,18 +426,142 @@ async function backup() {
         }
         const name = `MP1_backup_${(pad.profile || 'pad').replace(/[^\w-]+/g, '_')}_${new Date().toISOString().slice(0, 10)}.json`;
         const blob = new Blob([JSON.stringify({mp1_backup: 1, fw: pad.fw, made: new Date().toISOString(), files}, null, 1)], {type: 'application/json'});
-        if (APP) {
-            const why = APP.saveFile(name, b64(new Uint8Array(await blob.arrayBuffer())), 'application/json');
-            if (why) throw new Error(why);
-        } else {
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob); a.download = name; a.click();
-            setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-        }
+        await savePhone(name, new Uint8Array(await blob.arrayBuffer()), 'application/json');
         showRows('bkOut', [{ok: true, title: `Saved ${name}`, note: `${Object.keys(files).length} files, ${kb(blob.size)}. It's in the phone's Downloads.`}]);
     } catch (err) {
         showRows('bkOut', [{ok: false, title: 'Backup stopped: ' + err.message}]);
     } finally { working = false; render(); }
+}
+
+// ─── saving a file onto the phone (the app: its Downloads; Chrome: a download) ───
+async function savePhone(name, bytes, mime) {
+    if (APP) { const why = APP.saveFile(name, b64(bytes), mime); if (why) throw new Error(why); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([bytes], {type: mime})); a.download = name; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+}
+
+// ─── layers & keys: the files in layers/ and keys/, out to the phone and in from it (the same
+// checks as the configurator's drop card, app/shell.html checkDrop / copyDrop) ───
+const ADD_MAX = 512 * 1024;
+const ICON_FILE = 'linkicons.json';
+let lk = null;                                  // {layers: [[file, size]], keys: [[file, size]]}
+async function loadLayerKeys() {
+    if (!pad || working) return;
+    const pick = (items, re) => (items || []).filter(i => !i[1] && re.test(i[0])).map(i => [i[0], i[2] || 0]).sort();
+    lk = {layers: pick(await ls('layers'), /\.mp1layer\.json$/i), keys: pick(await ls('keys'), /^[1-8]\.mp1key\.json$/i)};
+    drawLayerKeys();
+}
+function drawLayerKeys() {
+    const box = $('lkList');
+    if (!pad || !lk) { box.innerHTML = '<span class="hint">Connect to see them.</span>'; return; }
+    const row = (dir, [n, size], label) => `<div class="f"><span class="n">${esc(label)}<small>${esc(n)} · ${kb(size)}</small></span>` +
+        `<button data-save="${esc(dir + '/' + n)}" ${working ? 'disabled' : ''}>Save to phone</button></div>`;
+    box.innerHTML = '<h3>Layers</h3>' + (lk.layers.length ? lk.layers.map(f => row('layers', f, f[0].replace(/\.mp1layer\.json$/i, '').toUpperCase())).join('')
+                                                          : '<p class="hint">No layer files (this keymap keeps its layers inside keymap.json).</p>') +
+                    '<h3>QUICK KEYS</h3>' + (lk.keys.length ? lk.keys.map(f => row('keys', f, 'Key ' + f[0][0])).join('') : '<p class="hint">No key files.</p>');
+}
+async function saveOne(path) {
+    if (working) return;
+    working = true; render();
+    try {
+        const base = path.split('/').pop();
+        const name = path.startsWith('keys/') ? 'quickkey' + base : base;
+        await savePhone(name, await readFile(path), 'application/json');
+        showRows('lkOut', [{ok: true, title: 'Saved ' + name, note: APP ? 'It\'s in the phone\'s Downloads.' : ''}]);
+    } catch (err) {
+        showRows('lkOut', [{ok: false, title: 'Not saved: ' + err.message}]);
+    } finally { working = false; render(); }
+}
+// A layer or key file's Link icons ("fa"), taken out of it (as shell.html splitIcons):
+// [the file's text without them, icons or null]. They go in linkicons.json, which the pages read.
+function splitIcons(text, kind) {
+    let d;
+    try { d = JSON.parse(text); } catch (e) { return [text, null]; }
+    const body = kind === 'key' ? (d && 'mp1_key' in d ? d.key : d) : (d && 'mp1_layer' in d ? d.layer : d);
+    if (!body || typeof body !== 'object') return [text, null];
+    const e = {keys: [], enc: '', chords: []};
+    let any = false;
+    if (kind === 'key') { if (body.fa) { e.key = body.fa; any = true; delete body.fa; } }
+    else {
+        (body.keys || []).forEach((k, i) => { e.keys[i] = (k && k.fa) || ''; if (k && k.fa) { any = true; delete k.fa; } });
+        if (body.encoder && body.encoder.fa) { e.enc = body.encoder.fa; any = true; delete body.encoder.fa; }
+        (body.chords || []).forEach((c, i) => { e.chords[i] = (c && c.fa) || ''; if (c && c.fa) { any = true; delete c.fa; } });
+        e.name = String(body.name || '').toUpperCase().slice(0, 10);
+    }
+    return any ? [JSON.stringify(d, null, 2) + '\n', e] : [text, null];
+}
+let addPlan = null;
+async function checkAdd(list) {
+    addPlan = null;
+    if (!lk) await loadLayerKeys();
+    const rows = [], plan = [], used = [];
+    const taken = lk.keys.map(k => +k[0][0]);
+    for (const f of list) {
+        const low = f.name.toLowerCase(), no = note => rows.push({ok: false, title: f.name, note});
+        if (f.size > ADD_MAX) { no(`Too big to copy over the link (${kb(f.size)}).`); continue; }
+        let text, d;
+        try { text = await f.text(); d = JSON.parse(text); } catch (e) { no('Isn\'t valid JSON: the macropad couldn\'t read it.'); continue; }
+        if (low.endsWith('.mp1layer.json')) {
+            const body = d && typeof d === 'object' ? ('mp1_layer' in d ? d.layer : d) : null;
+            if (!body || typeof body !== 'object' || 'layers' in body || typeof body.name !== 'string' || !body.name) { no('Not an MP1 layer file (export one from the Keymap tab\'s layer menu).'); continue; }
+            const lname = body.name.toUpperCase().slice(0, 10);
+            const there = lk.layers.some(x => x[0] === f.name);
+            const clash = !there && (pad.layers || []).includes(lname);
+            rows.push({ok: true, title: 'Layer ' + lname, note: there ? `Replaces layers/${f.name}.` : clash ? `A layer called ${lname} is already on the macropad: this one loads as ${lname.slice(0, 9)}2.` : 'A new layer.'});
+            plan.push({path: 'layers/' + f.name, text, kind: 'layer'});
+        } else if (low.endsWith('.mp1key.json')) {
+            if (!d || typeof d !== 'object' || 'mp1_layer' in d || 'layers' in d) { no('Not an MP1 key file (export one from a key\'s card in the Keymap tab).'); continue; }
+            const m = /(?:^|\D)([1-8])\.mp1key\.json$/i.exec(f.name);
+            const key = m && !used.includes(+m[1]) ? +m[1] : ([1, 2, 3, 4, 5, 6, 7, 8].find(n => !taken.includes(n) && !used.includes(n)) || [1, 2, 3, 4, 5, 6, 7, 8].find(n => !used.includes(n)));
+            if (!key) { no('All 8 QUICK KEYS keys are taken by the other files.'); continue; }
+            used.push(key);
+            rows.push({ok: true, title: `QUICK KEYS key ${key}`, note: `${taken.includes(key) ? 'Replaces' : 'Goes on'} key ${key} (from ${f.name}).`});
+            plan.push({path: `keys/${key}.mp1key.json`, text, kind: 'key', key});
+        } else no('For now: layer files (.mp1layer.json) and key files (.mp1key.json).');
+    }
+    if (!plan.length) return showRows('lkOut', rows.length ? rows : [{ok: false, title: 'Nothing picked'}]);
+    addPlan = plan;
+    rows.push({ok: 'info', title: 'Then the macropad restarts', note: 'To load them (a few seconds).'});
+    showRows('lkOut', rows, `<button class="primary" id="addGoBtn">Copy ${plan.length} to the macropad</button>`);
+    $('addGoBtn').onclick = runAdd;
+}
+async function runAdd() {
+    if (!addPlan || working) return;
+    const plan = addPlan;
+    addPlan = null;
+    working = true; render();
+    send({c: 'sync', on: true});
+    try {
+        for (const dir of new Set(plan.map(p => p.path.split('/')[0]))) {
+            const top = await ls('');
+            if (!(top || []).some(x => x[0] === dir)) await request({c: 'mkdir', path: dir});
+        }
+        let icons = null;
+        let i = 0;
+        for (const p of plan) {
+            $('lkOut').innerHTML = `<span class="hint">Copying ${esc(p.path)} (${++i} of ${plan.length})…</span>`;
+            const [text, e] = splitIcons(p.text, p.kind);
+            if (e) {
+                if (!icons) {
+                    try { icons = JSON.parse(new TextDecoder().decode(await readFile(ICON_FILE))); } catch (err) { icons = null; }
+                    icons = icons && icons.layers ? icons : {version: 1, layers: {}};
+                }
+                if (p.kind === 'key') {
+                    const qk = icons.layers['QUICK KEYS'] || (icons.layers['QUICK KEYS'] = {keys: [], enc: '', chords: []});
+                    qk.keys[p.key - 1] = e.key;
+                } else if (e.name) { const name = e.name; delete e.name; icons.layers[name] = e; }
+            }
+            await writeFile(p.path, enc.encode(text));
+        }
+        if (icons) await writeFile(ICON_FILE, enc.encode(JSON.stringify(icons, null, 2) + '\n'));
+        send({c: 'sync', on: false});
+        showRows('lkOut', [{ok: true, title: `Copied ${plan.length} file${plan.length > 1 ? 's' : ''}`, note: 'The macropad is restarting to load them; this reconnects by itself.'}]);
+        await request({c: 'restart'}).catch(() => {});
+    } catch (err) {
+        send({c: 'sync', on: false});
+        showRows('lkOut', [{ok: false, title: 'Copying stopped: ' + err.message, note: 'Whatever was copied before this is on the macropad. Try again.'}]);
+    } finally { working = false; lk = null; render(); }
 }
 
 // ─── drawing ───
@@ -434,7 +574,8 @@ function render(status) {
           `<dt>Layer</dt><dd>${esc(pad.layer)}</dd><dt>Free memory</dt><dd>${pad.free ? kb(pad.free) : '?'}</dd>`
         : `<dt>Status</dt><dd>${esc(status || (port ? 'Connecting…' : 'Not connected'))}</dd>`;
     $('connectBtn').textContent = on ? 'Connect another…' : 'Connect…';
-    $('zipBtn').disabled = $('backupBtn').disabled = !on || working;
+    $('zipBtn').disabled = $('backupBtn').disabled = $('lkAddBtn').disabled = !on || working;
+    drawLayerKeys();
 }
 
 if (serial) {
@@ -450,6 +591,9 @@ $('allBtn').addEventListener('click', () => connectNew(true));
 $('zipBtn').addEventListener('click', () => $('zipFile').click());
 $('zipFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) checkZip(f); });
 $('backupBtn').addEventListener('click', backup);
+$('lkList').addEventListener('click', e => { const b = e.target.closest('[data-save]'); if (b) saveOne(b.dataset.save); });
+$('lkAddBtn').addEventListener('click', () => $('lkFile').click());
+$('lkFile').addEventListener('change', e => { const list = [...e.target.files]; e.target.value = ''; if (list.length) checkAdd(list); });
 supported();
 render();
 autoConnect();
