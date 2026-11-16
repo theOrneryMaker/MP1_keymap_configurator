@@ -529,6 +529,8 @@ html {
                     </div>
                     <label for="mChordMode">Chords</label>
                     <select id="mChordMode" aria-label="Chords"><option value="bars">Bars (at each key's left)</option><option value="colors">Colors (one chord at a time)</option><option value="off">Off</option></select>
+                    <label for="mIconLook">Icons</label>
+                    <select id="mIconLook" aria-label="Icons"><option value="pad">As on the pad (pixels)</option><option value="original">Original (smooth)</option></select>
                     <label for="mSkin">Skin</label>
                     <select id="mSkin" aria-label="Skin"><option value="">Default</option></select>
                 </div>
@@ -916,18 +918,48 @@ html {
     // Icons the macropad draws (a key's or the encoder's text starting with a character from U+E000):
     // drawn here from the same Link icon, converted the way the configurator does (18 x 18 keys, 14 x 14
     // status row). Without Font Awesome, just the text is shown.
-    const PICON = 0xE000, iconCache = new Map();
+    const PICON = 0xE000, iconCache = new Map(), smoothCache = new Map();
+    let padEdits = {};                          // icons/edits.json on the pad: 'classes@size' -> your fixed pixels
+    // 'pad' (the pixels the pad shows) or 'original' (the icon itself, smooth); kept in this browser
+    function iconLook() { return options().iconLook === 'original' ? 'original' : 'pad'; }
     function faRows(cls, n) { return window.iconPixels ? window.iconPixels(cls, n) : Promise.resolve(null); }     // (any icon set: the page's icon loader)
     // "a;b": a key's two icons (also in the shared icon helpers, which load after this script)
     function iconParts(value) { return String(value || '').split(';').map(s => s.trim()).filter(Boolean).slice(0, 2); }
     function iconRows(cls, n) {
         if (!cls) return null;
-        const key = cls + '@' + n, v = iconCache.get(key);
+        const key = cls + '@' + n;
+        if (Array.isArray(padEdits[key])) return padEdits[key];
+        const v = iconCache.get(key);
         if (Array.isArray(v) || v === null) return v;
         if (!v) iconCache.set(key, faRows(cls, n).then(rows => { iconCache.set(key, rows); if (rows) drawLive(); }, () => iconCache.set(key, null)));
         return null;
     }
+    // an icon for the screen here: pixel rows, or (Original icons) {img, n}: the icon drawn smooth
+    function iconFor(cls, n) {
+        if (!cls || iconLook() !== 'original') return iconRows(cls, n);
+        const key = cls + '@' + n, v = smoothCache.get(key);
+        if (v && v.img) return v;
+        if (v === null) return iconRows(cls, n);           // (can't be drawn smooth: its pixels)
+        if (!v && window.iconSmooth) smoothCache.set(key, window.iconSmooth(cls, n).then(img => { smoothCache.set(key, img ? {img, n} : null); drawLive(); }, () => smoothCache.set(key, null)));
+        return null;
+    }
+    function drawIcon(ctx, look, x, y, color) {
+        if (!look || !look.img) return drawRows(ctx, look, x, y, color);
+        const tints = look.img.tints || (look.img.tints = {});
+        if (!tints[color]) {                    // the icon's shape in this color
+            const t = document.createElement('canvas');
+            t.width = look.img.width; t.height = look.img.height;
+            const g = t.getContext('2d');
+            g.drawImage(look.img, 0, 0);
+            g.globalCompositeOperation = 'source-in';
+            g.fillStyle = color;
+            g.fillRect(0, 0, t.width, t.height);
+            tints[color] = t;
+        }
+        ctx.drawImage(tints[color], x, y, look.n, look.n);
+    }
     function drawRows(ctx, rows, x, y, color) {
+        if (rows && rows.img) return drawIcon(ctx, rows, x, y, color);
         ctx.fillStyle = color;
         rows.forEach((r, j) => { for (let i = 0; i < r.length; i++) if (r[i] === '1') ctx.fillRect(x + i, y + j, 1, 1); });
     }
@@ -938,11 +970,16 @@ html {
         if (!canvas) return;
         const look = getComputedStyle(q('mini'));
         const light = look.getPropertyValue('--oled-ink').trim() || '#f4f8ff', dark = look.getPropertyValue('--oled-paper').trim() || '#000';
+        // Original icons: the screen drawn 4x finer (the letters stay the pad's pixels, the icons are smooth)
+        const fine = iconLook() === 'original' ? 4 : 1;
+        if (canvas.width !== 128 * fine) { canvas.width = 128 * fine; canvas.height = 64 * fine; }
         const ctx = canvas.getContext('2d'), ink = pad.hold ? dark : light;
+        ctx.setTransform(fine, 0, 0, fine, 0, 0);
+        ctx.clearRect(0, 0, 128, 64);
         if (pad.hold) { ctx.fillStyle = light; ctx.fillRect(0, 0, 128, 64); }
         const li = pad.hold ? {} : iconsFor(pad.layer);
         if (pad.enc) {
-            const rows = hasPicon(pad.enc) ? iconRows(li.enc, 14) : null;
+            const rows = hasPicon(pad.enc) ? iconFor(li.enc, 14) : null;
             if (rows) drawRows(ctx, rows, MARGIN + 1, 1, ink);
             padText(ctx, noPicon(pad.enc), MARGIN + (rows ? 18 : 0), 8, 's', ink, false);
         }
@@ -955,12 +992,12 @@ html {
             if (hasPicon(icon) && li.text && typeof li.text[k] === 'string' && window.labelItems) {
                 const items = window.labelItems(li.text[k], (li.keys || [])[k], (li.at || [])[k]), fit = window.labelFit(items, PAD_FONT_WIDE.k);
                 const left = MARGIN + (k % 4) * KEY_COL_W + 1;
-                if (fit && window.drawLabel(items, fit, left, cy, (c, n) => iconRows(c, n), (rows, x, y) => drawRows(ctx, rows, x, y, keyInk),
+                if (fit && window.drawLabel(items, fit, left, cy, (c, n) => iconFor(c, n), (rows, x, y) => drawRows(ctx, rows, x, y, keyInk),
                                             (ch, x) => padText(ctx, ch, x, cy, 'k', keyInk, false), PAD_FONT_WIDE.k)) return;
             }
             const two = hasPicon(icon) ? iconParts((li.keys || [])[k]) : [];
             if (two.length > 1) {               // two icons, 14 x 14, side by side
-                const a = iconRows(two[0], 14), b = iconRows(two[1], 14);
+                const a = iconFor(two[0], 14), b = iconFor(two[1], 14);
                 if (a && b) {
                     const left = Math.round(cx - 14.5);
                     drawRows(ctx, a, left, Math.round(cy - 7), keyInk);
@@ -968,7 +1005,7 @@ html {
                     return;
                 }
             }
-            const rows = hasPicon(icon) ? iconRows((li.keys || [])[k], 18) : null;
+            const rows = hasPicon(icon) ? iconFor((li.keys || [])[k], 18) : null;
             if (rows) {                         // the macropad's icon, then its letter (if any)
                 const letter = noPicon(icon), total = 18 + (letter ? 1 + ((PAD_FONT_WIDE.k || {})[letter] || PAD_FONT_SIZE.k.w) - 1 : 0);
                 const left = Math.round(cx - (total - 1) / 2);
@@ -1611,7 +1648,7 @@ html {
         m.hidden = !open;
         q('mGear').setAttribute('aria-expanded', String(open));
         q('mOnTop').checked = !!pipWin;
-        if (open) { fillSkins(); listSkins(); markLook(); q('mChordMode').value = chordMode(); }
+        if (open) { fillSkins(); listSkins(); markLook(); q('mChordMode').value = chordMode(); q('mIconLook').value = iconLook(); }
     }
 
     // ════════════════════════════════════════════════════════════
@@ -1737,7 +1774,9 @@ html {
         return new TextDecoder().decode(all);
     }
     async function loadLinkIcons() {
-        for (const k of Object.keys(iconLook)) delete iconLook[k];
+        for (const k of Object.keys(iconLook_)) delete iconLook_[k];
+        try { const e = JSON.parse(await readQuiet('icons/edits.json')); padEdits = e && typeof e === 'object' ? (e.icons || e) : {}; }
+        catch (e) { padEdits = {}; }
         try {
             const j = JSON.parse(await readQuiet(ICON_FILE)) || {};
             linkIcons = j.layers || {};
@@ -1748,16 +1787,16 @@ html {
     }
     // A layer linkicons.json doesn't cover (its file still has the icons inside: copied by hand, or
     // saved before linkicons.json existed): its own file is read once, quietly, and its icons used
-    const iconLook = {};                        // layer name -> 'busy' / 'done'
+    const iconLook_ = {};                       // layer name -> 'busy' / 'done'
     function iconsFor(name) {
         if (linkIcons[name]) return linkIcons[name];
-        if (name && pad && !pad.secret && !iconLook[name]) {
-            iconLook[name] = 'busy';
+        if (name && pad && !pad.secret && !iconLook_[name]) {
+            iconLook_[name] = 'busy';
             const slug = name.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'layer';
             readQuiet('layers/' + slug + '.mp1layer.json').then(text => {
                 const [, e] = splitIcons(text, 'layer');
                 if (e) { delete e.name; linkIcons[name] = e; render(); }
-            }).catch(() => {}).finally(() => { iconLook[name] = 'done'; });
+            }).catch(() => {}).finally(() => { iconLook_[name] = 'done'; });
         }
         return {};
     }
@@ -1936,7 +1975,8 @@ html {
     }
     window.MP1Pad = {connected: () => !!pad, root: () => padDir(''), restartSoon: () => { if (pad) restartSoon(); },
                      updateFirmware: file => { showView('link'); return firmwareCard(file); },
-                     secretKey: () => requestOne({c: 'skey'}).then(r => r.key)};
+                     secretKey: () => requestOne({c: 'skey'}).then(r => r.key),
+                     iconLook: v => { if (v) { saveOptions({iconLook: v}); render(); } return iconLook(); }};
     // Tell the configurator when the link comes or goes (it shows "MP1 over USB" as its drive)
     let padWas = false;
     function padChanged() {
@@ -2029,6 +2069,9 @@ html {
         $('mOnTop').closest('label').hidden = !('documentPictureInPicture' in window);
         $('mSkin').addEventListener('change', e => { pickSkin(e.target.value); });
         $('mChordMode').addEventListener('change', e => { saveOptions({chordMarks: e.target.value}); render(); });
+        $('mIconLook').addEventListener('change', e => { saveOptions({iconLook: e.target.value}); render(); });
+        // the Settings tab (or another window) changed the choice
+        window.addEventListener('storage', e => { if (e.key === OPT_KEY) render(); });
         $('mLook').addEventListener('click', e => {
             const b = e.target.closest('[data-look]');
             if (!b) return;
@@ -2319,6 +2362,39 @@ html {
         const od = og.getImageData(0, 0, n, n).data, rows = [];
         for (let y = 0; y < n; y++) { let r = ''; for (let x = 0; x < n; x++) r += od[(y * n + x) * 4 + 3] >= 128 ? '1' : '0'; rows.push(r); }
         return rows;
+    };
+    // An icon drawn smooth for the Link displays (Original icons): a canvas 4 x n square, its shape
+    // in the alpha (cropped to its own ink and fitted like iconPixels), or null. "my" icons: null (they're pixels).
+    window.iconSmooth = async (value, n) => {
+        if (String(value || '').includes(';')) value = window.iconParts(value)[0];
+        const info = window.iconInfo(value);
+        if (!window.FA_OK || !info || info.set === 'my') return null;
+        const el = document.createElement('i');
+        el.className = info.cls;
+        el.textContent = info.text;
+        el.style.cssText = 'position:absolute;left:-9999px;top:0;font-size:16px';
+        document.body.appendChild(el);
+        const glyph = info.text || (getComputedStyle(el, '::before').content || '').replace(/^["']|["']$/g, '');
+        const fam = getComputedStyle(el).fontFamily, wt = getComputedStyle(el).fontWeight;
+        el.remove();
+        if (!glyph || glyph === 'none') return null;
+        try { await document.fonts.load(`${wt} 64px ${fam}`, glyph); } catch (e) { return null; }
+        const N = 256, k = document.createElement('canvas');
+        k.width = k.height = N;
+        const g = k.getContext('2d');
+        g.font = `${wt} ${info.text ? 180 : 200}px ${fam}`;
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillText(glyph, N / 2, N / 2);
+        const d = g.getImageData(0, 0, N, N).data;
+        let x0 = N, y0 = N, x1 = -1, y1 = -1;
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (d[(y * N + x) * 4 + 3] > 20) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        if (x1 < 0 || (info.text && x1 - x0 > N * 0.9)) return null;
+        const sw = x1 - x0 + 1, sh = y1 - y0 + 1, S = n * 4, o = document.createElement('canvas');
+        o.width = o.height = S;
+        const s = Math.min(S / sw, S / sh);
+        o.getContext('2d').drawImage(k, x0, y0, sw, sh, (S - sw * s) / 2, (S - sh * s) / 2, sw * s, sh * s);
+        return o;
     };
     function swap(root) {
         if (!window.FA_OK || !root || !root.querySelectorAll) return;
