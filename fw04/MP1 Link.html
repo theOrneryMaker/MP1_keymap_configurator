@@ -979,9 +979,11 @@ html {
         if (pad.hold) { ctx.fillStyle = light; ctx.fillRect(0, 0, 128, 64); }
         const li = pad.hold ? {} : iconsFor(pad.layer);
         if (pad.enc) {
-            const rows = hasPicon(pad.enc) ? iconFor(li.enc, 14) : null;
-            if (rows) drawRows(ctx, rows, MARGIN + 1, 1, ink);
-            padText(ctx, noPicon(pad.enc), MARGIN + (rows ? 18 : 0), 8, 's', ink, false);
+            // up to two icons, 16 x 16 (as many as the pad got: its text has one icon character each)
+            const want = Array.from(pad.enc).filter(ch => hasPicon(ch)).length;
+            const rows = iconParts(li.enc).slice(0, want).map(p => iconFor(p, 16)).filter(Boolean);
+            rows.forEach((r, j) => drawRows(ctx, r, MARGIN + 18 * j, 0, ink));
+            padText(ctx, noPicon(pad.enc), MARGIN + 18 * rows.length, 8, 's', ink, false);
         }
         const pairs = pad.hold ? [] : chordPairs(), mode = chordMode();
         const turn = mode === 'colors' && pairs.length ? Math.floor(Date.now() / CHORD_CYCLE_MS) % (pairs.length + 1) : -1;
