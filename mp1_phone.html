@@ -44,6 +44,7 @@ dt { color: var(--muted); } dd { margin: 0; font-family: var(--mono); overflow-w
   <div class="card">
     <dl id="info"><dt>Status</dt><dd>Not connected</dd></dl>
     <button class="primary" id="connectBtn">Connect…</button>
+    <button id="allBtn">Show all devices…</button>
     <p class="hint" id="connectHint">Plug the macropad into the phone (USB-C cable or an OTG adapter), then Connect… and pick it. It has two ports: if the one you pick is its serial console, the page says so and you pick the other.</p>
   </div>
 
@@ -93,7 +94,7 @@ function supported() {
     else if (!window.isSecureContext) why = 'Serial ports only work when this page is opened from an https:// address (or a file on a computer).';
     $('noSerial').hidden = !why;
     $('noSerial').innerHTML = why;
-    $('connectBtn').disabled = !!why;
+    $('connectBtn').disabled = $('allBtn').disabled = !!why;
     return !why;
 }
 async function tryPort(p) {
@@ -120,11 +121,20 @@ async function autoConnect() {
         }
     } finally { busy = false; render(); }
 }
-async function connectNew() {
+async function connectNew(all) {
     if (!supported()) return;
     let p;
-    try { p = await navigator.serial.requestPort({filters: VENDORS.map(v => ({usbVendorId: v}))}); }
-    catch (e) { return; }
+    try { p = await navigator.serial.requestPort(all === true ? {} : {filters: VENDORS.map(v => ({usbVendorId: v}))}); }
+    catch (e) {
+        if (e.name === 'NotFoundError' && all !== true)
+            $('connectHint').innerHTML = '<strong>No macropad found.</strong> Check the pad lights up on the phone (some cables and adapters only carry power; some phones need USB OTG turned on in Settings), then try <strong>Show all devices…</strong>.';
+        else if (e.name === 'NotFoundError')
+            $('connectHint').innerHTML = '<strong>Chrome can\'t see any serial device on this phone.</strong> Either the phone isn\'t seeing the pad over USB, or this Chrome only offers Bluetooth serial.';
+        return;
+    }
+    const info = p.getInfo();
+    if (info.usbVendorId !== undefined) $('connectHint').textContent = `Picked USB device ${info.usbVendorId.toString(16).padStart(4, '0')}:${(info.usbProductId || 0).toString(16).padStart(4, '0')}.`;
+    else if (all === true) $('connectHint').textContent = 'Picked a device that isn\'t USB (Bluetooth?).';
     if (port) await closePort();
     busy = true;
     render('Connecting…');
@@ -364,7 +374,8 @@ if ('serial' in navigator) {
     navigator.serial.addEventListener('connect', () => setTimeout(autoConnect, 1500));
     navigator.serial.addEventListener('disconnect', e => { if (port && e.target === port) closePort(); });
 }
-$('connectBtn').addEventListener('click', connectNew);
+$('connectBtn').addEventListener('click', () => connectNew(false));
+$('allBtn').addEventListener('click', () => connectNew(true));
 $('zipBtn').addEventListener('click', () => $('zipFile').click());
 $('zipFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) checkZip(f); });
 $('backupBtn').addEventListener('click', backup);
