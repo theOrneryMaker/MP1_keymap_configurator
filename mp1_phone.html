@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MP1 Phone</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#16171a">
+<style>
+/* MP1 Phone: one self-contained page (no theme.css, no .js) so it can be hosted or copied anywhere */
+:root { --bg: #f4f4f2; --panel: #fff; --text: #1b1c1f; --muted: #6b6e76; --border: #dddcd8; --orange: #f26b1d;
+        --orange-ink: #fff; --orange-soft: #fdeee4; --ok: #2f9e57; --error: #d23c3c; --mono: ui-monospace, Consolas, monospace;
+        --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #16171a; --panel: #212226; --text: #ececec; --muted: #9a9ca3; --border: #34363c; --orange-soft: #3a2618; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 var(--font); }
+.wrap { max-width: 560px; margin: 0 auto; padding: 16px 16px calc(40px + env(safe-area-inset-bottom)); }
+h1 { font: 800 1.4em/1.2 var(--mono); letter-spacing: .05em; margin: 4px 0 12px; display: flex; align-items: center; gap: 10px; }
+.dot { width: 11px; height: 11px; border-radius: 50%; background: var(--error); }
+.dot.on { background: var(--ok); }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin: 12px 0; }
+.card h2 { font-size: 1.05em; margin: 0 0 8px; }
+.hint { color: var(--muted); font-size: .9em; }
+.warn { background: var(--orange-soft); border: 1px solid var(--orange); border-radius: 10px; padding: 8px 12px; margin: 10px 0; }
+button { font: 600 1em var(--font); border: 1px solid var(--border); background: var(--panel); color: var(--text);
+         border-radius: 10px; padding: 12px 16px; min-height: 48px; cursor: pointer; width: 100%; margin: 6px 0; }
+button.primary { background: var(--orange); border-color: var(--orange); color: var(--orange-ink); }
+button:disabled { opacity: .45; }
+dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: .95em; }
+dt { color: var(--muted); } dd { margin: 0; font-family: var(--mono); overflow-wrap: anywhere; }
+.rows div { padding: 6px 0; border-top: 1px solid var(--border); }
+.rows div:first-child { border-top: 0; }
+.bad { color: var(--error); } .good { color: var(--ok); }
+.bar { height: 10px; background: var(--border); border-radius: 5px; overflow: hidden; margin: 10px 0 4px; }
+.bar i { display: block; height: 100%; width: 0; background: var(--orange); transition: width .2s; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1><span class="dot" id="dot"></span><span id="title">MP1</span></h1>
+  <div id="noSerial" class="warn" hidden></div>
+
+  <div class="card">
+    <dl id="info"><dt>Status</dt><dd>Not connected</dd></dl>
+    <button class="primary" id="connectBtn">Connect…</button>
+    <p class="hint" id="connectHint">Plug the macropad into the phone (USB-C cable or an OTG adapter), then Connect… and pick it. It has two ports: if the one you pick is its serial console, the page says so and you pick the other.</p>
+  </div>
+
+  <div class="card">
+    <h2>Firmware update</h2>
+    <p class="hint">Pick an <strong>MP1_firmware_NN.zip</strong> (from Downloads, Drive, email…). It's checked first; your keymap, settings, wiring and layers are never touched.</p>
+    <button id="zipBtn" disabled>Choose firmware zip…</button>
+    <input type="file" id="zipFile" accept=".zip,application/zip" hidden>
+    <div id="fwOut"></div>
+  </div>
+
+  <div class="card">
+    <h2>Backup</h2>
+    <p class="hint">Saves the macropad's own files (keymap, settings, wiring, layers, profiles, keys) into one .json on the phone.</p>
+    <button id="backupBtn" disabled>Save backup</button>
+    <div id="bkOut"></div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// MP1 Phone: Web Serial (Chrome on Android) to the macropad's data channel (lib/macropad/link.py),
+// one JSON object per line: the same link and file requests the configurator's player uses
+// (app/shell.html). Nothing on the macropad side is specific to the phone.
+// ════════════════════════════════════════════════════════════
+const VENDORS = [0x2E8A, 0x239A];
+const HELLO_WAIT_MS = 2500, CHUNK_WAIT_MS = 8000;
+const WRITE_CHUNK = 1536, FW_MAX = 2 * 1024 * 1024;
+const OWN_DATA = ['keymap.json', 'settings.json', 'wiring.json', 'clock.json', 'secret.json', 'linkicons.json', 'modules/responses/responses.json'];
+const BACKUP_DIRS = ['layers', 'profiles', 'keys', 'scenes'];
+const BACKUP_FILES = ['keymap.json', 'settings.json', 'wiring.json', 'default.json', 'linkicons.json'];
+let port = null, reader = null, writer = null, pad = null, busy = false, helloWaiter = null, working = false;
+let rid = 0, queue = Promise.resolve();
+const pending = {};
+const $ = id => document.getElementById(id);
+const enc = new TextEncoder();
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const kb = n => n < 1024 ? n + ' bytes' : (n / 1024).toFixed(n < 10240 ? 1 : 0) + ' KB';
+const b64 = bytes => { let s = ''; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+// ─── connecting (as mp1_link.html: the link says hello, the serial console doesn't) ───
+function supported() {
+    let why = '';
+    if (!('serial' in navigator)) why = 'This browser can\'t use serial ports. Use <strong>Chrome</strong> (version 148 or newer on Android).';
+    else if (!window.isSecureContext) why = 'Serial ports only work when this page is opened from an https:// address (or a file on a computer).';
+    $('noSerial').hidden = !why;
+    $('noSerial').innerHTML = why;
+    $('connectBtn').disabled = !!why;
+    return !why;
+}
+async function tryPort(p) {
+    try { await p.open({baudRate: 115200}); } catch (e) { return false; }
+    try { await p.setSignals({dataTerminalReady: true}); } catch (e) { /* not needed everywhere */ }
+    port = p;
+    writer = p.writable.getWriter();
+    const gotHello = new Promise(resolve => { helloWaiter = resolve; });
+    readLoop(p);
+    const ok = await Promise.race([gotHello, wait(HELLO_WAIT_MS).then(() => false)]);
+    helloWaiter = null;
+    if (ok) return true;
+    await closePort();
+    return false;
+}
+async function autoConnect() {
+    if (port || busy || !('serial' in navigator)) return;
+    busy = true;
+    try {
+        for (const p of await navigator.serial.getPorts()) {
+            const info = p.getInfo();
+            if (info.usbVendorId && !VENDORS.includes(info.usbVendorId)) continue;
+            if (await tryPort(p)) return;
+        }
+    } finally { busy = false; render(); }
+}
+async function connectNew() {
+    if (!supported()) return;
+    let p;
+    try { p = await navigator.serial.requestPort({filters: VENDORS.map(v => ({usbVendorId: v}))}); }
+    catch (e) { return; }
+    if (port) await closePort();
+    busy = true;
+    render('Connecting…');
+    let ok = false;
+    try { ok = await tryPort(p); } finally { busy = false; }
+    if (!ok) $('connectHint').innerHTML = '<strong>That port didn\'t answer.</strong> It\'s probably the serial console: Connect… again and pick the <strong>other</strong> port.';
+    render();
+}
+async function closePort() {
+    const p = port;
+    port = null; pad = null;
+    try { if (reader) await reader.cancel(); } catch (e) { /* gone */ }
+    try { if (writer) writer.releaseLock(); } catch (e) { /* gone */ }
+    writer = null;
+    try { if (p) await p.close(); } catch (e) { /* unplugged */ }
+    for (const id of Object.keys(pending)) { pending[id]({err: 'The macropad went away.'}); delete pending[id]; }
+    render();
+}
+async function readLoop(p) {
+    const dec = new TextDecoder();
+    let buf = '';
+    while (p.readable && port === p) {
+        reader = p.readable.getReader();
+        try {
+            for (;;) {
+                const {value, done} = await reader.read();
+                if (done) break;
+                buf += dec.decode(value, {stream: true});
+                let i;
+                while ((i = buf.indexOf('\n')) >= 0) {
+                    const line = buf.slice(0, i).trim();
+                    buf = buf.slice(i + 1);
+                    if (line.startsWith('{')) { try { onMessage(JSON.parse(line)); } catch (e) { /* not ours */ } }
+                }
+                if (buf.length > 65536) buf = '';
+            }
+        } catch (e) { break; }
+        finally { try { reader.releaseLock(); } catch (e) { /* already */ } reader = null; }
+    }
+    if (port === p) { await closePort(); render('Reconnecting…'); setTimeout(autoConnect, 1500); }
+}
+async function send(obj) {
+    if (!writer) return;
+    try { await writer.write(enc.encode(JSON.stringify(obj) + '\n')); } catch (e) { /* the read loop notices */ }
+}
+function onMessage(m) {
+    if (m.t === 'hello') { pad = m; if (helloWaiter) helloWaiter(true); }
+    else if (m.t === 'state' && pad) Object.assign(pad, {layer: m.layer, free: m.free});
+    else if (m.t === 'r') { const done = pending[m.id]; delete pending[m.id]; if (done) done(m); return; }
+    else if (m.t === 'open') { send({c: 'opened', id: m.id, ok: false}); return; }     // (URL keys: the computer's job)
+    if (!working) render();
+}
+
+// ─── file requests (one at a time, as in shell.html) ───
+function request(obj) {
+    const run = () => new Promise((resolve, reject) => {
+        if (!pad) return reject(new Error('The macropad isn\'t connected.'));
+        const id = ++rid;
+        const timer = setTimeout(() => { delete pending[id]; reject(new Error('The macropad didn\'t answer.')); }, CHUNK_WAIT_MS);
+        pending[id] = m => { clearTimeout(timer); m.err ? reject(Object.assign(new Error(m.err), {notFound: m.err === 'not found'})) : resolve(m); };
+        send(Object.assign({id}, obj));
+    });
+    const p = queue.then(run, run);
+    queue = p.catch(() => {});
+    return p;
+}
+async function readFile(path) {
+    const parts = [];
+    let off = 0;
+    for (;;) {
+        const r = await request({c: 'read', path, off});
+        const bytes = unb64(r.data);
+        parts.push(bytes); off += bytes.length;
+        if (r.eof || !bytes.length) break;
+    }
+    const all = new Uint8Array(off);
+    let at = 0;
+    for (const p of parts) { all.set(p, at); at += p.length; }
+    return all;
+}
+async function writeFile(path, bytes, onChunk) {
+    const xid = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    for (let off = 0; off < bytes.length || off === 0; off += WRITE_CHUNK) {
+        await request({c: 'write', path, off, xid, total: bytes.length, data: b64(bytes.subarray(off, off + WRITE_CHUNK)), last: off + WRITE_CHUNK >= bytes.length});
+        if (onChunk) onChunk(Math.min(WRITE_CHUNK, bytes.length - off));
+        if (!bytes.length) break;
+    }
+}
+async function ls(path) { try { return (await request({c: 'ls', path})).items; } catch (e) { return null; } }
+
+// ─── firmware zip (readZip / unzip / checks: the same as shell.html's firmwareCard) ───
+async function readZip(file) {
+    const buf = new Uint8Array(await file.arrayBuffer()), dv = new DataView(buf.buffer);
+    let end = -1;
+    for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { end = i; break; }
+    if (end < 0) throw new Error('not a zip file');
+    const count = dv.getUint16(end + 10, true), out = [];
+    let p = dv.getUint32(end + 16, true);
+    for (let n = 0; n < count; n++) {
+        if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('the zip is damaged');
+        const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), size = dv.getUint32(p + 24, true);
+        const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), local = dv.getUint32(p + 42, true);
+        const name = new TextDecoder().decode(buf.subarray(p + 46, p + 46 + nlen)).replace(/\\/g, '/');
+        p += 46 + nlen + xlen + clen;
+        if (name.endsWith('/')) continue;
+        const start = local + 30 + dv.getUint16(local + 26, true) + dv.getUint16(local + 28, true);
+        out.push({name, method, size, data: buf.subarray(start, start + csize)});
+    }
+    return out;
+}
+async function unzip(e) {
+    if (e.method === 0) return e.data;
+    if (e.method !== 8) throw new Error(`${e.name} is packed in a way the page can't read`);
+    const stream = new Blob([e.data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+    return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+function showRows(box, rows, extra = '') {
+    $(box).innerHTML = '<div class="rows">' + rows.map(r =>
+        `<div><strong class="${r.ok === false ? 'bad' : r.ok === true ? 'good' : ''}">${esc(r.title)}</strong><br><span class="hint">${esc(r.note || '')}</span></div>`).join('') + '</div>' + extra;
+}
+let fwPlan = null;
+async function checkZip(file) {
+    fwPlan = null;
+    const rows = [], fail = (title, note) => { rows.push({ok: false, title, note}); showRows('fwOut', rows); };
+    showRows('fwOut', [{title: 'Checking ' + file.name + '…'}]);
+    let entries;
+    try { entries = await readZip(file); } catch (e) { return fail(file.name, `Isn't a zip the page can read (${e.message}).`); }
+    const tops = new Set(entries.map(e => e.name.split('/')[0]));
+    const strip = tops.size === 1 && entries.every(e => e.name.includes('/')) ? [...tops][0].length + 1 : 0;
+    for (const e of entries) e.path = e.name.slice(strip);
+    const man = entries.find(e => e.path === 'mp1_firmware.json');
+    let info = null;
+    try { info = man && JSON.parse(new TextDecoder().decode(await unzip(man))); } catch (e) { info = null; }
+    if (!info || !info.mp1_firmware) return fail(file.name, 'Not an MP1 firmware zip (no mp1_firmware.json in it).');
+    const fw = String(info.fw || '?'), now = String(pad.fw || '?');
+    rows.push({ok: true, title: `MP1 firmware ${fw}${info.frozen ? ' (custom firmware build)' : ''}`, note: (info.built ? `Built ${info.built}. ` : '') + `The macropad has ${now}.`});
+    if (/^\d+$/.test(fw) && /^\d+$/.test(now) && +fw < +now) return fail('Older than the macropad\'s firmware', `This is ${fw}; the macropad has ${now}.`);
+    if (pad.frozen === undefined) return fail('This macropad can\'t update over the link yet', 'Copy the zip\'s files onto the MP1 drive from a computer once; after that, updates work from here.');
+    if (info.frozen && !pad.frozen) return fail('Made for the MP1 custom firmware', 'This macropad runs standard CircuitPython: use the standard build\'s zip.');
+    const list = [];
+    let skipped = 0;
+    for (const e of entries) {
+        const low = e.path.toLowerCase();
+        if (!e.path || e.path === 'mp1_firmware.json' || low.endsWith('.bak') || /(^|\/)\./.test(e.path) || OWN_DATA.includes(low)) continue;
+        if (pad.frozen && /^lib\/(mp1\/|adafruit_hid\/|neopixel\.mpy$|adafruit_displayio_ssd1306\.mpy$)/i.test(e.path)) { skipped++; continue; }
+        if (e.size > FW_MAX) return fail(e.path, `Too big for the link (${kb(e.size)}).`);
+        list.push(e);
+    }
+    if (!list.some(e => e.path === 'code.py') || !list.some(e => /^lib\/macropad\/app\.m?py$/.test(e.path))) return fail('Incomplete', 'A firmware zip needs code.py and lib/macropad.');
+    const total = list.reduce((n, e) => n + e.size, 0);
+    try {
+        const df = await request({c: 'df'});
+        if (total > df.free + 300 * 1024) rows.push({title: 'Space', note: `Needs ${kb(total)}; ${kb(df.free)} free plus the files it replaces.`});
+    } catch (e) { /* older pad: no df */ }
+    rows.push({ok: true, title: `${list.length} firmware files, ${kb(total)}`, note: 'The macropad shows UPDATING and restarts at the end. Keep the cable in.' + (skipped ? ` ${skipped} built-in files skipped.` : '')});
+    fwPlan = {list, fw, total};
+    showRows('fwOut', rows, '<button class="primary" id="goBtn">Update</button>');
+    $('goBtn').onclick = runUpdate;
+}
+async function runUpdate() {
+    if (!fwPlan || working) return;
+    const {list, fw, total} = fwPlan;
+    fwPlan = null;
+    working = true; render();
+    const rank = p => p === 'code.py' ? 3 : p === 'boot.py' ? 2 : /^lib\//.test(p) ? 0 : 1;
+    const files = list.slice().sort((a, b) => rank(a.path) - rank(b.path) || (a.path < b.path ? -1 : 1));
+    let sent = 0;
+    const progress = name => { $('fwOut').innerHTML = `<div class="bar"><i style="width:${(100 * sent / total).toFixed(1)}%"></i></div><span class="hint">${esc(name)} · ${Math.round(100 * sent / total)}%</span>`; };
+    send({c: 'sync', on: true, update: true});
+    try {
+        const made = new Set();
+        for (const e of files) {
+            progress(e.path);
+            let dir = '';
+            for (const part of e.path.split('/').slice(0, -1)) {
+                dir = dir ? dir + '/' + part : part;
+                if (made.has(dir)) continue;
+                const i = dir.lastIndexOf('/');
+                const items = await ls(i < 0 ? '' : dir.slice(0, i));
+                if (!(items || []).some(x => x[0] === dir.slice(i + 1))) await request({c: 'mkdir', path: dir});
+                made.add(dir);
+            }
+            await writeFile(e.path, await unzip(e), n => { sent += n; progress(e.path); });
+        }
+        // a .py next to the new .mpy would still win: deleted
+        const mpy = new Set(files.filter(e => e.path.endsWith('.mpy')).map(e => e.path.slice(0, -4) + '.py'));
+        for (const d of new Set([...mpy].map(p => p.slice(0, p.lastIndexOf('/'))))) {
+            for (const [n] of (await ls(d)) || []) if (mpy.has(d + '/' + n)) await request({c: 'delete', path: d + '/' + n});
+        }
+        send({c: 'sync', on: false});
+        showRows('fwOut', [{ok: true, title: `Updated to firmware ${fw}`, note: 'The macropad is restarting; this page reconnects by itself.'}]);
+        await request({c: 'restart'}).catch(() => {});
+    } catch (err) {
+        send({c: 'sync', on: false});
+        showRows('fwOut', [{ok: false, title: 'Update stopped: ' + err.message, note: 'Some files may already be new. Run the update again (it\'s safe to repeat).'}]);
+    } finally { working = false; render(); }
+}
+
+// ─── backup: the macropad's own files into one .json download ───
+async function backup() {
+    if (working) return;
+    working = true; render();
+    const files = {};
+    try {
+        const paths = [...BACKUP_FILES];
+        for (const d of BACKUP_DIRS) for (const [n, isDir] of (await ls(d)) || []) if (!isDir) paths.push(d + '/' + n);
+        let i = 0;
+        for (const p of paths) {
+            $('bkOut').innerHTML = `<span class="hint">Reading ${esc(p)} (${++i} of ${paths.length})…</span>`;
+            try { files[p] = b64(await readFile(p)); } catch (e) { if (!e.notFound) throw e; }
+        }
+        const name = `MP1_backup_${(pad.profile || 'pad').replace(/[^\w-]+/g, '_')}_${new Date().toISOString().slice(0, 10)}.json`;
+        const blob = new Blob([JSON.stringify({mp1_backup: 1, fw: pad.fw, made: new Date().toISOString(), files}, null, 1)], {type: 'application/json'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = name; a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+        showRows('bkOut', [{ok: true, title: `Saved ${name}`, note: `${Object.keys(files).length} files, ${kb(blob.size)}. It's in the phone's Downloads.`}]);
+    } catch (err) {
+        showRows('bkOut', [{ok: false, title: 'Backup stopped: ' + err.message}]);
+    } finally { working = false; render(); }
+}
+
+// ─── drawing ───
+function render(status) {
+    const on = !!pad;
+    $('dot').classList.toggle('on', on);
+    $('title').textContent = on ? (pad.profile || 'MP1') : 'MP1';
+    $('info').innerHTML = on
+        ? `<dt>Firmware</dt><dd>${esc(pad.fw ?? '?')}${pad.frozen ? ' (custom build)' : ''}</dd><dt>Profile</dt><dd>${esc(pad.profile)}</dd>` +
+          `<dt>Layer</dt><dd>${esc(pad.layer)}</dd><dt>Free memory</dt><dd>${pad.free ? kb(pad.free) : '?'}</dd>`
+        : `<dt>Status</dt><dd>${esc(status || (port ? 'Connecting…' : 'Not connected'))}</dd>`;
+    $('connectBtn').textContent = on ? 'Connect another…' : 'Connect…';
+    $('zipBtn').disabled = $('backupBtn').disabled = !on || working;
+}
+
+if ('serial' in navigator) {
+    navigator.serial.addEventListener('connect', () => setTimeout(autoConnect, 1500));
+    navigator.serial.addEventListener('disconnect', e => { if (port && e.target === port) closePort(); });
+}
+$('connectBtn').addEventListener('click', connectNew);
+$('zipBtn').addEventListener('click', () => $('zipFile').click());
+$('zipFile').addEventListener('change', e => { const f = e.target.files[0]; e.target.value = ''; if (f) checkZip(f); });
+$('backupBtn').addEventListener('click', backup);
+supported();
+render();
+autoConnect();
+</script>
+</body>
+</html>
