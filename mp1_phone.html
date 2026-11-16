@@ -87,10 +87,60 @@ const kb = n => n < 1024 ? n + ' bytes' : (n / 1024).toFixed(n < 10240 ? 1 : 0) 
 const b64 = bytes => { let s = ''; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };
 const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
+// ─── inside the MP1 Android app: its USB serial (window.MP1Android) dressed up as Web Serial ports,
+// so the rest of the page is the same as in Chrome ───
+const APP = window.MP1Android || null;
+if (APP) window.MP1Serial = (() => {
+    const known = new Map();                    // key -> port object (the same one each time)
+    const handlers = {connect: [], disconnect: []};
+    let permWaiter = null;
+    class AppPort {
+        constructor(info) { this.key = info.key; this.info = info; this.readable = this.writable = null; this.ctl = null; }
+        getInfo() { return {usbVendorId: this.info.vid, usbProductId: this.info.pid}; }
+        async open() {
+            if (!APP.open(this.key)) throw new Error('could not open the port');
+            const self = this;
+            this.readable = new ReadableStream({start(c) { self.ctl = c; }, cancel() { self.ctl = null; }});
+            this.writable = new WritableStream({write(chunk) { if (!APP.write(self.key, b64(chunk))) throw new Error('write failed'); }});
+        }
+        async setSignals(s) { if ('dataTerminalReady' in s) APP.setDtr(this.key, !!s.dataTerminalReady); }
+        async close() { APP.close(this.key); this.end(); }
+        end() {
+            const c = this.ctl;
+            this.ctl = null;
+            this.readable = this.writable = null;
+            if (c) try { c.close(); } catch (e) { /* already */ }
+        }
+    }
+    const list = () => JSON.parse(APP.ports()).map(info => {
+        if (!known.has(info.key)) known.set(info.key, new AppPort(info));
+        const p = known.get(info.key);
+        p.info = info;
+        return p;
+    });
+    return {
+        async getPorts() { return list().filter(p => p.info.perm); },
+        // Android asks "Allow MP1 to access the macropad?" (once per plug-in, or never with "always")
+        async allow() {
+            const r = APP.askPermission();
+            if (r === 'none') throw Object.assign(new Error('No macropad plugged in'), {name: 'NotFoundError'});
+            if (r === 'ok') return true;
+            return new Promise(resolve => { permWaiter = resolve; });
+        },
+        addEventListener(type, fn) { (handlers[type] || []).push(fn); },
+        _perm(ok) { if (permWaiter) { permWaiter(ok); permWaiter = null; } },
+        _data(key, s) { const p = known.get(key); if (p && p.ctl) p.ctl.enqueue(unb64(s)); },
+        _gone(key) { const p = known.get(key); if (!p) return; p.end(); handlers.disconnect.forEach(fn => fn({target: p})); },
+        _attached() { handlers.connect.forEach(fn => fn({})); },
+    };
+})();
+const serial = window.MP1Serial || navigator.serial;
+
 // ─── connecting (as mp1_link.html: the link says hello, the serial console doesn't) ───
 function supported() {
     let why = '';
-    if (!('serial' in navigator)) why = 'This browser can\'t use serial ports. Use <strong>Chrome</strong> (version 148 or newer on Android).';
+    if (APP) why = '';
+    else if (!('serial' in navigator)) why = 'This browser can\'t use serial ports. Use <strong>Chrome</strong> (version 148 or newer on Android).';
     else if (!window.isSecureContext) why = 'Serial ports only work when this page is opened from an https:// address (or a file on a computer).';
     $('noSerial').hidden = !why;
     $('noSerial').innerHTML = why;
@@ -111,10 +161,10 @@ async function tryPort(p) {
     return false;
 }
 async function autoConnect() {
-    if (port || busy || !('serial' in navigator)) return;
+    if (port || busy || !serial) return;
     busy = true;
     try {
-        for (const p of await navigator.serial.getPorts()) {
+        for (const p of await serial.getPorts()) {
             const info = p.getInfo();
             if (info.usbVendorId && !VENDORS.includes(info.usbVendorId)) continue;
             if (await tryPort(p)) return;
@@ -123,6 +173,7 @@ async function autoConnect() {
 }
 async function connectNew(all) {
     if (!supported()) return;
+    if (APP) return appConnect();
     let p;
     try { p = await navigator.serial.requestPort(all === true ? {} : {filters: VENDORS.map(v => ({usbVendorId: v}))}); }
     catch (e) {
@@ -142,6 +193,17 @@ async function connectNew(all) {
     try { ok = await tryPort(p); } finally { busy = false; }
     if (!ok) $('connectHint').innerHTML = '<strong>That port didn\'t answer.</strong> It\'s probably the serial console: Connect… again and pick the <strong>other</strong> port.';
     render();
+}
+// In the app: Android's "allow" question, then the same look-for-the-link as autoConnect
+async function appConnect() {
+    if (port) await closePort();
+    let ok;
+    try { ok = await serial.allow(); }
+    catch (e) { $('connectHint').innerHTML = '<strong>No macropad found.</strong> Check it lights up when plugged into the phone (some cables and adapters only carry power).'; return; }
+    if (!ok) { $('connectHint').innerHTML = '<strong>Not allowed.</strong> Tap Connect… again and choose <strong>Allow</strong>.'; return; }
+    render('Connecting…');
+    await autoConnect();
+    if (!pad) $('connectHint').innerHTML = '<strong>The macropad didn\'t answer.</strong> It needs firmware 03 or newer (its MP1 Link port). Unplug it, plug it back in and try again.';
 }
 async function closePort() {
     const p = port;
@@ -348,9 +410,14 @@ async function backup() {
         }
         const name = `MP1_backup_${(pad.profile || 'pad').replace(/[^\w-]+/g, '_')}_${new Date().toISOString().slice(0, 10)}.json`;
         const blob = new Blob([JSON.stringify({mp1_backup: 1, fw: pad.fw, made: new Date().toISOString(), files}, null, 1)], {type: 'application/json'});
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob); a.download = name; a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+        if (APP) {
+            const why = APP.saveFile(name, b64(new Uint8Array(await blob.arrayBuffer())), 'application/json');
+            if (why) throw new Error(why);
+        } else {
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob); a.download = name; a.click();
+            setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+        }
         showRows('bkOut', [{ok: true, title: `Saved ${name}`, note: `${Object.keys(files).length} files, ${kb(blob.size)}. It's in the phone's Downloads.`}]);
     } catch (err) {
         showRows('bkOut', [{ok: false, title: 'Backup stopped: ' + err.message}]);
@@ -370,9 +437,13 @@ function render(status) {
     $('zipBtn').disabled = $('backupBtn').disabled = !on || working;
 }
 
-if ('serial' in navigator) {
-    navigator.serial.addEventListener('connect', () => setTimeout(autoConnect, 1500));
-    navigator.serial.addEventListener('disconnect', e => { if (port && e.target === port) closePort(); });
+if (serial) {
+    serial.addEventListener('connect', () => setTimeout(APP ? appConnect : autoConnect, 1500));
+    serial.addEventListener('disconnect', e => { if (port && e.target === port) closePort(); });
+}
+if (APP) {
+    $('allBtn').hidden = true;
+    $('connectHint').textContent = 'Plug the macropad into the phone (USB-C cable or an OTG adapter), then Connect… and allow MP1 to use it.';
 }
 $('connectBtn').addEventListener('click', () => connectNew(false));
 $('allBtn').addEventListener('click', () => connectNew(true));
