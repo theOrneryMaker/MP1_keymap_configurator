@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MP1 Link</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+/* theme.css - shared look for the MP1 pages (configurator, macro recorder, help).
+   Inspired by the hardware: black or white housing (dark / light mode), frosted-clear
+   panels, matte orange and purple keycaps. Light/dark follows the computer unless the
+   toggle in the top bar picks one (theme.js). Works offline: system fonts only. */
+
+:root {
+    color-scheme: light;
+    --bg: #f4f4f6;              /* white housing */
+    --panel: #ffffff;
+    --panel-2: #f6f6f9;
+    --border: #e2e2e8;
+    --border-strong: #cfcfd8;
+    --text: #1c1c22;
+    --muted: #5d5f6d;
+    --input: #ffffff;
+    --orange: #d9661d;          /* matte orange keycap */
+    --orange-hover: #c55a16;
+    --orange-ink: #ffffff;
+    --orange-soft: rgba(217, 102, 29, 0.12);
+    --purple: #6b4fb8;          /* matte purple keycap */
+    --purple-hover: #5d43a3;
+    --purple-ink: #ffffff;
+    --purple-soft: rgba(107, 79, 184, 0.12);
+    --error: #c42f2f;
+    --warn: #9a6700;
+    --ok: #2b8a48;
+    --glass: rgba(255, 255, 255, 0.72);   /* frosted clear */
+    --code-bg: #f1f1f6;
+    --shadow: 0 1px 2px rgba(20, 20, 30, 0.06), 0 6px 20px rgba(20, 20, 30, 0.05);
+    --key-edge: rgba(0, 0, 0, 0.18);
+    --radius: 10px;
+    --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "Cascadia Mono", Consolas, "SF Mono", Menlo, "Liberation Mono", monospace;
+}
+
+/* Slate housing (dark) */
+@media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+        color-scheme: dark;
+        --bg: #22262e;
+        --panel: #2b3039;
+        --panel-2: #333945;
+        --border: #3e4552;
+        --border-strong: #4d5564;
+        --text: #eef1f6;
+        --muted: #b3bac6;
+        --input: #1e2229;
+        --orange: #e8772e;
+        --orange-hover: #f08a45;
+        --orange-ink: #16120e;
+        --orange-soft: rgba(232, 119, 46, 0.14);
+        --purple: #8b6fd6;
+        --purple-hover: #9c84de;
+        --purple-ink: #ffffff;
+        --purple-soft: rgba(139, 111, 214, 0.16);
+        --error: #ff7d7d;
+        --warn: #f2c14e;
+        --ok: #62d27f;
+        --glass: rgba(43, 48, 57, 0.85);
+        --code-bg: #1e2229;
+        --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+        --key-edge: rgba(0, 0, 0, 0.45);
+    }
+}
+:root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #22262e;
+    --panel: #2b3039;
+    --panel-2: #333945;
+    --border: #3e4552;
+    --border-strong: #4d5564;
+    --text: #eef1f6;
+    --muted: #b3bac6;
+    --input: #1e2229;
+    --orange: #e8772e;
+    --orange-hover: #f08a45;
+    --orange-ink: #16120e;
+    --orange-soft: rgba(232, 119, 46, 0.14);
+    --purple: #8b6fd6;
+    --purple-hover: #9c84de;
+    --purple-ink: #ffffff;
+    --purple-soft: rgba(139, 111, 214, 0.16);
+    --error: #ff7d7d;
+    --warn: #f2c14e;
+    --ok: #62d27f;
+    --glass: rgba(43, 48, 57, 0.85);
+    --code-bg: #1e2229;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.25);
+    --key-edge: rgba(0, 0, 0, 0.45);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+[hidden] { display: none !important; }
+
+body {
+    font-family: var(--font);
+    font-size: 16px;
+    line-height: 1.55;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--purple); text-underline-offset: 2px; }
+a:hover { color: var(--purple-hover); }
+code, pre, kbd { font-family: var(--mono); font-size: 0.92em; }
+code { background: var(--code-bg); border: 1px solid var(--border); border-radius: 5px; padding: 0 5px; }
+pre { background: var(--code-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; overflow-x: auto; line-height: 1.45; }
+pre code { background: none; border: 0; padding: 0; }
+::selection { background: var(--orange-soft); }
+
+/* ─── Top bar (frosted) ─── */
+.topbar {
+    position: sticky; top: 0; z-index: 50;
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    padding: 10px max(16px, calc((100vw - 1240px) / 2));
+    background: var(--glass);
+    -webkit-backdrop-filter: blur(14px) saturate(1.3);
+    backdrop-filter: blur(14px) saturate(1.3);
+    border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 800; letter-spacing: 0.02em; color: var(--text); text-decoration: none; }
+.brand-keys { display: grid; grid-template-columns: repeat(2, 9px); gap: 3px; }
+.brand-keys span { width: 9px; height: 9px; border-radius: 2px; background: var(--orange); }
+.brand-keys span:nth-child(2), .brand-keys span:nth-child(3) { background: var(--purple); }
+.nav { display: flex; gap: 4px; flex-wrap: wrap; }
+.nav a { color: var(--muted); text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; font-size: 0.95em; }
+.nav a:hover { color: var(--text); background: var(--panel-2); }
+.nav a.active { color: var(--text); background: var(--orange-soft); box-shadow: inset 0 -2px 0 var(--orange); }
+.topbar .spacer { flex: 1; }
+.help-btn { display: inline-flex; align-items: center; color: var(--muted); text-decoration: none; padding: 5px 8px;
+            border: 1px solid var(--border); border-radius: 9px; }
+.help-btn:hover { color: var(--text); background: var(--panel-2); }
+.help-btn.active { color: var(--text); background: var(--orange-soft); border-color: var(--orange); }
+.nav .mod { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--purple); margin-left: 6px; vertical-align: 2px; }
+.theme-toggle { display: flex; border: 1px solid var(--border); border-radius: 9px; overflow: hidden; }
+.theme-toggle button {
+    margin: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent;
+    color: var(--muted); padding: 5px 10px; font-size: 0.85em; font-weight: 600;
+}
+.theme-toggle button:hover { background: var(--panel-2); color: var(--text); transform: none; }
+.theme-toggle button.on { background: var(--panel-2); color: var(--text); box-shadow: inset 0 -2px 0 var(--purple); }
+
+/* ─── Page ─── */
+.page { max-width: 1240px; margin: 0 auto; padding: 28px 16px 120px; }
+.page-title { font-size: 1.9em; font-weight: 800; letter-spacing: -0.01em; margin-bottom: 4px; }
+.page-sub { color: var(--muted); margin-bottom: 24px; }
+
+/* Second-level cards inside a section keep the page theme's colors */
+.key-config, .field, .step-row, .preview-panel, .rec-status, .rec-steps {
+    --panel: var(--r-panel);
+    --panel-2: var(--r-panel-2);
+    --border: var(--r-border);
+    --border-strong: var(--r-border-strong);
+    --text: var(--r-text);
+    --muted: var(--r-muted);
+    --input: var(--r-input);
+    --code-bg: var(--r-code-bg);
+    --orange: var(--r-orange);
+    --orange-hover: var(--r-orange-hover);
+    --orange-ink: var(--r-orange-ink);
+    --purple: var(--r-purple);
+    --error: var(--r-error);
+    --warn: var(--r-warn);
+    --ok: var(--r-ok);
+    color: var(--text);
+}
+/* Section cards use the page theme's own panel colors (Slate in dark mode) */
+.section, .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    margin-bottom: 18px;
+    box-shadow: var(--shadow);
+}
+.section > h2, .card > h2 {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 1.15em; font-weight: 750; margin-bottom: 14px;
+}
+.section > h2::before, .card > h2::before {
+    content: ''; width: 10px; height: 10px; border-radius: 3px; background: var(--orange); flex: 0 0 10px;
+}
+h3.sub { font-size: 0.8em; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 24px 0 8px; }
+
+/* ─── Form controls ─── */
+label { display: block; margin: 10px 0 5px; font-weight: 600; font-size: 0.9em; color: var(--muted); }
+input[type="text"], input[type="number"], select, textarea {
+    width: 100%; padding: 9px 11px;
+    background: var(--input); color: var(--text);
+    border: 1px solid var(--border-strong); border-radius: 8px;
+    font: inherit; font-size: 0.95em;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+textarea { resize: vertical; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--orange); box-shadow: 0 0 0 3px var(--orange-soft); }
+input[type="checkbox"] { accent-color: var(--purple); width: 16px; height: 16px; }
+input[type="file"] { font: inherit; color: var(--muted); }
+input[type="file"]::file-selector-button {
+    font: inherit; font-weight: 600; margin-right: 12px; padding: 8px 14px; cursor: pointer;
+    border: 1px solid var(--border-strong); border-radius: 9px; background: var(--panel-2); color: var(--text);
+    box-shadow: inset 0 -2px 0 var(--key-edge);
+}
+
+/* ─── Buttons: keycaps (a faint bottom edge that presses down) ─── */
+button {
+    font: inherit; font-weight: 650; font-size: 0.92em; cursor: pointer;
+    margin: 4px; padding: 8px 14px;
+    border: 1px solid var(--border-strong); border-radius: 9px;
+    background: var(--panel-2); color: var(--text);
+    box-shadow: inset 0 -2px 0 var(--key-edge);
+    transition: background 0.12s, transform 0.05s, box-shadow 0.05s;
+}
+button:hover { background: var(--border); }
+button:active { transform: translateY(1px); box-shadow: inset 0 -1px 0 var(--key-edge); }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--orange-soft); outline-offset: 1px; border-color: var(--orange); }
+button.primary { background: var(--orange); border-color: var(--orange); color: var(--orange-ink); }
+button.primary:hover { background: var(--orange-hover); border-color: var(--orange-hover); }
+button.accent { background: var(--purple); border-color: var(--purple); color: var(--purple-ink); }
+button.accent:hover { background: var(--purple-hover); border-color: var(--purple-hover); }
+button.danger { color: var(--error); }
+button.danger:hover { background: var(--error); border-color: var(--error); color: #fff; }
+button.small { padding: 4px 10px; font-size: 0.82em; }
+button:disabled, button:disabled:hover { opacity: 0.45; cursor: not-allowed; transform: none;
+                                         background: var(--panel-2); border-color: var(--border-strong); color: var(--muted); }
+
+/* ─── Messages ─── */
+.hint, small { display: block; color: var(--muted); font-size: 0.85em; margin-top: 4px; }
+.notice { background: var(--purple-soft); border: 1px solid var(--border); border-left: 3px solid var(--purple); padding: 10px 14px; border-radius: 8px; margin: 10px 0; }
+.note { background: var(--orange-soft); border-left: 3px solid var(--orange); padding: 10px 14px; border-radius: 8px; margin: 12px 0; }
+.warning { background: rgba(242, 193, 78, 0.12); border-left: 3px solid var(--warn); padding: 10px 14px; border-radius: 8px; margin: 12px 0; }
+.issue-error { color: var(--error); }
+.issue-warn { color: var(--warn); }
+.issues-ok { color: var(--ok); font-weight: 700; }
+.badge { display: inline-block; font-size: 0.72em; font-weight: 700; padding: 1px 7px; border-radius: 999px;
+         background: var(--purple-soft); color: var(--purple); margin-left: 6px; vertical-align: 1px; }
+
+/* ─── Dialogs (frosted backdrop) ─── */
+.json-modal {
+    display: none; position: fixed; inset: 0; z-index: 1000;
+    align-items: center; justify-content: center;
+    background: rgba(10, 10, 14, 0.45);
+    -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+}
+.json-modal.active { display: flex; }
+.json-modal-content {
+    width: min(960px, 92vw); height: 80vh; display: flex; flex-direction: column;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+.json-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.json-modal-header h3 { font-size: 1.1em; }
+.json-modal-close { width: 32px; height: 32px; padding: 0; margin: 0; border-radius: 8px; font-size: 18px; line-height: 1; }
+.json-modal-body { flex: 1; padding: 16px 20px; display: flex; flex-direction: column; overflow: hidden; }
+.json-modal-body textarea { flex: 1; resize: none; font-family: var(--mono); font-size: 13.5px; line-height: 1.5; }
+.json-modal-footer { display: flex; justify-content: flex-end; gap: 6px; padding: 12px 16px; border-top: 1px solid var(--border); }
+.modal-error { color: var(--error); white-space: pre-wrap; margin-top: 10px; }
+
+@media (max-width: 640px) {
+    .topbar { gap: 10px; }
+    .page { padding-top: 18px; }
+    .section, .card { padding: 16px; }
+}
+
+/* Icons (inline SVG) and hover labels for icon-only buttons (data-tip="...") */
+.ico { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; vertical-align: -3px; }
+.theme-toggle .ico { width: 17px; height: 17px; }
+.rec-dot-ico { color: var(--error); }
+[data-tip] { position: relative; }
+[data-tip]::after {
+    content: attr(data-tip); position: absolute; left: 50%; top: calc(100% + 7px); transform: translate(-50%, -3px);
+    padding: 4px 9px; border-radius: 7px; white-space: nowrap; pointer-events: none; z-index: 80;
+    background: #1d1f25; color: #f4f8ff; border: 1px solid #4a4e5a; font: 600 12px/1.3 system-ui, sans-serif; letter-spacing: 0;   /* (fixed colors: readable in every theme and card) */
+    opacity: 0; transition: opacity 0.12s, transform 0.12s; transition-delay: 0s;
+}
+[data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1; transform: translate(-50%, 0); transition-delay: 0.25s; }
+.theme-toggle [data-tip]:last-child::after, .help-btn[data-tip]::after { left: auto; right: 0; transform: translate(0, -3px); }
+.theme-toggle [data-tip]:last-child:hover::after, .help-btn[data-tip]:hover::after { transform: translate(0, 0); }
+.theme-toggle { overflow: visible; }
+
+/* The page theme's own colors, kept for the cards inside sections (resolved here, so the grey section cards don't change them) */
+html {
+    --r-panel: var(--panel);
+    --r-panel-2: var(--panel-2);
+    --r-border: var(--border);
+    --r-border-strong: var(--border-strong);
+    --r-text: var(--text);
+    --r-muted: var(--muted);
+    --r-input: var(--input);
+    --r-code-bg: var(--code-bg);
+    --r-orange: var(--orange);
+    --r-orange-hover: var(--orange-hover);
+    --r-orange-ink: var(--orange-ink);
+    --r-purple: var(--purple);
+    --r-error: var(--error);
+    --r-warn: var(--warn);
+    --r-ok: var(--ok);
+}
+
+</style>
+    <script>
+// Theme - light/dark for the MP1 pages (the same code is in every page). Follows the computer's setting unless the
+// top-bar toggle picks one (remembered in this browser). It runs in the page head so the page
+// never flashes the wrong colors.
+(function () {
+    var KEY = 'mp1-theme';
+    function saved() {
+        try { return localStorage.getItem(KEY) || 'auto'; } catch (e) { return 'auto'; }
+    }
+    function apply(mode) {
+        if (mode === 'light' || mode === 'dark') document.documentElement.setAttribute('data-theme', mode);
+        else document.documentElement.removeAttribute('data-theme');
+        var buttons = document.querySelectorAll('.theme-toggle button');
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].classList.toggle('on', buttons[i].getAttribute('data-mode') === mode);
+        }
+    }
+    window.setTheme = function (mode) {
+        try { localStorage.setItem(KEY, mode); } catch (e) { /* private window: just this visit */ }
+        apply(mode);
+    };
+    apply(saved());
+    document.addEventListener('DOMContentLoaded', function () { apply(saved()); });
+})();
+    </script>
+    <style>
+        /* MP1 Link page (colors come from theme.css) */
+        .link-wrap { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+        .card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 16px 18px; margin: 14px 0; box-shadow: var(--shadow); }
+        .card h2 { font-size: 1.05em; margin: 0 0 8px; }
+        .hint { color: var(--muted); font-size: 0.9em; }
+        .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 6px 0; }
+        .warn-box { background: var(--orange-soft); border: 1px solid var(--orange); border-radius: 10px; padding: 8px 12px; margin: 8px 0; }
+        .err-list { color: var(--error); margin: 4px 0 0 18px; }
+        /* chips: layers and profiles (click one to switch) */
+        .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+        .chip { border: 1px solid var(--border-strong); background: var(--panel); color: var(--text); border-radius: 999px;
+                padding: 3px 11px; font: 600 0.82em/1.6 var(--mono); cursor: pointer; white-space: nowrap; }
+        .chip:hover { border-color: var(--orange); }
+        .chip.on { background: var(--orange); border-color: var(--orange); color: var(--orange-ink); cursor: default; }
+        .chip:disabled { opacity: 0.45; cursor: default; }
+        /* the mini player: the same block in the page and in the always-on-top window */
+        .mini { font-family: var(--font); color: var(--text); }
+        .mini .top { display: flex; align-items: center; gap: 8px; font-size: 0.82em; color: var(--muted); margin-bottom: 8px; }
+        /* chords: one row, a color swatch and the two keys' icons each; hover one to light its keys */
+        .mini .chord-legend { display: flex; justify-content: space-evenly; gap: calc(3px * var(--cs, 1)); margin: -2px 0 6px; overflow: hidden; white-space: nowrap; font: 700 calc(0.72em * var(--cs, 1)) var(--mono); color: var(--text); }
+        .mini .chord-legend span { display: inline-flex; align-items: center; gap: 4px; padding: 1px 2px; border-radius: 4px; cursor: pointer; }
+        .mini .chord-legend .fa-ico { font-size: 1.3em; height: 1.3em; line-height: 1.3em; }
+        .mini .chord-legend .tb { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; padding: 0 0.65em; border-radius: 999px; color: #fff; font: 700 0.8em/1 var(--mono); height: 1.625em; }
+        .mini .oled canvas { cursor: pointer; }
+        .mini .dot.jig { animation: jigBlink 1s steps(1) infinite; }
+        @keyframes jigBlink { 50% { opacity: 0.15; } }
+        .mini .chord-legend span.hot { background: rgba(0, 0, 0, 0.12); }
+        .mini .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--orange); flex: 0 0 auto; }
+        .mini .dot.on { background: var(--purple); }
+        .mini .state { margin: 0; padding: 2px 10px; border: 0; border-radius: 999px; font: 700 0.95em var(--font); box-shadow: none;
+                       background: var(--orange); color: var(--orange-ink); cursor: pointer; }
+        .mini .full-btn { display: none; margin: 0; padding: 0 4px; border: 0; background: transparent; box-shadow: none; font-size: 1.15em; line-height: 1; color: var(--text); cursor: pointer; }
+        body.compact .mini .full-btn, .pip-body .mini .full-btn { display: inline-block; }
+        .mini { position: relative; }
+        .mini .gear-btn { display: none; margin: 0; padding: 0 2px; border: 0; background: transparent; box-shadow: none; line-height: 1; color: var(--text); cursor: pointer; }
+        body.compact .mini .gear-btn, .pip-body .mini .gear-btn { display: inline-block; }
+        .mini .mini-menu { position: absolute; top: 26px; right: 0; z-index: 5; min-width: 150px; padding: 8px 10px; border-radius: 10px;
+                           background: var(--panel); border: 1px solid var(--border-strong); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25); font-size: 0.85em; }
+        .mini .mini-menu label { display: flex; align-items: center; gap: 6px; margin: 2px 0; white-space: nowrap; cursor: pointer; }
+        .mini .mini-menu select { width: 100%; margin-top: 2px; background: var(--input); color: var(--text); border-color: var(--border-strong); }
+        .mini .mini-menu .menu-label, .mini .mini-menu label[for] { display: block; margin: 6px 0 2px; color: var(--muted); }
+        .mini .mini-look { display: flex; width: max-content; }
+        .mini .mini-look button { padding: 4px 8px; }
+        .mini .mini-menu select option { background: var(--panel); color: var(--text); }
+        body.mini-real .mini, .pip-body.mini-real .mini {
+            --panel: var(--r-panel); --panel-2: var(--r-panel-2); --border: var(--r-border); --border-strong: var(--r-border-strong);
+            --text: var(--r-text); --muted: var(--r-muted); --input: var(--r-input); --code-bg: var(--r-code-bg);
+            --orange: var(--r-orange); --orange-hover: var(--r-orange-hover); --orange-ink: var(--r-orange-ink); --purple: var(--r-purple);
+            --error: var(--r-error); --warn: var(--r-warn); --ok: var(--r-ok);
+        }
+        body.compact.mini-real, body.compact.mini-real .card:has(.mini), .pip-body.mini-real { background: var(--r-panel); }
+        body.mini-real .mini .oled, .pip-body.mini-real .mini .oled { border-color: var(--r-border-strong); }
+        .mini .info { min-height: 1.3em; }
+        .mini.drop-on { outline: 3px dashed var(--purple); outline-offset: 2px; border-radius: 10px; }
+        .mini-away { padding: 10px; color: var(--muted); font-size: 0.85em; }
+        .mini .state.on { background: var(--purple); color: var(--purple-ink); cursor: default; }
+        .wip-tag { font: 700 0.7em var(--mono); padding: 1px 6px; border-radius: 6px; background: var(--orange); color: var(--orange-ink); vertical-align: 2px; }
+        .mini .state.syncing { animation: syncPulse 0.9s ease-in-out infinite; }
+        @keyframes syncPulse { 50% { opacity: 0.55; } }
+        .mini .spacer { flex: 1; }
+        .mini .name { font: 800 1.05em/1.2 var(--mono); letter-spacing: 0.05em; color: var(--text); }
+        /* the pad's screen: 128 x 64 like the OLED, white on black */
+        .oled { position: relative; width: 100%; aspect-ratio: 2 / 1; background: #050505; border-radius: 8px;
+                border: 6px solid #1d1e22; box-sizing: border-box; color: #f2f2f2; font-family: var(--mono); overflow: hidden; }
+        .oled canvas { position: absolute; inset: 0; width: 100%; height: 100%; image-rendering: pixelated; }
+        .oled .enc { position: absolute; left: 6.25%; top: 6%; font-size: var(--px); line-height: 1; }
+        .oled .key { position: absolute; width: 18.75%; height: 22%; display: flex; align-items: center; justify-content: flex-start;
+                     font-size: var(--px); line-height: 1; white-space: pre; }
+        /* chord dots: 2 x 2 pixels at a corner of the icon (like dots.py), sizes in % of the 24 x 14 key box */
+        .oled .cd { position: absolute; width: 8.4%; height: 14.3%; background: #f2f2f2; }
+        .oled .cd.c1 { left: 0; top: -14.3%; } .oled .cd.c2 { right: 0; top: -14.3%; }
+        .oled .cd.c3 { left: 0; bottom: -14.3%; } .oled .cd.c4 { right: 0; bottom: -14.3%; }
+        .oled .blank.nolink { animation: noLink 2.4s ease-in-out infinite; }
+        @keyframes noLink { 50% { opacity: 0.2; } }
+        .oled .blank { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+                       font-size: calc(var(--px) * 1.4); letter-spacing: 0.1em; color: #bbb; }
+        .mini .chips { margin-top: 10px; }
+        /* the player's layer list: two rows, scrolling up and down, the bar thin and on the left */
+        .mini .layers { margin-top: 10px; max-height: 68px; overflow-y: auto; direction: rtl; padding-left: 6px;
+                        scrollbar-width: thin; scrollbar-color: var(--border-strong) transparent; }
+        .mini .layers > .chips { direction: ltr; margin-top: 0; }
+        .mini .layers::-webkit-scrollbar { width: 4px; }
+        .mini .layers::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 2px; }
+        .mini .layers::-webkit-scrollbar-track { background: transparent; }
+        .mini .xfer { margin-top: 8px; }
+        /* the transfer bar: one bar, filling left to right (the whole drop / update, not each file) */
+        .mini .xfer .track { position: relative; height: 8px; border-radius: 4px; overflow: hidden; background: transparent; transition: background 0.2s; }
+        .mini .xfer.busy .track { background: var(--border); }
+        .mini .xfer .bar { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: 4px; transition: width 0.25s ease-out; }
+        .mini .xfer .bar.up { background: var(--purple); }        /* saving: toward the macropad */
+        .mini .xfer .bar.down { background: var(--orange); }      /* reading: from the macropad */
+        .mini .xfer .label .pct { float: right; font-weight: 700; color: var(--text); }
+        /* a drop's check card: each file accepted or not, before anything is copied */
+        .mini .dcard { border: 1px solid var(--border-strong); border-radius: 8px; background: var(--panel-2); padding: 8px 10px; font-size: 0.82em;
+                       max-height: 280px; overflow-y: auto; }
+        body.compact .mini .dcard, .pip-body .mini .dcard { max-height: 150px; padding: 6px 8px; }
+        .mini .dcard .dc-head { font-weight: 800; margin-bottom: 4px; }
+        .mini .dcard .dc-head small { font-weight: 400; color: var(--muted); margin-left: 6px; }
+        .mini .dcard .dc-row { display: grid; grid-template-columns: 16px 1fr auto; gap: 1px 6px; padding: 4px 0; border-top: 1px solid var(--border); align-items: baseline; }
+        .mini .dcard .dc-mark { font-weight: 800; }
+        .mini .dcard .dc-row.ok .dc-mark { color: var(--ok); }
+        .mini .dcard .dc-row.no .dc-mark { color: var(--error); }
+        .mini .dcard .dc-row.info .dc-mark { color: var(--muted); }
+        .mini .dcard .dc-title { font-weight: 700; overflow-wrap: anywhere; }
+        .mini .dcard .dc-row.no .dc-title { opacity: 0.75; }
+        .mini .dcard .dc-note { grid-column: 2 / 4; color: var(--muted); }
+        .mini .dcard select { width: auto; padding: 0 4px; margin: 0; }
+        .mini .dcard .dc-btns { display: flex; gap: 6px; justify-content: flex-end; margin-top: 8px; position: sticky; bottom: -8px; background: var(--panel-2); padding: 4px 0; }
+        .mini .dcard .dc-btns button { margin: 0; }
+        .mini .dcard .dc-err { color: var(--error); margin-top: 6px; }
+        /* the player's screen while files go over the link: like the macropad's (white, a bar) */
+        .oled .sync { position: absolute; inset: 0; background: #f2f2f2; color: #050505; display: flex; flex-direction: column;
+                      align-items: center; justify-content: center; gap: 7%; }
+        .oled .sync b { font-size: calc(var(--px) * 1.5); letter-spacing: 0.14em; }
+        .oled .sync .sbar { width: 78%; height: 13%; border: 2px solid #050505; border-radius: 2px; position: relative; overflow: hidden; box-sizing: border-box; }
+        .oled .sync .sbar i { position: absolute; left: 0; top: 1px; bottom: 1px; width: 0; background: #050505; transition: width 0.25s ease-out; }
+        .oled .sync .sbar.loop i { width: 24%; animation: sbarLoop 1.1s linear infinite; }
+        @keyframes sbarLoop { from { left: -24%; } to { left: 100%; } }
+        .oled .sync small { font-size: calc(var(--px) * 0.8); max-width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .oled .sync.done { background: #050505; color: #f2f2f2; }
+        .oled .sync.fail { background: #050505; color: #ff8a80; }
+        body.compact .mini .xfer .label, .pip-body .mini .xfer .label { display: none; }
+        .pip-body .mini { max-width: 450px; margin-left: auto; margin-right: auto; }     /* (as MP1 Mini: never wider, even if the window is) */
+        /* the mini windows: a little tighter, so the chord legend fits the default size */
+        body.compact .mini .top, .pip-body .mini .top { margin-bottom: 4px; }
+        body.compact .mini .chord-legend, .pip-body .mini .chord-legend { margin: -1px 0 4px; }
+        body.compact .mini .xfer, .pip-body .mini .xfer { margin-top: 4px; }
+        body.compact .mini .info, .pip-body .mini .info { margin-top: 2px; }
+        .mini .xfer .label { margin-top: 3px; min-height: 1.3em; font: 0.75em var(--mono); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .mini .info { margin-top: 8px; font-size: 0.78em; color: var(--muted); min-height: 1.2em; }
+        .pip-body { margin: 0; padding: 10px 12px; background: var(--bg); }
+        body.compact .link-wrap { padding: 0 !important; }
+        body.compact .card:has(.mini) { padding: 10px 12px !important; }
+        /* the tools (configurator, help, workbench, module guide): each in its own frame under the tab bar */
+        .topbar .nav button { background: none; border: 0; box-shadow: none; color: inherit; font: inherit; padding: 6px 12px; margin: 0;
+                              border-radius: 8px; cursor: pointer; opacity: 0.75; }
+        .topbar .nav button:hover { opacity: 1; }
+        .topbar .nav button.active { opacity: 1; background: var(--orange-soft); color: var(--orange); font-weight: 700; }
+        .topbar .nav .linkdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--error); margin-left: 6px; vertical-align: 1px; }
+        .topbar .nav .linkdot.on { background: var(--ok); }
+        .view-frame { position: fixed; left: 0; right: 0; bottom: 0; top: var(--bar-h, 56px); width: 100%; height: calc(100vh - var(--bar-h, 56px));
+                      border: 0; background: var(--bg); }
+        .copy-line { display: flex; gap: 6px; align-items: center; }
+        .copy-line input { flex: 1; min-width: 0; font: 0.8em var(--mono); }
+        /* player only: a small window (a desktop shortcut in app mode, or #mini) shows just the player */
+        body.compact .topbar, body.compact .link-wrap > :not(:has(.mini)), body.compact .card:has(.mini) > :not(.mini),
+        body.compact .view-frame { display: none !important; }
+        body.compact .link-wrap { padding: 8px 10px; max-width: none; }
+        body.compact .card:has(.mini) { margin: 0; padding: 10px; border: 0; border-radius: 0; box-shadow: none; }
+        body.compact, .pip-body { background: var(--panel); }
+        body.compact #mLayersBox, .pip-body #mLayersBox { display: none; }     /* the mini window: no layer picker */
+        /* the always-on-top window and the desktop shortcut: a widget, not a page */
+        .pip-body, body.compact { overflow: hidden; }
+        .pip-body::-webkit-scrollbar, body.compact::-webkit-scrollbar { display: none; }
+        .topbar .mini-btn { margin: 0 6px 0 0; }
+    </style>
+</head>
+<body>
+    <header class="topbar" id="topbar">
+        <span class="brand"><span class="brand-keys"><span></span><span></span><span></span><span></span></span>MP1</span>
+        <nav class="nav" role="tablist" id="tabs">
+            <button data-view="link" class="active" title="The macropad's screen, layers, profiles; the connection">Link<span class="linkdot" id="tabDot"></span></button>
+            <button data-view="keymap" title="keymap.json: layers, keys, encoder">Keymap</button>
+            <button data-view="settings" title="settings.json">Settings</button>
+            <button data-view="dropins" title="Layers, scenes and modules on the drive: on / off, delete">Drop-ins</button>
+            <button data-view="pixels" title="Pixel art: icons, boot images, or just for fun">Pixels</button>
+            <button data-view="help" title="The user guide">Help</button>
+            <button data-view="workbench" title="Wiring guide, Pin Picker, troubleshooting, serial console">Workbench</button>
+            <button data-view="modguide" title="Writing modules">Module guide</button>
+        </nav>
+        <span class="spacer"></span>
+        <button class="icon-btn mini-btn" id="topConnect" data-tip="Connect the macropad (MP1 Link)" aria-label="Connect the macropad"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 3v5M15 3v5"/><path d="M6 8h12v3a6 6 0 0 1-12 0z"/><path d="M12 17v4"/></svg></button>
+        <button class="icon-btn mini-btn" id="miniTop" data-tip="Mini window (always on top)" aria-label="Mini window (always on top)"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="14" rx="2"/><rect x="12" y="11" width="7" height="5" rx="1" fill="currentColor"/></svg></button>
+        <div class="theme-toggle" title="Housing color: follow the computer, or pick light / dark">
+            <button data-mode="auto" onclick="setTheme('auto')" data-tip="Auto (follow the computer)" aria-label="Auto: follow the computer"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+            <button data-mode="light" onclick="setTheme('light')" data-tip="Light" aria-label="Light"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+            <button data-mode="dark" onclick="setTheme('dark')" data-tip="Dark" aria-label="Dark"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+        </div>
+    </header>
+
+    <main id="view-link"><div class="link-wrap">
+        <h1 class="page-title">MP1</h1>
+        <div id="noSerial" class="warn-box" hidden></div>
+        <div id="popupBox" class="warn-box" hidden></div>
+
+        <div class="card">
+            <div class="mini" id="mini">
+                <div class="top"><span class="dot" id="mDot"></span><span class="name" id="mName">—</span><span class="spacer"></span><button class="state" id="mStatus">Connect</button><button class="gear-btn" id="mGear" aria-label="Mini window settings" aria-expanded="false"><svg class="ico" data-fa="fa-gear" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button><button class="full-btn" id="mFull" aria-label="Open the full MP1 page">⤢</button></div>
+                <div class="mini-menu" id="mMenu" hidden>
+                    <label><input type="checkbox" id="mOnTop"> Always on top</label>
+                    <span class="menu-label">Look</span>
+                    <div class="theme-toggle mini-look" id="mLook">
+                        <button data-look="" data-tip="Like the page" aria-label="Like the page"><svg class="ico" data-fa="fa-square" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="5" width="14" height="14" rx="2" fill="currentColor"/></svg></button>
+                        <button data-look="system" data-tip="Auto (follow the computer)" aria-label="Auto: follow the computer"><svg class="ico" data-fa="fa-circle-half-stroke" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8"/><path d="M12 4a8 8 0 0 1 0 16z" fill="currentColor"/></svg></button>
+                        <button data-look="light" data-tip="Light" aria-label="Light"><svg class="ico" data-fa="fa-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg></button>
+                        <button data-look="dark" data-tip="Dark" aria-label="Dark"><svg class="ico" data-fa="fa-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></button>
+                    </div>
+                    <label for="mChordMode">Chords</label>
+                    <select id="mChordMode" aria-label="Chords"><option value="bars">Bars (at each key's left)</option><option value="colors">Colors (one chord at a time)</option><option value="off">Off</option></select>
+                    <label for="mSkin">Skin</label>
+                    <select id="mSkin" aria-label="Skin"><option value="">Default</option></select>
+                </div>
+                <div class="chord-legend" id="mChords" hidden></div>
+                <div class="oled" id="mOled"><div class="blank nolink">No Link</div></div>
+                <div class="dcard" id="mCard" hidden></div>
+                <div class="xfer" id="mXfer"><div class="track"><div class="bar up"></div><div class="bar down"></div></div><div class="label"></div></div>
+                <div class="layers" id="mLayersBox"><div class="chips" id="mLayers"></div></div>
+                <div class="info" id="mInfo"></div>
+            </div>
+            <div class="row" style="margin-top:14px">
+                <button class="primary" id="connectBtn">Connect…</button>
+                <button id="pipBtn">Open mini window</button>
+                <span class="hint" id="pipHint"></span>
+            </div>
+            <p class="hint" id="connectHint">First time: Connect… and pick the macropad's port. After that it connects by itself.</p>
+        </div>
+
+        <div class="card" id="profileCard">
+            <h2>Profile</h2>
+            <div class="chips" id="profiles"><span class="hint">Connect to see the macropad's profiles.</span></div>
+            <p class="hint">Click one to switch: the macropad shows that profile's layers at once (ALL shows every layer). Clicking the profile name at the top of the player goes to the next one.</p>
+        </div>
+
+        <div class="card">
+            <h2>This computer</h2>
+            <div class="row" id="autoProfileRow">
+                <label for="autoProfile">Profile on this computer:</label>
+                <select id="autoProfile"></select>
+            </div>
+            <p class="hint" id="autoProfileHint">Whenever the macropad connects to this page on this computer, it switches to this profile by itself: work layers hidden at home, game layers hidden at work. Kept in this computer's browser, so each computer has its own. Without the page open, the macropad keeps the profile it had last. <em>Any</em> leaves the profile alone.</p>
+            <div class="row"><label><input type="checkbox" id="openLinks" checked> Open the macropad's web addresses (URL keys) in this browser</label></div>
+            <p class="hint">Instead of the Run dialog (Win+R), a key's web address opens as a new tab here: quicker, and nothing flashes up on the screen. The first time, the browser may block it (a "pop-up blocked" icon in the address bar): click it and choose <strong>Always allow</strong>. Until then, and whenever this page isn't connected, the macropad uses the Run dialog as before.</p>
+            <div class="row"><label><input type="checkbox" id="syncClock" checked> Set the macropad's clock from this computer</label></div>
+            <p class="hint">Sent when it connects and every hour; kept until the macropad loses power. Modules can use it (<code>mp.time()</code>).</p>
+        </div>
+
+        <div class="card">
+            <h2>Mini window on the desktop</h2>
+            <p class="hint">Just the player, in its own small window (no tabs, no address bar), without opening this page first. Once: right-click the desktop → <strong>New → Shortcut</strong>, paste this line, and name it MP1:</p>
+            <div class="copy-line"><input id="shortcutLine" readonly><button id="copyShortcut">Copy</button></div>
+            <p class="hint">It opens this file as a small app window showing only the player (any window narrower than about 520 pixels does the same). <strong>Open mini window</strong> above keeps it on top of other windows. If you move this file, make the shortcut again. Chrome works too: use chrome.exe instead of msedge.exe.</p>
+        </div>
+
+        <div class="card">
+            <h2>Health</h2>
+            <div id="health" class="hint">Connect to see the macropad's free memory and any start-up problems.</div>
+        </div>
+    </div></main>
+
+    <script>
+    // The tools' pages, kept in this one file (built by build_mpy.py from the separate source pages)
+    const PAGES = {};
+    </script>
+    <script>
+    // The window / tab icon: the MP1 mark (the keycaps in the top bar), for the full page and the mini window
+    const MP1_ICON = 'data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 21 21">' +
+        '<rect x="0" y="0" width="9" height="9" rx="2" fill="#d9661d"/><rect x="12" y="0" width="9" height="9" rx="2" fill="#6b4fb8"/>' +
+        '<rect x="0" y="12" width="9" height="9" rx="2" fill="#6b4fb8"/><rect x="12" y="12" width="9" height="9" rx="2" fill="#d9661d"/></svg>');
+    function setIcon(doc) {
+        let l = doc.querySelector('link[rel="icon"]');
+        if (!l) { l = doc.createElement('link'); l.rel = 'icon'; doc.head.appendChild(l); }
+        l.type = 'image/svg+xml';
+        l.href = MP1_ICON;
+    }
+    setIcon(document);
+    </script>
+    <script>
+    // ════════════════════════════════════════════════════════════
+    // MP1 Link: Web Serial to the macropad's data channel (lib/macropad/link.py), one JSON object
+    // per line. The mini player can move into a Document Picture-in-Picture window (always on top).
+    // ════════════════════════════════════════════════════════════
+    const VENDORS = [0x2E8A, 0x239A];           // Raspberry Pi, Adafruit
+    const HELLO_WAIT_MS = 2500;                 // a port that doesn't say hello by then isn't the link
+    const CLOCK_EVERY_MS = 3600 * 1000;
+    const OPT_KEY = 'mp1-link';
+    // The macropad's own pixels for the screen preview: Terminus 12 (6 x 12: the status row and encoder) and the key
+    // icon font (Terminus 16 bold, 7 x 20: taller and narrower), plus the symbols it draws itself. One hex byte per row.
+    // size 's': the status row's font (Terminus 16, 8 x 16) and its 2-character symbols (tools/keyfont/status_font.py)
+    const PAD_FONT = {6: {" ": "000000000000000000000000", "!": "000008080808080008080000", "\"": "001414140000000000000000", "#": "000014143e14143e14140000", "$": "0000081c2a281c0a2a1c0800", "%": "0000122a1404080a15120000", "&": "0000081414081a24241a0000", "'": "000808080000000000000000", "(": "000004081010101008040000", ")": "000010080404040408100000", "*": "0000000014083e0814000000", "+": "0000000008083e0808000000", ",": "000000000000000008081000", "-": "0000000000003e0000000000", ".": "000000000000000008080000", "/": "000002020404080810100000", "0": "00001c22262a3222221c0000", "1": "0000081808080808081c0000", "2": "00001c2222020408103e0000", "3": "00001c22020c0202221c0000", "4": "000002060a12223e02020000", "5": "00003e20203c0202221c0000", "6": "00001c20203c2222221c0000", "7": "00003e020204040808080000", "8": "00001c22221c2222221c0000", "9": "00001c2222221e02021c0000", ":": "000000000808000008080000", ";": "000000000808000008081000", "<": "000000020408100804020000", "=": "000000003e00003e00000000", ">": "000000100804020408100000", "?": "00001c222204080008080000", "@": "00001c22262a2a26201e0000", "A": "00001c2222223e2222220000", "B": "00003c22223c2222223c0000", "C": "00001c2220202020221c0000", "D": "000038242222222224380000", "E": "00003e20203c2020203e0000", "F": "00003e20203c202020200000", "G": "00001c2220202e22221c0000", "H": "00002222223e222222220000", "I": "00001c0808080808081c0000", "J": "00000e040404042424180000", "K": "000022242830302824220000", "L": "0000202020202020203e0000", "M": "000022362a2a222222220000", "N": "00002222322a262222220000", "O": "00001c2222222222221c0000", "P": "00003c2222223c2020200000", "Q": "00001c22222222222a1c0200", "R": "00003c2222223c2824220000", "S": "00001c22201c0202221c0000", "T": "00003e080808080808080000", "U": "0000222222222222221c0000", "V": "000022222214141408080000", "W": "0000222222222a2a36220000", "X": "000022221408081422220000", "Y": "000022221414080808080000", "Z": "00003e0204081020203e0000", "[": "00001c1010101010101c0000", "\\": "000010100808040402020000", "]": "00001c0404040404041c0000", "^": "000814220000000000000000", "_": "000000000000000000003e00", "`": "100800000000000000000000", "a": "000000001c021e22221e0000", "b": "000020203c222222223c0000", "c": "000000001c222020221c0000", "d": "000002021e222222221e0000", "e": "000000001c223e20201e0000", "f": "000006081c08080808080000", "g": "000000001e222222221e021c", "h": "000020203c22222222220000", "i": "0008080018080808081c0000", "j": "00020200060202020202120c", "k": "000010101214181814120000", "l": "0000180808080808081c0000", "m": "000000003c2a2a2a2a2a0000", "n": "000000003c22222222220000", "o": "000000001c222222221c0000", "p": "000000003c222222223c2020", "q": "000000001e222222221e0202", "r": "000000002e30202020200000", "s": "000000001e201c02023c0000", "t": "000008081c08080808060000", "u": "0000000022222222221e0000", "v": "000000002222141408080000", "w": "0000000022222a2a2a1c0000", "x": "000000002214080814220000", "y": "0000000022222222221e021c", "z": "000000003e040810203e0000", "{": "000006080810080808060000", "|": "000008080808080808080000", "}": "000018040402040404180000", "~": "00122a240000000000000000", "⏯": "000025353535353525000000", "⏭": "000022323a3e3e3a32220000", "⏮": "00001113171f1f1713110000", "⏹": "0000003f3f3f3f3f3f000000", "🔊": "0000091a3a3a3a3a1a090000", "🔉": "000008183a3a3a3a18080000", "🔇": "000008183d3a3a3d18080000", "▲": "0000000c0c1e1e3f3f000000", "▼": "0000003f3f1e1e0c0c000000", "◀": "00000103070f0f0703010000", "▶": "00002030383c3c3830200000", "↵": "0000010109193f1808000000", "⇥": "00002025233f232520000000", "⌫": "00000008103f100800000000"},
+        k: {" ": "000000000000000000000000000000000000000000000000", "!": "00000c0c0c0c0c0c0c0c0c0c0c0c0c000c0c0c0c00000000", "\"": "003636363600000000000000000000000000000000000000", "#": "000036363636367e7e363636367e7e363636363600000000", "$": "000808083e6a6a6868683e3e0a0a0a6a6a3e3e0808080000", "%": "000033336b6b3606060c0c0c0c18181b3535333300000000", "&": "00001c1c3636361c1c3a3a6e6e6666666e6e3a3a00000000", "'": "000c0c0c0c00000000000000000000000000000000000000", "(": "000006060c0c181818181818181818180c0c060600000000", ")": "000018180c0c060606060606060606060c0c181800000000", "*": "0000000000000036361c7e7e1c1c36000000000000000000", "+": "000000000000001818187e7e181818000000000000000000", ",": "0000000000000000000000000000000c0c0c0c1800000000", "-": "000000000000000000007e7e000000000000000000000000", ".": "0000000000000000000000000000000c0c0c0c0000000000", "/": "0000060606060c0c0c181818183030306060606000000000", "0": "00003c3c6666666e6e6e6e767676766666663c3c00000000", "1": "0000181838387818181818181818181818187e7e00000000", "2": "00003c3c66666606060c0c181810102060607e7e00000000", "3": "00003c3c66666606061c1c060606066666663c3c00000000", "4": "000006060e0e1e3636666646467e7e060606060600000000", "5": "00007e7e60606060607c7c060606060666663c3c00000000", "6": "00001c1c30306060607c7c666666666666663c3c00000000", "7": "00007e7e0606060c0c0c0c18181818303030303000000000", "8": "00003c3c66666666663c3c666666666666663c3c00000000", "9": "00003c3c666666666666663e3e0606060c0c383800000000", ":": "000000000000000c0c0c00000000000c0c0c0c0000000000", ";": "000000000000000c0c0c00000000000c0c0c0c1800000000", "<": "00000006060c0c1818303060303018180c0c060600000000", "=": "000000000000007e7e0000007e7e00000000000000000000", ">": "0000006060303018180c0c060c0c18183030606000000000", "?": "00003c3c6666666666660c18181818001818181800000000", "@": "00003e3e6262666a6a6a6a6a6a6a6a6660603e3e00000000", "A": "00003c3c666666666666667e7e6666666666666600000000", "B": "00007c7c66666666667c7c666666666666667c7c00000000", "C": "00003c3c66666660606060606060606666663c3c00000000", "D": "000078786c6c666666666666666666666c6c787800000000", "E": "00007e7e60606060607c7c606060606060607e7e00000000", "F": "00007e7e60606060607c7c60606060606060606000000000", "G": "00003c3c666666606060606e6e66666666663c3c00000000", "H": "0000666666666666667e7e66666666666666666600000000", "I": "00001e1e0c0c0c0c0c0c0c0c0c0c0c0c0c0c1e1e00000000", "J": "00001e1e0c0c0c0c0c0c0c0c0c0c0c6c6c6c383800000000", "K": "0000666666666c68687070707068686c6666666600000000", "L": "000060606060606060606060606060606060607e00000000", "M": "000042426262727e7e6e6e62626262626262626200000000", "N": "00006666666666767676766e6e6e6e666666666600000000", "O": "00003c3c66666666666666666666666666663c3c00000000", "P": "00007c7c666666666666667c7c6060606060606000000000", "Q": "00003c3c6666666666666666666666666e3c3c0606000000", "R": "00007c7c666666666666667c7c7070686c6c666600000000", "S": "00003c3c66666060603c3c060606066666663c3c00000000", "T": "00007f0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c00000000", "U": "000066666666666666666666666666666666663c00000000", "V": "000066666666666666666634343434341818181800000000", "W": "00006666666666666666666e6e7e7e766666424200000000", "X": "000066666666343434181818183434346666666600000000", "Y": "0000636363633232321c1c0c0c0c0c0c0c0c0c0c00000000", "Z": "00007e7e02020206060c0c181830306060607e7e00000000", "[": "00001e1e18181818181818181818181818181e1e00000000", "\\": "000060606060303030181818180c0c0c0606060600000000", "]": "00001e1e06060606060606060606060606061e1e00000000", "^": "00183c3c6600000000000000000000000000000000000000", "_": "00000000000000000000000000000000000000007e7e0000", "`": "180c00000000000000000000000000000000000000000000", "a": "000000000000003c3c063e3e66666666663e3e0000000000", "b": "000060606060607c7c6666666666666666667c7c00000000", "c": "000000000000003c3c66606060606066663c3c0000000000", "d": "000006060606063e3e6666666666666666663e3e00000000", "e": "000000000000003c3c6666667e7e6060603c3c0000000000", "f": "00000e0e1818187e7e181818181818181818181800000000", "g": "00000000003e3e6666666666666666663e3e060606063c00", "h": "000060606060607c7c666666666666666666666600000000", "i": "00000c0c0c0c001c1c0c0c0c0c0c0c0c0c0c1e1e00000000", "j": "000006060606000e06060606060606060606666666663c00", "k": "0000606060606066666c6c68687070686c6c666600000000", "l": "00001c1c0c0c0c0c0c0c0c0c0c0c0c0c0c0c1e1e00000000", "m": "000000000000007e7e6a6a6a6a6a6a6a6a6a6a0000000000", "n": "000000000000007c7c666666666666666666660000000000", "o": "000000000000003c3c66666666666666663c3c0000000000", "p": "00000000007c7c6666666666666666667c7c606060606000", "q": "00000000003e3e6666666666666666663e3e060606060600", "r": "000000000000006e6e787070606060606060600000000000", "s": "000000000000003e3e6060603c3c0606067c7c0000000000", "t": "000018181818187e7e1818181818181818180e0e00000000", "u": "00000000000000666666666666666666663e3e0000000000", "v": "000000000000006666666666343434181818180000000000", "w": "000000000000006262626a6a6a6a6a6a6a3e3e0000000000", "x": "000000000000006666663434181834666666660000000000", "y": "000000000066666666666666666666663e3e060606063c00", "z": "000000000000007e7e060c0c18183060607e7e0000000000", "{": "00000e0e18181818183030181818181818180e0e00000000", "|": "00000c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c00000000", "}": "000038380c0c0c0c0c06060c0c0c0c0c0c0c383800000000", "~": "003b6b6b6600000000000000000000000000000000000000", "▶": "00000000000010001c001e001f001fc01fe01ff01ffc1ffc1ff01fe01fc01f001e001c00100000000000000000000000", "◀": "0000000000000004001c003c007c01fc03fc07fc1ffc1ffc07fc03fc01fc007c003c001c000400000000000000000000", "▲": "00000000000000000080008001c001c003e003e007f007f00ff80ff81ffc1ffc3ffe0000000000000000000000000000", "▼": "000000000000000000003ffe1ffc1ffc0ff80ff807f007f003e003e001c001c000800080000000000000000000000000", "⏭": "000000000000200c300c380c3c0c3e0c3f0c3f8c3fcc3fcc3f8c3f0c3e0c3c0c380c300c200c00000000000000000000", "⏮": "00000000000018021806180e181e183e187e18fe19fe19fe18fe187e183e181e180e1806180200000000000000000000", "⏯": "00000000000020263026302638263c263e263f263f263f263f263e263c26382630263026202600000000000000000000", "⏹": "000000000000000000001ffc1ffc1ffc1ffc1ffc1ffc1ffc1ffc1ffc1ffc1ffc1ffc0000000000000000000000000000", "🔊": "000000000000008001a003b80398078c3fa43fb63fb63fb63fb63fa4078c039803b801a0008000000000000000000000", "🔉": "000000000000008001800380038007803fa03fb03fb03fb03fb03fa00780038003800180008000000000000000000000", "🔇": "000000000000008001800380038007b23fb63f9c3f9c3f9c3f9c3fb607b2038003800180008000000000000000000000", "↵": "0000000000000004000400040004020406040e041e043ffc1ffc1e000e00060002000000000000000000000000000000", "⇥": "0000000000000006000601060186018601c601e63ff63ff601e601c60186018601060006000600000000000000000000", "⌫": "000000000000000000000100030007000f001f003ffe3ffe1f000f000700030001000000000000000000000000000000"}, "s": {" ": "00000000000000000000000000000000", "!": "00001010101010101000101000000000", "\"": "00242424000000000000000000000000", "#": "00002424247e24247e24242400000000", "$": "0010107c9290907c1212927c10100000", "%": "0000649468081010202c524c00000000", "&": "000018242418304a4444443a00000000", "'": "00101010000000000000000000000000", "(": "00000810202020202020100800000000", ")": "00002010080808080808102000000000", "*": "000000000024187e1824000000000000", "+": "000000000010107c1010000000000000", ",": "00000000000000000000101020000000", "-": "000000000000007e0000000000000000", ".": "00000000000000000000101000000000", "/": "00000404080810102020404000000000", "0": "00003c4242464a526242423c00000000", "1": "00000818280808080808083e00000000", "2": "00003c42420204081020407e00000000", "3": "00003c4242021c020242423c00000000", "4": "000002060a1222427e02020200000000", "5": "00007e4040407c020202423c00000000", "6": "00001c2040407c424242423c00000000", "7": "00007e02020404080810101000000000", "8": "00003c4242423c424242423c00000000", "9": "00003c424242423e0202043800000000", ":": "00000000001010000000101000000000", ";": "00000000001010000000101020000000", "<": "00000004081020402010080400000000", "=": "00000000007e00007e00000000000000", ">": "00000040201008040810204000000000", "?": "00003c42424204080800080800000000", "@": "00007c829ea2a2a2a69a807e00000000", "A": "00003c424242427e4242424200000000", "B": "00007c4242427c424242427c00000000", "C": "00003c42424040404042423c00000000", "D": "00007844424242424242447800000000", "E": "00007e40404078404040407e00000000", "F": "00007e40404078404040404000000000", "G": "00003c424240404e4242423c00000000", "H": "0000424242427e424242424200000000", "I": "00003810101010101010103800000000", "J": "00000e04040404040444443800000000", "K": "00004244485060605048444200000000", "L": "00004040404040404040407e00000000", "M": "000082c6aa9292828282828200000000", "N": "000042424262524a4642424200000000", "O": "00003c42424242424242423c00000000", "P": "00007c424242427c4040404000000000", "Q": "00003c424242424242424a3c02000000", "R": "00007c424242427c5048444200000000", "S": "00003c4240403c020242423c00000000", "T": "0000fe10101010101010101000000000", "U": "00004242424242424242423c00000000", "V": "00004242424242242424181800000000", "W": "000082828282829292aac68200000000", "X": "00004242242418182424424200000000", "Y": "00008282444428101010101000000000", "Z": "00007e02020408102040407e00000000", "[": "00003820202020202020203800000000", "\\": "00004040202010100808040400000000", "]": "00003808080808080808083800000000", "^": "00102844000000000000000000000000", "_": "000000000000000000000000007e0000", "`": "10080000000000000000000000000000", "a": "00000000003c023e4242423e00000000", "b": "00004040407c42424242427c00000000", "c": "00000000003c42404040423c00000000", "d": "00000202023e42424242423e00000000", "e": "00000000003c42427e40403c00000000", "f": "00000e10107c10101010101000000000", "g": "00000000003e42424242423e02023c00", "h": "00004040407c42424242424200000000", "i": "00001010003010101010103800000000", "j": "00000404000c04040404040444443800", "k": "00004040404244487048444200000000", "l": "00003010101010101010103800000000", "m": "0000000000fc92929292929200000000", "n": "00000000007c42424242424200000000", "o": "00000000003c42424242423c00000000", "p": "00000000007c42424242427c40404000", "q": "00000000003e42424242423e02020200", "r": "00000000005e60404040404000000000", "s": "00000000003e40403c02027c00000000", "t": "00001010107c10101010100e00000000", "u": "00000000004242424242423e00000000", "v": "00000000004242422424181800000000", "w": "00000000008282929292927c00000000", "x": "00000000004242241824424200000000", "y": "00000000004242424242423e02023c00", "z": "00000000007e04081020407e00000000", "{": "00000c10101020101010100c00000000", "|": "00001010101010101010101000000000", "}": "00003008080804080808083000000000", "~": "0062928c000000000000000000000000", "▶": "0000000008000e000f000fc00fe00ff80fe00fc00f000e000800000000000000", "◀": "000000000010007000f003f007f01ff007f003f000f000700010000000000000", "▲": "0000000000000180018003c003c007e007e00ff00ff01ff80000000000000000", "▼": "0000000000001ff80ff00ff007e007e003c003c0018001800000000000000000", "⏭": "00000038103818381c381f381fb81ff81fb81f381c3818381038003800000000", "⏮": "00001c001c081c181c381cf81df81ff81df81cf81c381c181c081c0000000000", "⏯": "00000048104818481c481e481e481f481e481e481c4818481048004800000000", "⏹": "0000000000000ff00ff00ff00ff00ff00ff00ff00ff00ff00000000000000000", "🔊": "000000000140036007101f501f481f281f481f50071003600140000000000000", "🔉": "000000000100030007001f401f401f201f401f40070003000100000000000000", "🔇": "000000000100030007001f681f381f301f381f68070003000100000000000000", "↵": "00000000001800180018021806180ff81ff80e00060002000000000000000000", "⇥": "00000000000800080108018801c81fe801c80188010800080008000000000000", "⌫": "0000000000000100030007000f001ff80f000700030001000000000000000000"}};
+    const PAD_FONT_WIDE = {"k": {"▶": 14, "◀": 14, "▲": 14, "▼": 14, "⏭": 14, "⏮": 14, "⏯": 14, "⏹": 14, "🔊": 14, "🔉": 14, "🔇": 14, "↵": 14, "⇥": 14, "⌫": 14}, "s": {"▶": 16, "◀": 16, "▲": 16, "▼": 16, "⏭": 16, "⏮": 16, "⏯": 16, "⏹": 16, "🔊": 16, "🔉": 16, "🔇": 16, "↵": 16, "⇥": 16, "⌫": 16}};     // symbols: wider than a letter
+    const PAD_FONT_SIZE = {"6": {"w": 6, "h": 12, "mid": 6.0}, "k": {"w": 7, "h": 24, "mid": 11.0}, "s": {"w": 8, "h": 16, "mid": 8.0}};
+    // The layer screen as the macropad draws it (lib/macropad/display.py): status row, then 4 x 2 keys
+    const MARGIN = 2, KEY_COL_W = 31, KEY_CENTERS = [0, 1].flatMap(r => [0, 1, 2, 3].map(c => [MARGIN + c * KEY_COL_W + KEY_COL_W / 2, r ? 52.5 : 27]));
+    const KEY_CAPS = [[18, 35], [44, 61]];      // each row's capitals: top, bottom
+    const CHORD_COLORS = ['#e8590c', '#1c7ed6', '#9c36b5', '#2f9e44'];     // as on the Keymap tab's chord cards
+    let hotKey = -1, hotChord = 0;              // what the pointer is over (a key, or a legend entry)
+    function chordPairs() {                     // [[chord number 1-4, [key, key]], ...] from the macropad's dots
+        const by = {};
+        for (const [k, n] of (pad && pad.dots) || []) (by[n] = by[n] || []).push(k);
+        return Object.keys(by).map(Number).sort().map(n => [n, by[n]]);
+    }
+    function padText(ctx, text, x, y, size, color, centered) {
+        // size 6: the 6 x 12 status font; 'k': the key font. y = the capitals' middle; x = left edge, or the middle if centered.
+        // A symbol can be wider than a letter (PAD_FONT_WIDE); the last character's spacing column isn't counted when centering.
+        const chars = Array.from(text), {w, h, mid} = PAD_FONT_SIZE[size], wide = PAD_FONT_WIDE[size] || {};
+        const widthOf = ch => wide[ch] || w;
+        const total = chars.reduce((n, ch) => n + (PAD_FONT[size][ch] || ch === ' ' ? widthOf(ch) : 0), 0);
+        let left = centered ? Math.round(x - (total - 1) / 2) : x;
+        const top = Math.round(y - mid);
+        ctx.fillStyle = color;
+        for (const ch of chars) {
+            const g = PAD_FONT[size][ch], cw = widthOf(ch), digits = cw > 12 ? 4 : cw > 8 ? 3 : 2;
+            if (g) for (let r = 0; r < h; r++) {
+                const bits = parseInt(g.substr(r * digits, digits), 16);
+                for (let c = 0; c < cw; c++) if (bits & (1 << (cw - 1 - c))) ctx.fillRect(left + c, top + r, 1, 1);
+            }
+            if (g || ch === ' ') left += cw;
+        }
+    }
+    let port = null, reader = null, writer = null, pad = null, pipWin = null, clockTimer = null, autoDone = false;
+    let busy = false, helloWaiter = null;
+    // ─── one link for every MP1 page on this computer ───
+    // The serial port can only be open in one page. The page that has it (the holder) passes the
+    // macropad's messages to the others (BroadcastChannel 'mp1-link') and sends their requests on;
+    // a page that opens while another holds the link uses it instead (remote). If the holder
+    // closes, the others try the port themselves.
+    const ME = Math.random().toString(36).slice(2);
+    let chan = null, remote = false, remoteFrom = null, relayId = 0;
+    const relayed = {};                         // holder: our request id -> [page, its id]
+    try { chan = new BroadcastChannel('mp1-link'); } catch (e) { chan = null; }
+    function share(msg) { if (chan) try { chan.postMessage(msg); } catch (e) { /* closed */ } }
+    function holding() { return !!(port && pad); }
+    if (chan) chan.onmessage = ({data: d}) => {
+        if (!d || d.from === ME) return;
+        if (d.k === 'who' && holding()) share({k: 'here', from: ME, pad});
+        else if (d.k === 'here' && !port) {            // another page has the link: use it
+            remote = true; remoteFrom = d.from;
+            pad = Object.assign({}, d.pad);
+            render(); padChanged();
+        } else if (d.k === 'pad' && remote && d.from === remoteFrom) {
+            if (d.m.t === 'hello') pad = null;          // (a restart: start afresh)
+            onMessage(d.m, true);
+        } else if (d.k === 'reply' && d.to === ME) {
+            onMessage(d.m, true);
+        } else if (d.k === 'send' && holding()) {         // another page's request: on to the macropad
+            const obj = Object.assign({}, d.obj);
+            if (obj.id !== undefined) {
+                const id = 'r' + (++relayId);
+                relayed[id] = [d.from, obj.id];
+                obj.id = id;
+            }
+            send(obj);
+        } else if (d.k === 'xfer') {               // another window's transfer: its progress here too
+            xfer(d.a[0], d.a[1], d.a[2], d.a[3], true);
+        } else if (d.k === 'sync') {
+            syncShow(d.on, true);
+        } else if (d.k === 'bye' && remote && d.from === remoteFrom) {     // the holder closed: take over
+            remote = false; remoteFrom = null; pad = null;
+            render(); padChanged();
+            setTimeout(autoConnect, 600 + Math.random() * 600);
+        }
+    };
+    // Before trying the port: is another page holding the link? (answers within a moment)
+    function askAround() {
+        if (!chan) return Promise.resolve(false);
+        share({k: 'who', from: ME});
+        return wait(400).then(() => remote);
+    }
+    window.addEventListener('pagehide', () => { if (holding()) share({k: 'bye', from: ME}); });
+    const $ = id => document.getElementById(id);
+    const enc = new TextEncoder();
+    const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+
+    function options() {
+        try { return JSON.parse(localStorage.getItem(OPT_KEY)) || {}; } catch (e) { return {}; }
+    }
+    function saveOptions(extra = {}) {
+        const o = Object.assign(options(), {clock: $('syncClock').checked, links: $('openLinks').checked}, extra);
+        try { localStorage.setItem(OPT_KEY, JSON.stringify(o)); } catch (e) { /* private window */ }
+        return o;
+    }
+
+    // ─── connecting ───
+    function supported() {
+        const box = $('noSerial');
+        let why = '';
+        if (!('serial' in navigator)) why = 'This browser can\'t use serial ports. Open this page in <strong>Chrome</strong> or <strong>Edge</strong> on a computer. If it is Chrome or Edge already, the computer\'s IT settings may have turned serial ports off for web pages.';
+        else if (!window.isSecureContext) why = 'Serial ports only work when this page is opened from the MP1 drive or the computer (file://) or an https:// address.';
+        box.hidden = !why;
+        box.innerHTML = why;
+        $('connectBtn').disabled = $('topConnect').disabled = !!why;
+        if (!('documentPictureInPicture' in window)) {
+            $('pipBtn').hidden = true;
+            $('pipHint').textContent = 'This browser has no always-on-top window (needs Chrome or Edge 116 or newer).';
+        }
+        return !why;
+    }
+
+    // Open a port and listen: the link says hello within a moment; the serial console doesn't.
+    async function tryPort(p) {
+        try { await p.open({baudRate: 115200}); } catch (e) { return false; }
+        try { await p.setSignals({dataTerminalReady: true}); } catch (e) { /* not needed everywhere */ }
+        port = p;
+        writer = p.writable.getWriter();
+        const gotHello = new Promise(resolve => { helloWaiter = resolve; });
+        readLoop(p);
+        const ok = await Promise.race([gotHello, wait(HELLO_WAIT_MS).then(() => false)]);
+        helloWaiter = null;
+        if (ok) return true;
+        await closePort();
+        return false;
+    }
+
+    async function autoConnect() {
+        if (port || busy || remote || !('serial' in navigator)) return;
+        busy = true;
+        try {
+            if (await askAround()) return;      // another MP1 page has the link: use it
+            for (const p of await navigator.serial.getPorts()) {
+                const info = p.getInfo();
+                if (info.usbVendorId && !VENDORS.includes(info.usbVendorId)) continue;
+                setStatus('Looking…');
+                if (await tryPort(p)) return;
+            }
+            render();
+        } finally { busy = false; }
+    }
+
+    async function connectNew() {
+        if (!supported() || remote) return;
+        let p;
+        try { p = await navigator.serial.requestPort({filters: VENDORS.map(v => ({usbVendorId: v}))}); }
+        catch (e) { return; }                   // cancelled
+        if (port) await closePort();
+        busy = true;
+        setStatus('Connecting…');
+        let ok = false;
+        try { ok = await tryPort(p); } finally { busy = false; }
+        if (!ok) {
+            render();
+            $('connectHint').innerHTML = '<strong>That port didn\'t answer.</strong> It\'s probably the macropad\'s serial console (or it\'s in use by Mu or another tab): click Connect… again and pick its <strong>other</strong> port. If neither answers, the macropad needs the FIRMWARE_03 boot.py and one unplug / plug-in.';
+        }
+    }
+
+    async function closePort() {
+        const p = port;
+        port = null;
+        pad = null;
+        autoDone = false;                       // (the next connection sets this computer's profile again)
+        try { if (reader) await reader.cancel(); } catch (e) { /* gone */ }
+        try { if (writer) writer.releaseLock(); } catch (e) { /* gone */ }
+        writer = null;
+        try { if (p) await p.close(); } catch (e) { /* unplugged */ }
+        clearInterval(clockTimer);
+        render();
+    }
+
+    async function readLoop(p) {
+        const dec = new TextDecoder();
+        let buf = '';
+        while (p.readable && port === p) {
+            reader = p.readable.getReader();
+            try {
+                for (;;) {
+                    const {value, done} = await reader.read();
+                    if (done) break;
+                    buf += dec.decode(value, {stream: true});
+                    let i;
+                    while ((i = buf.indexOf('\n')) >= 0) {
+                        const line = buf.slice(0, i).trim();
+                        buf = buf.slice(i + 1);
+                        if (line.startsWith('{')) { try { onMessage(JSON.parse(line)); } catch (e) { /* not ours */ } }
+                    }
+                    if (buf.length > 4096) buf = '';
+                }
+            } catch (e) {
+                break;                          // unplugged, or the macropad restarted its USB
+            } finally {
+                try { reader.releaseLock(); } catch (e) { /* already */ }
+                reader = null;
+            }
+        }
+        if (port === p) {                       // lost it: try again shortly (a restart, a replug)
+            await closePort();
+            setStatus('Reconnecting…');
+            setTimeout(autoConnect, 1500);
+        }
+    }
+
+    async function send(obj) {
+        if (remote) return share({k: 'send', from: ME, obj});     // through the page holding the link
+        if (!writer) return;
+        try { await writer.write(enc.encode(JSON.stringify(obj) + '\n')); } catch (e) { /* the read loop notices */ }
+    }
+
+    // ─── messages from the macropad ───
+    function onMessage(m, fromHolder) {
+        if (!fromHolder && port) {                  // holder: the other pages see everything too
+            if (m.t === 'r' && relayed[m.id]) {
+                const [to, id] = relayed[m.id];
+                delete relayed[m.id];
+                return share({k: 'reply', from: ME, to, m: Object.assign({}, m, {id})});
+            }
+            if (m.t !== 'r' && m.t !== 'open') share({k: 'pad', from: ME, m});
+        }
+        if (m.t === 'hello') {
+            skinNames = null;
+            setTimeout(loadLinkIcons, 800);
+            pad = m;
+            if (helloWaiter) helloWaiter(true);
+            if (fromHolder) { render(); padChanged(); return; }
+            const o = options();
+            if (o.clock !== false) sendClock();
+            clearInterval(clockTimer);
+            clockTimer = setInterval(() => { if (options().clock !== false) sendClock(); }, CLOCK_EVERY_MS);
+            if (!autoDone && m.profiles_on !== false && o.profile && o.profile !== m.profile && (m.profiles || []).includes(o.profile)) {
+                autoDone = true;                // once per connection (reset when the link goes)
+                send({c: 'profile', name: o.profile});
+                setStatus(`Switching to ${o.profile}…`);
+                return;
+            }
+        } else if (m.t === 'state' && pad) {
+            Object.assign(pad, {layer: m.layer, secret: m.secret, free: m.free, keys: m.keys, enc: m.enc, dots: m.dots,
+                                chords: m.chords, hold: m.hold, jiggle: m.jiggle});
+        } else if (m.t === 'open') {
+            openUrl(m);
+            return;
+        } else if (m.t === 'synced') {          // the macropad's report on the sync just finished
+            flashInfo(`Synced in ${m.secs.toFixed(1)} s`);
+            return;
+        } else if (m.t === 'r') {                // a file request's answer
+            const done = pending[m.id];
+            delete pending[m.id];
+            if (done) done(m);
+            return;
+        } else if (m.t === 'error') {
+            flashInfo(m.msg);
+        }
+        render();
+    }
+
+    // A key's web address: open it here (the macropad waits a moment for the answer, then uses
+    // the Run dialog if this didn't work)
+    function openUrl(m) {
+        let ok = false;
+        if (options().links !== false && /^(https?|mailto|ftp):/i.test(m.url)) {
+            const w = window.open(m.url, '_blank');
+            ok = !!w;
+            if (w) { try { w.opener = null; } catch (e) { /* cross-origin already */ } }
+        }
+        send({c: 'opened', id: m.id, ok});
+        const box = $('popupBox');
+        if (!ok && options().links !== false) {
+            box.hidden = false;
+            box.innerHTML = '<strong>The browser blocked a web address the macropad sent</strong> (it used the Run dialog instead). To open them here, click the <em>pop-up blocked</em> icon at the right of the address bar and choose <strong>Always allow</strong>.';
+        } else if (ok) box.hidden = true;
+        flashInfo(ok ? 'Opened ' + m.url : 'Opened with the Run dialog');
+    }
+
+    function sendClock() {
+        const d = new Date();
+        const yday = Math.floor((d - new Date(d.getFullYear(), 0, 1)) / 86400000) + 1;
+        send({c: 'time', t: [d.getFullYear(), d.getMonth() + 1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), (d.getDay() + 6) % 7, yday]});
+        if (pad) pad.clock = true;
+    }
+
+    // ─── actions ───
+    function pickLayer(name) { if (pad && name !== pad.layer) send({c: 'layer', name}); }
+    function pickProfile(name) {
+        if (!pad || name === pad.profile) return;
+        send({c: 'profile', name});
+        setStatus(`Switching to ${name}…`);
+    }
+
+    // ─── drawing (the page and the mini window share the same elements) ───
+    let infoUntil = 0;
+    function flashInfo(text) {
+        q('mInfo').textContent = text;
+        infoUntil = Date.now() + 4000;
+        setTimeout(render, 4100);
+    }
+    function q(id) { return (pipWin && pipWin.document.getElementById(id)) || $(id); }
+    function setStatus(text) { q('mStatus').textContent = text; }
+
+    function oledHtml() {
+        const sc = screenNow();
+        if (sc) return syncHtml(sc);
+        if (!pad) return '<div class="blank nolink">No Link</div>';
+        if (pad.secret || !pad.keys) return '<div class="blank">SECRET</div>';
+        return '<canvas width="128" height="64"></canvas>';
+    }
+    // Icons the macropad draws (a key's or the encoder's text starting with a character from U+E000):
+    // drawn here from the same Link icon, converted the way the configurator does (18 x 18 keys, 14 x 14
+    // status row). Without Font Awesome, just the text is shown.
+    const PICON = 0xE000, iconCache = new Map();
+    function faRows(cls, n) { return window.iconPixels ? window.iconPixels(cls, n) : Promise.resolve(null); }     // (any icon set: the page's icon loader)
+    // "a;b": a key's two icons (also in the shared icon helpers, which load after this script)
+    function iconParts(value) { return String(value || '').split(';').map(s => s.trim()).filter(Boolean).slice(0, 2); }
+    function iconRows(cls, n) {
+        if (!cls) return null;
+        const key = cls + '@' + n, v = iconCache.get(key);
+        if (Array.isArray(v) || v === null) return v;
+        if (!v) iconCache.set(key, faRows(cls, n).then(rows => { iconCache.set(key, rows); if (rows) drawLive(); }, () => iconCache.set(key, null)));
+        return null;
+    }
+    function drawRows(ctx, rows, x, y, color) {
+        ctx.fillStyle = color;
+        rows.forEach((r, j) => { for (let i = 0; i < r.length; i++) if (r[i] === '1') ctx.fillRect(x + i, y + j, 1, 1); });
+    }
+    const hasPicon = s => !!s && s.codePointAt(0) >= PICON && s.codePointAt(0) < PICON + 4096;
+    const noPicon = s => Array.from(s || '').filter(ch => !(ch.codePointAt(0) >= PICON && ch.codePointAt(0) < PICON + 4096)).join('');
+    function drawOled(oled) {
+        const canvas = oled.querySelector('canvas');
+        if (!canvas) return;
+        const look = getComputedStyle(q('mini'));
+        const light = look.getPropertyValue('--oled-ink').trim() || '#f4f8ff', dark = look.getPropertyValue('--oled-paper').trim() || '#000';
+        const ctx = canvas.getContext('2d'), ink = pad.hold ? dark : light;
+        if (pad.hold) { ctx.fillStyle = light; ctx.fillRect(0, 0, 128, 64); }
+        const li = pad.hold ? {} : iconsFor(pad.layer);
+        if (pad.enc) {
+            const rows = hasPicon(pad.enc) ? iconRows(li.enc, 14) : null;
+            if (rows) drawRows(ctx, rows, MARGIN + 1, 1, ink);
+            padText(ctx, noPicon(pad.enc), MARGIN + (rows ? 18 : 0), 8, 's', ink, false);
+        }
+        const pairs = pad.hold ? [] : chordPairs(), mode = chordMode();
+        const turn = mode === 'colors' && pairs.length ? Math.floor(Date.now() / CHORD_CYCLE_MS) % (pairs.length + 1) : -1;
+        const turnKeys = turn >= 0 && turn < pairs.length ? pairs[turn][1] : [], turnColor = turn >= 0 && turn < pairs.length ? CHORD_COLORS[pairs[turn][0] - 1] : '';
+        pad.keys.forEach((icon, k) => {
+            const [cx, cy] = KEY_CENTERS[k], keyInk = turnKeys.includes(k) ? turnColor : ink;
+            // a whole label (letters and icons, as the configurator drew it for the macropad)
+            if (hasPicon(icon) && li.text && typeof li.text[k] === 'string' && window.labelItems) {
+                const items = window.labelItems(li.text[k], (li.keys || [])[k], (li.at || [])[k]), fit = window.labelFit(items, PAD_FONT_WIDE.k);
+                const left = MARGIN + (k % 4) * KEY_COL_W + 1;
+                if (fit && window.drawLabel(items, fit, left, cy, (c, n) => iconRows(c, n), (rows, x, y) => drawRows(ctx, rows, x, y, keyInk),
+                                            (ch, x) => padText(ctx, ch, x, cy, 'k', keyInk, false), PAD_FONT_WIDE.k)) return;
+            }
+            const two = hasPicon(icon) ? iconParts((li.keys || [])[k]) : [];
+            if (two.length > 1) {               // two icons, 14 x 14, side by side
+                const a = iconRows(two[0], 14), b = iconRows(two[1], 14);
+                if (a && b) {
+                    const left = Math.round(cx - 14.5);
+                    drawRows(ctx, a, left, Math.round(cy - 7), keyInk);
+                    drawRows(ctx, b, left + 16, Math.round(cy - 7), keyInk);
+                    return;
+                }
+            }
+            const rows = hasPicon(icon) ? iconRows((li.keys || [])[k], 18) : null;
+            if (rows) {                         // the macropad's icon, then its letter (if any)
+                const letter = noPicon(icon), total = 18 + (letter ? 1 + ((PAD_FONT_WIDE.k || {})[letter] || PAD_FONT_SIZE.k.w) - 1 : 0);
+                const left = Math.round(cx - (total - 1) / 2);
+                drawRows(ctx, rows, left, Math.round(cy - 9), keyInk);
+                if (letter) padText(ctx, letter, left + 19, cy, 'k', keyInk, false);
+                return;
+            }
+            padText(ctx, Array.from(noPicon(icon)).slice(0, 4).join(''), cx, cy, 'k', keyInk, true);
+        });
+        // chords (Bars): a bar down the far left of each chord key, in its chord's color (split when it's in several)
+        const inKey = {};
+        if (mode === 'bars') for (const [n, keys] of pairs) for (const k of keys) (inKey[k] = inKey[k] || []).push(n);
+        for (const [k, ns] of Object.entries(inKey)) {
+            const [top, bottom] = KEY_CAPS[k < 4 ? 0 : 1], h = bottom - top + 1;
+            const left = MARGIN + (k % 4) * KEY_COL_W;
+            ns.forEach((n, i) => {
+                const y0 = top + Math.round(i * h / ns.length), y1 = top + Math.round((i + 1) * h / ns.length);
+                ctx.fillStyle = CHORD_COLORS[n - 1];
+                ctx.fillRect(left, y0, 2, y1 - y0);
+            });
+        }
+        // hover: the pairs of the key (or legend entry) under the pointer, outlined in their colors
+        for (const [n, keys] of pairs) {
+            if (hotChord !== n && !(hotKey >= 0 && keys.includes(hotKey))) continue;
+            for (const k of keys) {
+                const left = MARGIN + (k % 4) * KEY_COL_W, top = k < 4 ? 17 : 43;
+                ctx.fillStyle = CHORD_COLORS[n - 1];
+                ctx.fillRect(left, top, KEY_COL_W, 1); ctx.fillRect(left, top + 19, KEY_COL_W, 1);
+                ctx.fillRect(left, top, 1, 20); ctx.fillRect(left + KEY_COL_W - 1, top, 1, 20);
+            }
+        }
+    }
+    // How chords show on the screen here (the gear menu): 'bars', 'colors' (one chord at a time in its
+    // color, cycling like the macropad's marks) or 'off'. Kept in this browser.
+    const CHORD_CYCLE_MS = 1500;
+    let chordTimer = null;
+    function chordMode() { const m = options().chordMarks; return m === 'colors' || m === 'off' ? m : 'bars'; }
+    function chordCycle() {                     // the Colors cycle's clock (only while it's showing)
+        const want = chordMode() === 'colors' && pad && !pad.secret && chordPairs().length;
+        if (want && !chordTimer) chordTimer = setInterval(drawLive, CHORD_CYCLE_MS / 3);
+        else if (!want && chordTimer) { clearInterval(chordTimer); chordTimer = null; }
+    }
+    function renderLegend() {
+        const box = q('mChords'), pairs = pad && !pad.secret ? chordPairs() : [];
+        box.innerHTML = pairs.map(([n, keys]) => {
+            const color = CHORD_COLORS[n - 1], fa = window.FA_OK && window.iconHtml ? iconHtml((iconsFor(pad.layer).chords || [])[n - 1], 'fa-ico', 'color:' + color) : '';
+            const text = (pad.chords || [])[n - 1] || keys.map(k => (pad.keys || [])[k] || '·').join(' ');
+            const look = fa || `<b class="tb" style="background:${color}">${esc(text)}</b>`;
+            return `<span data-chord="${n}" class="${hotChord === n ? 'hot' : ''}" ${fa ? `title="${esc(text)}"` : ''}>${look}</span>`;
+        }).join('');
+        box.hidden = !pairs.length;
+        // the mini windows: the row goes when the window is too short for it
+        // As big as the room allows, smoothly, up to 2.5x (the height in the mini windows; never
+        // wider than the screen mock-up); the spacing between them grows and shrinks with it.
+        // In the mini windows the transfer bar goes first when there's no room, then the legend
+        // shrinks, down to 0.8x; under that it goes
+        const win = pipWin || window, doc = win.document, mini = miniMode();
+        const xfer = q('mXfer');
+        xfer.style.display = '';
+        const tooTall = () => mini && doc.documentElement.scrollHeight > win.innerHeight + 1;
+        if (!pairs.length) {
+            if (tooTall() && !xferBusy) xfer.style.display = 'none';
+            return;
+        }
+        const fit = least => {
+            const fits = () => !tooTall() && [...box.children].reduce((n, el) => n + el.offsetWidth, 0) <= q('mOled').offsetWidth - 2;
+            box.hidden = false;
+            box.style.setProperty('--cs', 1);
+            const items = [...box.children];           // (their own widths: the even spacing fills the rest)
+            const w1 = items.reduce((n, el) => n + el.offsetWidth, 0) + 3 * (items.length + 1), h1 = box.offsetHeight;
+            const free = win.innerHeight - (q('mInfo').getBoundingClientRect().bottom + 10);     // (under the last line)
+            let s = Math.min(2.5, q('mOled').offsetWidth / Math.max(1, w1), mini ? (h1 + free) / Math.max(1, h1) : 9);
+            for (s = Math.floor(s * 20) / 20; s >= least; s = Math.round((s - 0.05) * 100) / 100) {
+                box.style.setProperty('--cs', s);
+                if (fits()) return true;
+            }
+            box.hidden = true;
+            return false;
+        };
+        if (xferBusy) { fit(0.8); return; }        // a transfer: the bar stays, the legend makes do
+        if (fit(mini ? 1 : 0.8)) return;
+        if (mini) {
+            xfer.style.display = 'none';
+            if (fit(0.8)) return;
+        }
+    }
+    function keyAt(e) {                          // the key under the pointer on the screen mock-up (-1: none)
+        const oled = q('mOled'), r = oled.getBoundingClientRect();
+        const x = (e.clientX - r.left) / r.width * 128, y = (e.clientY - r.top) / r.height * 64;
+        return y >= 14 && x >= MARGIN && x < MARGIN + 4 * KEY_COL_W ? Math.floor((x - MARGIN) / KEY_COL_W) + (y >= 38 ? 4 : 0) : -1;
+    }
+    function hoverAt(e) {
+        const k = keyAt(e);
+        if (k !== hotKey) { hotKey = k; drawLive(); }
+    }
+    function pressFromHere(what, label) {        // {key: 0-7} or {chord: 0-3}
+        if (!pad || pad.secret || !pad.keys) return;
+        send(Object.assign({c: 'press'}, what));
+        flashInfo('Sent ' + (label || 'it'));
+    }
+    function drawLive() {                        // redraw the mock-up and legend only (hover)
+        const oled = q('mOled');
+        if (pad && oled.querySelector('canvas')) {
+            const ctx = oled.querySelector('canvas').getContext('2d');
+            ctx.clearRect(0, 0, 128, 64);
+            drawOled(oled);
+        }
+        renderLegend();
+    }
+
+    function render() {
+        const on = !!pad;
+        q('mDot').classList.toggle('on', on);
+        q('mDot').classList.toggle('jig', on && !!pad.jiggle);
+        q('mDot').title = on ? (pad.jiggle ? 'Jiggle on' : 'Jiggle off') : 'Not connected';
+        q('mName').textContent = on ? pad.layer : '—';
+        const st = q('mStatus');
+        const profilesOn = on && pad.profiles_on !== false;     // (profiles switched off: nothing about them)
+        const profilesSwitch = on && (pad.profiles_setting === true || profilesOn);    // the Settings switch is on
+        $('profileCard').hidden = !profilesSwitch;
+        for (const id of ['autoProfileRow', 'autoProfileHint']) $(id).hidden = !profilesOn;
+        st.textContent = on ? (updating ? 'UPDATING' : syncShown ? 'SYNCING' : profilesOn ? pad.profile : 'Connected') : (port || remote ? 'Connecting…' : 'Connect');
+        st.classList.toggle('on', on);
+        st.classList.toggle('syncing', on && (syncShown || updating));
+        st.title = on ? (profilesOn ? 'The profile showing: click for the next one' : 'Connected') : 'Connect to the macropad';
+        st.style.cursor = on && profilesOn ? 'pointer' : '';
+        const oled = q('mOled');
+        oled.innerHTML = oledHtml();
+        if (pad) drawOled(oled);
+        renderLegend();
+        chordCycle();
+        q('mLayers').innerHTML = on ? pad.layers.map(n =>
+            `<button class="chip ${n === pad.layer ? 'on' : ''}" data-layer="${esc(n)}">${esc(n)}</button>`).join('') : '';
+        const cur = q('mLayers').querySelector('.chip.on');
+        if (cur) {                              // keep the current layer in view (two rows show)
+            const box = q('mLayersBox'), top = cur.offsetTop - box.offsetTop;
+            if (top < box.scrollTop || top + cur.offsetHeight > box.scrollTop + box.clientHeight) box.scrollTop = top - 2;
+        }
+        if (Date.now() > infoUntil) q('mInfo').textContent = on ? `${Math.round(pad.free / 1024)} KB free${pad.clock ? ' · clock set' : ''}` : '';
+        $('profiles').innerHTML = on && !profilesOn && profilesSwitch
+            ? '<span class="hint">Profiles are on, but no layer has one yet. In the <strong>Keymap</strong> tab, open a layer&#39;s <strong>Profiles</strong> button (next to its name), choose <strong>New profile…</strong> (e.g. WORK), tick it on the layers it should show, and Save to drive. Then pick one here, or set <em>Profile on this computer</em> below.</span>'
+            : on ? pad.profiles.map(n =>
+            `<button class="chip ${n === pad.profile ? 'on' : ''}" data-profile="${esc(n)}">${esc(n)}</button>`).join('')
+            : '<span class="hint">Connect to see the macropad\'s profiles.</span>';
+        const o = options();
+        const profiles = on ? pad.profiles : [];
+        $('autoProfile').innerHTML = '<option value="">Any (leave it)</option>' +
+            [...new Set([...profiles, ...(o.profile ? [o.profile] : [])])].map(n => `<option ${n === o.profile ? 'selected' : ''}>${esc(n)}</option>`).join('');
+        $('syncClock').checked = o.clock !== false;
+        $('openLinks').checked = o.links !== false;
+        $('health').innerHTML = on
+            ? `Free memory while running: <strong>${pad.free.toLocaleString()} bytes</strong> (above about 15,000 is comfortable). ${pad.profiles_on !== false ? `Profile <strong>${esc(pad.profile)}</strong>, ` : ''}${pad.layers.length} layers.` +
+              (pad.errors && pad.errors.length ? `<div>Start-up problems:</div><ul class="err-list">${pad.errors.map(e => `<li>${esc(e)}</li>`).join('')}</ul>` : ' No start-up problems.')
+            : 'Connect to see the macropad\'s free memory and any start-up problems.';
+        $('connectBtn').textContent = on ? 'Connect another…' : 'Connect…';
+        $('topConnect').hidden = on;
+        padChanged();
+    }
+
+    // ─── the always-on-top mini window (Document Picture-in-Picture) ───
+    async function openMini() {
+        if (!('documentPictureInPicture' in window)) return;
+        if (pipWin) { pipWin.focus(); return; }
+        const mini = $('mini');
+        pipWin = await documentPictureInPicture.requestWindow({width: MINI_AREA[0], height: MINI_AREA[1]});
+        for (const sheet of document.styleSheets) {            // the page's look (theme.css + this page)
+            if (sheet.ownerNode && sheet.ownerNode.id === 'skinStyle') continue;      // (the skin: applySkin adds its own)
+            if (sheet.href) {
+                const link = pipWin.document.createElement('link');
+                link.rel = 'stylesheet';
+                link.href = sheet.href;
+                pipWin.document.head.appendChild(link);
+                continue;
+            }
+            try {
+                const style = pipWin.document.createElement('style');
+                style.textContent = [...sheet.cssRules].map(r => r.cssText).join('\n');
+                pipWin.document.head.appendChild(style);
+            } catch (e) {
+                if (sheet.href) {
+                    const link = pipWin.document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = sheet.href;
+                    pipWin.document.head.appendChild(link);
+                }
+            }
+        }
+        const theme = document.documentElement.getAttribute('data-theme');
+        if (theme) pipWin.document.documentElement.setAttribute('data-theme', theme);
+        pipWin.document.title = 'MP1';
+        pipWin.document.body.className = 'pip-body';
+        setTimeout(() => { applySkin(); applyLook(); });
+        try { setIcon(pipWin.document); } catch (e) { /* no icon there */ }
+        const holder = document.createElement('div');
+        holder.id = 'miniHome';
+        holder.className = 'mini mini-away';        // (a .mini, so the shortcut window keeps showing its card)
+        holder.textContent = 'On top in its own window. Untick "Always on top" (the gear) there, or close it, to bring it back here.';
+        mini.parentNode.insertBefore(holder, mini);
+        pipWin.document.body.appendChild(mini);
+        q('mMenu').hidden = true;
+        pipWin.addEventListener('resize', () => { render(); miniFitSoon(); });
+        pipWin.document.addEventListener('pointerdown', () => miniFit(), true);
+        pipWin.addEventListener('pagehide', () => {             // closed: the player comes back to the page
+            const home = $('miniHome');
+            home.parentNode.insertBefore(mini, home);
+            home.remove();
+            pipWin = null;
+            // closed on its own (not because this window is closing): it stays off next time
+            if (document.visibilityState === 'visible') saveOptions({onTop: false});
+            render();
+            miniFitSoon();
+        });
+        render();
+        miniFitSoon();
+    }
+    // ─── files dropped on the player: checked, shown on a card (each accepted or not, and why), then
+    // copied to the macropad over the link with the SYNCING screen. Where each goes:
+    // *.mp1layer.json -> layers/, *.mp1scene.json -> scenes/, *.mp1key.json -> keys/N (the card asks
+    // which key), a folder -> modules/ (a module is a folder), *.bmp -> images/ (boot.bmp and
+    // startup.bmp -> Boot/), *.mp1skin.css -> Toolkit/, the macropad's own .json files -> the top
+    // folder. A firmware zip on its own: the firmware update card. Anything else isn't copied.
+    // The macropad restarts afterwards if they're files it reads at start-up. ───
+    const DROP_MAX = 512 * 1024;                // bigger than this: not over the link
+    const FW_MAX = 2 * 1024 * 1024;             // one file of a firmware update (MP1.html is about 1 MB)
+    const TOP_FILES = ['keymap.json', 'settings.json', 'default.json', 'wiring.json', 'linkicons.json'];
+    const OWN_DATA = ['keymap.json', 'settings.json', 'wiring.json', 'clock.json', 'secret.json', 'linkicons.json', 'modules/responses/responses.json'];
+    function dropPlace(name) {
+        const n = name.toLowerCase();
+        if (n.endsWith('.mp1layer.json')) return 'layers/' + name;
+        if (n.endsWith('.mp1scene.json')) return 'scenes/' + name;
+        if (n.endsWith('.mp1key.json')) return 'keys/' + name;        // (its QUICK KEYS place is asked for)
+        if (n.endsWith('.mp1skin.css')) return 'Toolkit/' + name;
+        if (n === 'boot.bmp' || n === 'startup.bmp') return 'Boot/' + n;
+        if (n.endsWith('.bmp')) return 'images/' + name;
+        return name;
+    }
+    async function droppedFiles(dt) {           // [[path on the macropad, File]], folders walked
+        const out = [];
+        const walk = (entry, base) => new Promise(done => {
+            if (entry.isFile) entry.file(f => { out.push([base + f.name, f]); done(); }, () => done());
+            else entry.createReader().readEntries(async list => {
+                for (const e of list) await walk(e, base + entry.name + '/');
+                done();
+            }, () => done());
+        });
+        const entries = [...dt.items].map(i => i.webkitGetAsEntry && i.webkitGetAsEntry()).filter(Boolean);
+        if (entries.length) {
+            for (const e of entries) {
+                if (e.isDirectory) await walk(e, 'modules/');
+                else await new Promise(done => e.file(f => { out.push([dropPlace(f.name), f]); done(); }, () => done()));
+            }
+        } else for (const f of dt.files) out.push([dropPlace(f.name), f]);
+        return out;
+    }
+    const kb = n => n < 1024 ? n + ' bytes' : (n / 1024).toFixed(n < 10240 ? 1 : 0) + ' KB';
+    async function statQuiet(path) {            // like stat(), without starting a sync (only looking)
+        const i = path.lastIndexOf('/');
+        try {
+            const r = await requestOne({c: 'ls', path: i < 0 ? '' : path.slice(0, i)});
+            const item = r.items.find(x => x[0] === path.slice(i + 1));
+            return item ? {dir: item[1]} : null;
+        } catch (e) { return null; }
+    }
+    const jsonOf = async f => { try { return JSON.parse(await f.text()); } catch (e) { return undefined; } };
+    // Each dropped file (a module: its whole folder) as a row of the card: {ok, title, note, files: [[path, File]], key}
+    async function checkDrop(files) {
+        const rows = [], mods = new Map();
+        let taken = null;                       // the QUICK KEYS keys already set (keys/N.mp1key.json)
+        for (const [p, f] of files) {
+            const m = p.match(/^modules\/([^/]+)\//);
+            if (m) { if (!mods.has(m[1])) mods.set(m[1], []); mods.get(m[1]).push([p, f]); continue; }
+            const low = p.toLowerCase(), name = f.name;
+            const no = note => rows.push({ok: false, title: name, note, files: []});
+            if (f.size > DROP_MAX) { no(`Too big to copy over the link (${kb(f.size)}; the most is ${DROP_MAX / 1024} KB).`); continue; }
+            if (low === 'secret.json') { no('The secret layers are encrypted to the macropad: change them in the Keymap tab.'); continue; }
+            if (low === 'code.py' || low === 'boot.py' || /\.(py|mpy)$/.test(low)) { no('Firmware files go in with a firmware update (a firmware zip, dropped on its own).'); continue; }
+            if (low.endsWith('.zip')) { no('A firmware zip goes on its own: drop it without other files.'); continue; }
+            if (/^layers\//.test(low)) {
+                const d = await jsonOf(f), body = d && typeof d === 'object' ? ('mp1_layer' in d ? d.layer : d) : null;
+                if (!body || typeof body !== 'object' || 'layers' in body || typeof body.name !== 'string' || !body.name) { no('Not an MP1 layer file (export one from the Keymap tab\'s layer menu).'); continue; }
+                const lname = body.name.toUpperCase().slice(0, 10), there = await statQuiet(p);
+                const clash = !there && (pad.layers || []).includes(lname);
+                rows.push({ok: true, title: `Layer ${lname}`, note: there ? `Replaces ${p}.` : clash ? `A layer called ${lname} is already on the macropad: this one loads as ${lname.slice(0, 9)}2.` : 'A new layer.', files: [[p, f]], warn: !!(there || clash)});
+            } else if (/^scenes\//.test(low)) {
+                const d = await jsonOf(f);
+                if (!d || typeof d !== 'object' || Array.isArray(d)) { no('Not an MP1 scene file (NAME.mp1scene.json).'); continue; }
+                const there = await statQuiet(p);
+                rows.push({ok: true, title: `Scene ${name.replace(/\.mp1scene\.json$/i, '').toUpperCase()}`, note: there ? 'Replaces the scene of that name.' : 'A new light scene.', files: [[p, f]], warn: !!there});
+            } else if (/^keys\//.test(low)) {
+                const d = await jsonOf(f);
+                if (!d || typeof d !== 'object' || 'mp1_layer' in d || 'layers' in d) { no('Not an MP1 key file (export one from a key\'s card in the Keymap tab).'); continue; }
+                if (!taken) { try { taken = (await requestOne({c: 'ls', path: 'keys'})).items.map(i => i[0]); } catch (e) { taken = []; } }
+                const set = /^keys\/([1-8])\.mp1key\.json$/i.exec(p);
+                const used = rows.filter(x => x.key).map(x => x.key);
+                const key = set ? +set[1] : ([1, 2, 3, 4, 5, 6, 7, 8].find(n => !taken.includes(n + '.mp1key.json') && !used.includes(n)) || 1);
+                rows.push({ok: true, title: `Quick key: ${name.replace(/\.mp1key\.json$/i, '')}`, note: '', files: [[p, f]], key, taken});
+            } else if (/^boot\//i.test(p) || /^images\//.test(low)) {
+                const head = new Uint8Array(await f.slice(0, 2).arrayBuffer());
+                if (head[0] !== 0x42 || head[1] !== 0x4D) { no('Not a BMP picture (save it as .bmp; the Pixels tab makes them).'); continue; }
+                const there = await statQuiet(p);
+                rows.push({ok: true, title: /^boot\//i.test(p) ? (low.endsWith('startup.bmp') ? 'Start-up picture' : 'Boot picture') : `Picture ${name}`, note: there ? `Replaces ${p}.` : `Goes in ${p.split('/')[0]}/.`, files: [[p, f]], warn: !!there});
+            } else if (/^toolkit\//.test(low)) {
+                rows.push({ok: true, title: `Skin ${name.replace(/\.mp1skin\.css$/i, '')}`, note: 'For the mini windows (the gear menu).', files: [[p, f]]});
+            } else if (TOP_FILES.includes(low)) {
+                const d = await jsonOf(f);
+                if (!d || typeof d !== 'object') { no(`Isn't valid JSON: the macropad couldn't read it.`); continue; }
+                if (low === 'keymap.json' && ![2, 3].includes(d.version)) { no('Not a keymap the macropad can load (it needs "version": 2 or 3). Open it in the Keymap tab instead.'); continue; }
+                rows.push({ok: true, title: name, note: 'Replaces the macropad\'s ' + name + ' (the old one is kept as .bak).', files: [[p, f]], warn: true});
+            } else no('The macropad doesn\'t use this kind of file.');
+        }
+        for (const [mod, list] of mods) {
+            const key = mod.toLowerCase(), big = list.find(([, f]) => f.size > DROP_MAX);
+            const main = list.find(([p]) => new RegExp(`^modules/${mod.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/${key}\\.m?py$`, 'i').test(p));
+            if (!/^[a-z_][a-z0-9_]{0,23}$/.test(key)) rows.push({ok: false, title: `Module ${mod}`, note: 'A module\'s folder name needs letters, digits and _ only.', files: []});
+            else if (!main) rows.push({ok: false, title: `Module ${mod}`, note: `Not a module: there's no ${key}.py inside the folder.`, files: []});
+            else if (big) rows.push({ok: false, title: `Module ${mod}`, note: `${big[1].name} is too big to copy over the link.`, files: []});
+            else {
+                const there = await statQuiet('modules/' + mod);
+                rows.push({ok: true, title: `Module ${mod}`, note: `${list.length} file${list.length > 1 ? 's' : ''}` + (there ? '. Replaces the module of that name.' : '. Switch it on in Settings → Modules.'), files: list, warn: !!there});
+            }
+        }
+        return rows;
+    }
+    // ─── the card ───
+    let card = null;                            // {title, sub, rows, go (button label) or '', run, err}
+    let copying = false;
+    function showCard(c) { card = c; drawCard(); }
+    function closeCard() { card = null; drawCard(); }
+    function drawCard() {
+        const box = q('mCard'), oled = q('mOled');
+        if (!box) return;
+        box.hidden = !card;
+        oled.hidden = !!card;
+        if (!card) { box.innerHTML = ''; miniFitSoon(); return; }
+        const mark = r => r.ok === 'info' ? 'i' : r.ok ? '✓' : '✗';
+        box.innerHTML = `<div class="dc-head">${esc(card.title)}${card.sub ? `<small>${esc(card.sub)}</small>` : ''}</div>` +
+            card.rows.map((r, i) => `<div class="dc-row ${r.ok === 'info' ? 'info' : r.ok ? 'ok' : 'no'}"><span class="dc-mark" aria-label="${r.ok === 'info' ? 'note' : r.ok ? 'accepted' : 'not accepted'}">${mark(r)}</span>` +
+                `<span class="dc-title">${esc(r.title)}</span>` +
+                (r.key ? `<select data-row="${i}" aria-label="Which QUICK KEYS key">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<option value="${n}" ${n === r.key ? 'selected' : ''}>Key ${n}${r.taken && r.taken.includes(n + '.mp1key.json') ? ' (replace)' : ''}</option>`).join('')}</select>` : '<span></span>') +
+                (r.note ? `<span class="dc-note">${esc(r.note)}</span>` : '') + '</div>').join('') +
+            (card.err ? `<div class="dc-err">${esc(card.err)}</div>` : '') +
+            `<div class="dc-btns">${card.go ? `<button data-dc="cancel">Cancel</button><button class="primary" data-dc="go">${esc(card.go)}</button>` : `<button class="primary" data-dc="cancel">OK</button>`}</div>`;
+        miniFitSoon();
+    }
+    function cardEvents(box) {
+        box.addEventListener('click', e => {
+            const b = e.target.closest('[data-dc]');
+            if (!b || !card) return;
+            if (b.dataset.dc === 'cancel') return closeCard();
+            const c = card;
+            c.err = '';
+            Promise.resolve(c.run(c)).catch(err => { c.err = err.message || String(err); if (card !== c) showCard(c); else drawCard(); });
+        });
+        box.addEventListener('change', e => {
+            const sel = e.target.closest('select[data-row]');
+            if (sel && card) card.rows[+sel.dataset.row].key = +sel.value;
+        });
+    }
+    async function dropOnPad(e) {
+        e.preventDefault();
+        q('mini').classList.remove('drop-on');
+        if (!pad) return flashInfo('Connect to the macropad first');
+        if (remote) return flashInfo('Drop files on the window that holds the link');
+        if (copying || card) return flashInfo('Finish the card showing first');
+        const files = await droppedFiles(e.dataTransfer);
+        if (!files.length) return;
+        if (files.length === 1 && /\.zip$/i.test(files[0][0])) return firmwareCard(files[0][1]);
+        showCard({title: 'Checking…', rows: [], go: ''});
+        let rows;
+        try { rows = await checkDrop(files); } catch (err) { return showCard({title: 'Couldn\'t check the files', rows: [{ok: false, title: err.message, note: ''}], go: ''}); }
+        const ok = rows.filter(r => r.ok).length, no = rows.length - ok;
+        showCard({title: ok ? `Copy to the macropad?` : 'Nothing to copy',
+                  sub: [ok && `${ok} accepted`, no && `${no} not`].filter(Boolean).join(' · '),
+                  rows, go: ok ? `Copy ${ok}` : '', run: copyDrop});
+    }
+    async function copyDrop(c) {
+        const rows = c.rows.filter(r => r.ok);
+        const keys = rows.filter(r => r.key).map(r => r.key);
+        if (new Set(keys).size !== keys.length) throw new Error('Two files are set to the same QUICK KEYS key: pick another for one of them.');
+        for (const r of rows) if (r.key) r.files[0][0] = `keys/${r.key}.mp1key.json`;
+        const files = rows.flatMap(r => r.files);
+        closeCard();
+        copying = true;
+        batchStart('Saving', files.map(([, f]) => f.size));
+        try {
+            for (const p of new Set(files.map(([p]) => p.split('/').slice(0, -1).join('/')).filter(Boolean))) {
+                let dir = '';
+                for (const part of p.split('/')) {      // make the folders it needs
+                    dir = dir ? dir + '/' + part : part;
+                    if (!(await stat(dir))) await request({c: 'mkdir', path: dir});
+                }
+            }
+            let icons = null;                   // linkicons.json, read once if a dropped file has Link icons
+            for (const [p, f] of files) {
+                const kind = /^layers\/.*\.mp1layer\.json$/i.test(p) ? 'layer' : /^keys\/[1-8]\.mp1key\.json$/i.test(p) ? 'key' : '';
+                if (kind) {
+                    const [text, e] = splitIcons(await f.text(), kind);
+                    if (e) {
+                        if (!icons) { try { icons = JSON.parse(await readQuiet(ICON_FILE)); } catch (err) { icons = null; } icons = icons && icons.layers ? icons : {version: 1, layers: {}}; }
+                        if (kind === 'key') {
+                            const qk = icons.layers['QUICK KEYS'] || (icons.layers['QUICK KEYS'] = {keys: [], enc: '', chords: []});
+                            qk.keys[+p.match(/(\d)\.mp1key/)[1] - 1] = e.key;
+                        } else if (e.name) { const name = e.name; delete e.name; icons.layers[name] = e; }
+                    }
+                    await writeAll(p, text);
+                } else await writeAll(p, new Uint8Array(await f.arrayBuffer()));
+                batchNext();
+            }
+            if (icons) { await writeAll(ICON_FILE, JSON.stringify(icons, null, 2) + '\n'); linkIcons = icons.layers; }
+            batchEnd();
+            screenFlash({text: 'COPIED', sub: `${files.length} file${files.length > 1 ? 's' : ''}`, done: true});
+        } catch (err) {
+            batchEnd();
+            screenFlash({text: 'NOT COPIED', sub: err.message, fail: true}, 4000);
+            showCard({title: 'Copying stopped', rows: [{ok: false, title: err.message, note: 'Whatever was copied before this is on the macropad. Drop the files again to try again.'}], go: ''});
+        } finally { copying = false; }
+    }
+    // ─── firmware update: a firmware zip (build_mpy.py makes it), dropped on the player or picked in
+    // the Settings tab. Checked first (a card), then its files are written over the link while the
+    // macropad says UPDATING; your own files (keymap, settings, wiring...) are never in it or touched.
+    // The macropad restarts into the new firmware at the end. ───
+    async function readZip(file) {              // [{name, method, size, data}] (the zip's central directory)
+        const buf = new Uint8Array(await file.arrayBuffer()), dv = new DataView(buf.buffer);
+        let end = -1;
+        for (let i = buf.length - 22; i >= Math.max(0, buf.length - 65557); i--) if (dv.getUint32(i, true) === 0x06054b50) { end = i; break; }
+        if (end < 0) throw new Error('not a zip file');
+        const count = dv.getUint16(end + 10, true), out = [];
+        let p = dv.getUint32(end + 16, true);
+        for (let n = 0; n < count; n++) {
+            if (dv.getUint32(p, true) !== 0x02014b50) throw new Error('the zip is damaged');
+            const method = dv.getUint16(p + 10, true), csize = dv.getUint32(p + 20, true), size = dv.getUint32(p + 24, true);
+            const nlen = dv.getUint16(p + 28, true), xlen = dv.getUint16(p + 30, true), clen = dv.getUint16(p + 32, true), local = dv.getUint32(p + 42, true);
+            const name = new TextDecoder().decode(buf.subarray(p + 46, p + 46 + nlen)).replace(/\\/g, '/');
+            p += 46 + nlen + xlen + clen;
+            if (name.endsWith('/')) continue;
+            const start = local + 30 + dv.getUint16(local + 26, true) + dv.getUint16(local + 28, true);
+            out.push({name, method, size, data: buf.subarray(start, start + csize)});
+        }
+        return out;
+    }
+    async function unzip(e) {
+        if (e.method === 0) return e.data;
+        if (e.method !== 8) throw new Error(`${e.name} is packed in a way the page can't read`);
+        const stream = new Blob([e.data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+        return new Uint8Array(await new Response(stream).arrayBuffer());
+    }
+    async function firmwareCard(file) {
+        if (!pad) return flashInfo('Connect to the macropad first');
+        if (remote) return flashInfo('Update from the window that holds the link');
+        if (copying || card) return flashInfo('Finish the card showing first');
+        const title = 'Firmware update';
+        showCard({title, sub: 'Checking ' + file.name + '…', rows: [], go: ''});
+        const rows = [], fail = (t, note) => { rows.push({ok: false, title: t, note}); return showCard({title, sub: file.name, rows, go: ''}); };
+        let entries;
+        try { entries = await readZip(file); } catch (e) { return fail(file.name, `Isn't a zip the page can read (${e.message}).`); }
+        // a zip of a folder: its files are inside one top folder (left off)
+        const tops = new Set(entries.map(e => e.name.split('/')[0]));
+        const strip = tops.size === 1 && entries.every(e => e.name.includes('/')) ? [...tops][0].length + 1 : 0;
+        for (const e of entries) e.path = e.name.slice(strip);
+        const man = entries.find(e => e.path === 'mp1_firmware.json');
+        let info = null;
+        try { info = man && JSON.parse(new TextDecoder().decode(await unzip(man))); } catch (e) { info = null; }
+        if (!info || !info.mp1_firmware) return fail(file.name, 'Not an MP1 firmware zip (there\'s no mp1_firmware.json in it). build_mpy.py makes them.');
+        const fw = String(info.fw || '?'), now = String(pad.fw || '?');
+        rows.push({ok: true, title: `MP1 firmware ${fw}${info.frozen ? ' (custom firmware build)' : ''}`, note: (info.built ? `Built ${info.built}. ` : '') + `The macropad has ${now}.`});
+        if (/^\d+$/.test(fw) && /^\d+$/.test(now) && +fw < +now) return fail('Older than the macropad\'s firmware', `This is ${fw}; the macropad has ${now}. Copy older firmware by hand if you really mean to.`);
+        if (pad.frozen === undefined) return fail('This macropad can\'t update over the link yet', 'Its firmware is older than this feature: copy the zip\'s files onto the MP1 drive by hand once (unzip, then copy over). After that, updates work from here.');
+        if (info.frozen && !pad.frozen) return fail('Made for the MP1 custom firmware', 'This zip leaves out the parts built into the custom CircuitPython (lib/mp1), and this macropad runs standard CircuitPython. Use the standard build\'s zip.');
+        const own = [], skipFrozen = [], list = [];
+        for (const e of entries) {
+            const low = e.path.toLowerCase();
+            if (!e.path || e.path === 'mp1_firmware.json' || low.endsWith('.bak') || /(^|\/)\./.test(e.path)) continue;
+            if (OWN_DATA.includes(low)) { own.push(e.path); continue; }
+            if (pad.frozen && /^lib\/(mp1\/|adafruit_hid\/|neopixel\.mpy$|adafruit_displayio_ssd1306\.mpy$)/i.test(e.path)) { skipFrozen.push(e.path); continue; }
+            if (e.size > FW_MAX) return fail(e.path, `Too big for the link (${kb(e.size)}).`);
+            list.push(e);
+        }
+        if (!list.some(e => e.path === 'code.py') || !list.some(e => /^lib\/macropad\/app\.m?py$/.test(e.path))) return fail('Incomplete', 'A firmware zip needs code.py and lib/macropad. This one is missing them.');
+        const total = list.reduce((n, e) => n + e.size, 0);
+        let room = '';
+        try {
+            const df = await requestOne({c: 'df'});
+            let replaced = 0;                   // (files it replaces free their space)
+            const dirs = new Map();
+            for (const e of list) { const i = e.path.lastIndexOf('/'), d = i < 0 ? '' : e.path.slice(0, i); if (!dirs.has(d)) dirs.set(d, null); }
+            for (const d of dirs.keys()) { try { dirs.set(d, (await requestOne({c: 'ls', path: d})).items); } catch (err) { dirs.set(d, []); } }
+            for (const e of list) { const i = e.path.lastIndexOf('/'), it = (dirs.get(i < 0 ? '' : e.path.slice(0, i)) || []).find(x => x[0] === e.path.slice(i + 1)); if (it) replaced += it[2] || 0; }
+            const free = df.free + replaced;
+            if (total > free - 8192) return fail('Not enough room on the macropad', `The update needs ${kb(total)}; there's ${kb(free)} (counting the files it replaces). Delete a few drop-ins or images first.`);
+            room = ` · ${kb(df.free)} free`;
+        } catch (err) { room = ''; }
+        rows.push({ok: true, title: `${list.length} firmware files, ${kb(total)}`, note: 'Written one by one; the macropad shows UPDATING and restarts at the end.' + room});
+        rows.push({ok: 'info', title: 'Your files stay as they are', note: 'keymap.json, settings.json, wiring.json, the layers, profiles and drop-ins aren\'t touched' + (own.length ? ` (the copies in the zip are skipped: ${own.join(', ')})` : '') + '.'});
+        if (skipFrozen.length) rows.push({ok: 'info', title: `${skipFrozen.length} files skipped`, note: 'lib/mp1 and the libraries are built into this macropad\'s custom firmware.'});
+        showCard({title, sub: file.name, rows, go: 'Update', run: () => runUpdate(list, fw)});
+    }
+    let updating = false;
+    async function runUpdate(list, fw) {
+        closeCard();
+        copying = updating = true;
+        // the order: lib/ first, code.py and boot.py last (they start everything else)
+        const rank = p => p === 'code.py' ? 3 : p === 'boot.py' ? 2 : /^lib\//.test(p) ? 0 : 1;
+        list = list.slice().sort((a, b) => rank(a.path) - rank(b.path) || (a.path < b.path ? -1 : 1));
+        batchStart('Updating', list.map(e => e.size));
+        if (syncOn) send({c: 'sync', on: true, update: true});
+        render();
+        try {
+            const made = new Set();
+            for (const e of list) {
+                const parts = e.path.split('/').slice(0, -1);
+                let dir = '';
+                for (const part of parts) {
+                    dir = dir ? dir + '/' + part : part;
+                    if (made.has(dir)) continue;
+                    if (!(await stat(dir))) await request({c: 'mkdir', path: dir});
+                    made.add(dir);
+                }
+                await writeAll(e.path, await unzip(e));
+                batchNext();
+            }
+            // a .py left where the update brought the .mpy would still be the one used: deleted
+            const mpy = new Set(list.filter(e => e.path.endsWith('.mpy')).map(e => e.path.slice(0, -4) + '.py'));
+            for (const d of new Set([...mpy].map(p => p.slice(0, p.lastIndexOf('/'))))) {
+                let items = [];
+                try { items = (await requestOne({c: 'ls', path: d})).items; } catch (err) { /* no folder */ }
+                for (const [n] of items) if (mpy.has(d + '/' + n)) await request({c: 'delete', path: d + '/' + n});
+            }
+            batchEnd();
+            screenFlash({text: 'UPDATED', sub: `Firmware ${fw}: restarting…`, done: true}, 6000);
+            clearTimeout(restartTimer);         // (this restart is the one)
+            await request({c: 'restart'}).catch(() => {});
+        } catch (err) {
+            batchEnd();
+            const old = /part of the firmware/.test(err.message);
+            screenFlash({text: 'NOT UPDATED', sub: err.message, fail: true}, 5000);
+            showCard({title: 'Update stopped', rows: [{ok: false, title: old ? 'This macropad can\'t update over the link yet' : err.message,
+                note: old ? 'Its firmware refused to change its own files: copy the zip\'s files onto the MP1 drive by hand once. After that, updates work from here.'
+                          : 'Some files may already be new. Run the update again (it\'s safe to repeat), or copy the zip\'s files by hand.'}], go: ''});
+        } finally { updating = copying = false; syncUpdate = false; render(); }
+    }
+    // ─── the player's screen while files go over the link, and the bar under it ───
+    let batch = null;                           // {verb, sizes, i, total, before}: the whole drop / update
+    let xferNow = null;                         // {verb, name, pct, i, n}: what the bar shows now
+    let screenOver = null, screenTimer = null;  // a finished screen (COPIED, UPDATED...) for a moment
+    function batchStart(verb, sizes) { batch = {verb, sizes, i: 0, total: Math.max(1, sizes.reduce((a, b) => a + b, 0)), before: 0}; screenOver = null; }
+    function batchNext() { if (batch) { batch.before += batch.sizes[batch.i] || 0; batch.i++; } }
+    function batchEnd() { batch = null; xfer(); }
+    function screenFlash(sc, ms = 1800) {
+        screenOver = sc;
+        clearTimeout(screenTimer);
+        screenTimer = setTimeout(() => { screenOver = null; render(); }, ms);
+        render();
+    }
+    function screenNow() {
+        if (screenOver) return screenOver;
+        if (!pad) return null;
+        if (updating) return {text: 'UPDATING', x: true};
+        if (syncShown || batch) return {text: 'SYNCING', x: true};
+        return null;
+    }
+    function syncSub() {
+        if (!xferNow) return batch ? `${batch.i + 1} of ${batch.sizes.length}` : 'MP1 LINK';
+        return (xferNow.n > 1 ? `${xferNow.i} of ${xferNow.n} · ` : '') + xferNow.name;
+    }
+    function syncHtml(sc) {
+        if (!sc.x) return `<div class="sync ${sc.done ? 'done' : ''} ${sc.fail ? 'fail' : ''}"><b>${esc(sc.text)}</b>${sc.sub ? `<small>${esc(sc.sub)}</small>` : ''}</div>`;
+        const pct = xferNow ? xferNow.pct : null;
+        return `<div class="sync"><b>${esc(sc.text)}</b><div class="sbar ${pct === null ? 'loop' : ''}"><i style="${pct === null ? '' : `width:${pct}%`}"></i></div><small>${esc(syncSub())}</small></div>`;
+    }
+    function paintSync() {                      // the progress only (no full redraw for every piece)
+        const el = q('mOled') && q('mOled').querySelector('.sync');
+        if (!el) { if (screenNow()) render(); return; }
+        const sc = screenNow();
+        if (!sc || !sc.x) return;
+        const bar = el.querySelector('.sbar'), small = el.querySelector('small');
+        const pct = xferNow ? xferNow.pct : null;
+        bar.classList.toggle('loop', pct === null);
+        bar.firstChild.style.width = pct === null ? '' : pct + '%';
+        small.textContent = syncSub();
+    }
+    // ─── skins for the mini windows: NAME.mp1skin.css files next to MP1.html (the macropad's Toolkit
+    // folder), listed over the link and chosen in the gear menu. The chosen one is kept in this
+    // browser (its CSS too), so it shows before the macropad connects and on any computer it was
+    // chosen on. A skin is plain CSS for body.compact / .pip-body / .mini (see Help).
+    const SKIN_KEY = 'mp1-mini-skin', SKIN_DIR = 'Toolkit';
+    function skinSaved() { try { return JSON.parse(localStorage.getItem(SKIN_KEY)) || {}; } catch (e) { return {}; } }
+    function applySkin() {
+        const {name, css} = skinSaved();
+        for (const doc of [document, pipWin && pipWin.document].filter(Boolean)) {
+            let el = doc.getElementById('skinStyle');
+            if (!el) { el = doc.createElement('style'); el.id = 'skinStyle'; doc.head.appendChild(el); }
+            el.textContent = name && css ? css : '';
+        }
+        drawLive();
+    }
+    let skinNames = null;                       // NAMEs found on the macropad (once per connection)
+    async function listSkins() {
+        if (!pad || skinNames) return;
+        try {
+            const r = await requestOne({c: 'ls', path: SKIN_DIR});
+            skinNames = r.items.filter(([n, dir]) => !dir && /\.mp1skin\.css$/i.test(n)).map(([n]) => n.replace(/\.mp1skin\.css$/i, ''));
+        } catch (e) { skinNames = []; }
+        fillSkins();
+    }
+    function fillSkins() {
+        const cur = skinSaved().name || '';
+        const names = [...new Set([...(skinNames || []), ...(cur ? [cur] : [])])].sort();
+        q('mSkin').innerHTML = '<option value="">Default</option>' + names.map(n => `<option ${n === cur ? 'selected' : ''}>${esc(n)}</option>`).join('');
+    }
+    async function pickSkin(name) {
+        if (!name) { try { localStorage.removeItem(SKIN_KEY); } catch (e) { /* fine */ } return applySkin(); }
+        try {
+            const css = await readAll(SKIN_DIR + '/' + name + '.mp1skin.css');
+            try { localStorage.setItem(SKIN_KEY, JSON.stringify({name, css})); } catch (e) { /* private window */ }
+            applySkin();
+        } catch (e) {
+            flashInfo('Couldn\'t read that skin: ' + e.message);
+            fillSkins();
+        }
+    }
+    // ─── the mini windows' look: grey (the page's card colors, the default), or the page's own light /
+    // dark theme (system: follows Windows). Only the mini windows; kept in this browser. ───
+    function markLook() {
+        const look = options().miniLook || '';
+        q('mLook').querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.look === look));
+    }
+    function applyLook() {
+        const look = options().miniLook || '';
+        const docs = [pipWin && pipWin.document, miniPage() || document.body.classList.contains('compact') ? document : null].filter(Boolean);
+        for (const doc of docs) {
+            doc.body.classList.toggle('mini-real', !!look);
+            if (look === 'light' || look === 'dark') doc.documentElement.setAttribute('data-theme', look);
+            else if (look === 'system') doc.documentElement.removeAttribute('data-theme');
+        }
+        drawLive();
+    }
+    // ─── the mini windows' gear: a small settings menu ───
+    function miniMenu(open) {
+        const m = q('mMenu');
+        m.hidden = !open;
+        q('mGear').setAttribute('aria-expanded', String(open));
+        q('mOnTop').checked = !!pipWin;
+        if (open) { fillSkins(); listSkins(); markLook(); q('mChordMode').value = chordMode(); }
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // The tools: each page is kept in this file (PAGES, below) and shown in a frame the first time
+    // its tab is opened. Links between them switch tabs; web links open in a new tab, so nothing
+    // ever navigates this page away (that would drop the connection and the mini window).
+    // ════════════════════════════════════════════════════════════
+    const VIEWS = {keymap: ['config', 'keymap'], settings: ['config', 'settings'], dropins: ['config', 'dropins'], pixels: ['config', 'pixels'],
+                   help: ['help'], workbench: ['workbench'], modguide: ['modguide']};
+    const FRAME_FOR = {mp1_configurator: 'config', help: 'help', mp1_workbench: 'workbench', module_guide: 'modguide'};
+    const frames = {};
+    let view = 'link';
+    const EMBED = `<script>(function () {
+        document.documentElement.classList.add('in-mp1');
+        document.addEventListener('click', function (e) {
+            var a = e.target.closest && e.target.closest('a[href]');
+            if (!a) return;
+            var href = a.getAttribute('href');
+            if (href.charAt(0) === '#') {           // a section of this page: scroll there (the frame's own address is MP1.html)
+                e.preventDefault();
+                var to = href.length > 1 && document.getElementById(decodeURIComponent(href.slice(1)));
+                if (to) to.scrollIntoView({block: 'start'}); else if (href === '#' || href === '#top') window.scrollTo(0, 0);
+                return;
+            }
+            var m = href.match(/^(?:\\.\\.\\/)?(?:Toolkit\\/)?(mp1_configurator|help|mp1_workbench|module_guide|mp1_link)\\.html(#.*)?$/);
+            if (m) { e.preventDefault(); parent.MP1Go(m[1], m[2] || ''); return; }
+            if (/^(https?:|mailto:)/i.test(href)) a.target = '_blank';
+        }, true);
+    })();<\/script><style>.in-mp1 .topbar { display: none !important; }</style>`;
+
+    function frame(name) {
+        if (frames[name]) return frames[name];
+        const f = document.createElement('iframe');
+        f.className = 'view-frame';
+        f.setAttribute('allow', 'serial *');
+        f.title = name;
+        f.srcdoc = PAGES[name].replace('<head>', '<head>' + EMBED);
+        document.body.appendChild(f);
+        frames[name] = f;
+        return f;
+    }
+    function showView(name, hash) {
+        view = name;
+        for (const b of document.querySelectorAll('#tabs button')) b.classList.toggle('active', b.dataset.view === name);
+        $('view-link').hidden = name !== 'link';
+        const [fname, tab] = VIEWS[name] || [];
+        for (const [k, f] of Object.entries(frames)) f.hidden = k !== fname;
+        if (!fname) return;
+        const f = frame(fname);
+        const go = () => {
+            const w = f.contentWindow;
+            try {
+                if (tab && w.showTab) w.showTab(tab);
+                else if (hash) w.location.hash = hash;
+            } catch (e) { /* not ready yet */ }
+        };
+        if (f.dataset.ready) go(); else f.addEventListener('load', () => { f.dataset.ready = '1'; go(); padChanged(); }, {once: true});
+    }
+    // From a link inside a tool: "help.html#modules" -> the Help tab at that section
+    window.MP1Go = (page, hash) => {
+        if (page === 'mp1_link') return showView('link');
+        if (page === 'mp1_configurator') return showView(['#user', '#device', '#settings'].includes(hash) ? 'settings' : hash === '#dropins' ? 'dropins' : 'keymap');
+        const name = FRAME_FOR[page];
+        showView(name, hash);
+        if (hash && frames[name] && frames[name].dataset.ready) try { frames[name].contentWindow.location.hash = hash; } catch (e) { /* fine */ }
+    };
+    // The theme toggle reaches the tools too
+    const pageSetTheme = window.setTheme;
+    window.setTheme = mode => {
+        pageSetTheme(mode);
+        for (const f of Object.values(frames)) try { f.contentWindow.setTheme && f.contentWindow.setTheme(mode); } catch (e) { /* fine */ }
+    };
+
+    // ════════════════════════════════════════════════════════════
+    // The macropad's files over the link (lib/macropad/linkfiles.py), for the configurator: it uses
+    // these like a drive folder (same calls as the browser's folder access), so its Open / Save
+    // buttons work over the cable whenever the link is connected.
+    // ════════════════════════════════════════════════════════════
+    const CHUNK = 768;                          // bytes per piece read from the macropad
+    const WRITE_CHUNK = 1536;                   // ...and per piece saved (each about 2 KB as a line)
+    let rid = 0, queue = Promise.resolve(), restartTimer = null;
+    function restartSoon() {                    // once, after the last file change
+        clearTimeout(restartTimer);
+        restartTimer = setTimeout(() => {
+            if (syncOps > 0 || copying) return restartSoon();     // a save still going (several files): after the last one
+            request({c: 'restart'}).catch(() => {});
+            flashInfo('Restarting the macropad to use the changed files…');
+        }, 1500);
+    }
+    const pending = {};
+    // One sync on the macropad for a whole Open / Save / drop: "sync on" before the first file
+    // request, "sync off" once nothing more has been asked for a moment (it then keeps SYNCING up
+    // for at least 3 seconds, so it never flashes)
+    let syncOn = false, syncOps = 0, syncTimer = null, syncUpdate = false;
+    function syncBegin() {
+        clearTimeout(syncTimer);
+        syncOps++;
+        if (updating && !syncUpdate) syncUpdate = true;
+        if (!syncOn) { syncOn = true; send(Object.assign({c: 'sync', on: true}, syncUpdate ? {update: true} : {})); syncShow(true); }
+    }
+    function syncDone() {
+        if (--syncOps > 0) return;
+        clearTimeout(syncTimer);
+        syncTimer = setTimeout(() => { if (syncOn && !syncOps) { syncOn = false; send({c: 'sync', on: false}); syncShow(false); } }, 900);
+    }
+    // ─── Link icons: linkicons.json on the macropad (the configurator writes it; the macropad never
+    // reads it). {"version": 1, "layers": {NAME: {"keys": [...], "enc": "", "chords": [...]}}} ───
+    const ICON_FILE = 'linkicons.json';
+    let linkIcons = {};
+    async function readQuiet(path) {            // a small file, read without a sync (the screen stays)
+        const parts = [];
+        let off = 0;
+        for (;;) {
+            const r = await requestOne({c: 'read', path, off});
+            const bytes = unb64(r.data);
+            parts.push(bytes);
+            off += bytes.length;
+            if (r.eof || !bytes.length) break;
+        }
+        const all = new Uint8Array(off);
+        let at = 0;
+        for (const p of parts) { all.set(p, at); at += p.length; }
+        return new TextDecoder().decode(all);
+    }
+    async function loadLinkIcons() {
+        for (const k of Object.keys(iconLook)) delete iconLook[k];
+        try {
+            const j = JSON.parse(await readQuiet(ICON_FILE)) || {};
+            linkIcons = j.layers || {};
+            window.MY_ICONS = j.mine && typeof j.mine === 'object' ? j.mine : {};
+            applySymEdits(PAD_FONT, j.symbols || null);         // (your redrawn built-in symbols)
+        } catch (e) { linkIcons = {}; }
+        render();
+    }
+    // A layer linkicons.json doesn't cover (its file still has the icons inside: copied by hand, or
+    // saved before linkicons.json existed): its own file is read once, quietly, and its icons used
+    const iconLook = {};                        // layer name -> 'busy' / 'done'
+    function iconsFor(name) {
+        if (linkIcons[name]) return linkIcons[name];
+        if (name && pad && !pad.secret && !iconLook[name]) {
+            iconLook[name] = 'busy';
+            const slug = name.trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '-').replace(/^-+|-+$/g, '') || 'layer';
+            readQuiet('layers/' + slug + '.mp1layer.json').then(text => {
+                const [, e] = splitIcons(text, 'layer');
+                if (e) { delete e.name; linkIcons[name] = e; render(); }
+            }).catch(() => {}).finally(() => { iconLook[name] = 'done'; });
+        }
+        return {};
+    }
+    // A layer or key file's Link icons, taken out of it: [the file's text without them, icons or null]
+    function splitIcons(text, kind) {
+        let d;
+        try { d = JSON.parse(text); } catch (e) { return [text, null]; }
+        const body = kind === 'key' ? (d && 'mp1_key' in d ? d.key : d) : (d && 'mp1_layer' in d ? d.layer : d);
+        if (!body || typeof body !== 'object') return [text, null];
+        const e = {keys: [], enc: '', chords: []};
+        let any = false;
+        if (kind === 'key') { if (body.fa) { e.key = body.fa; any = true; delete body.fa; } }
+        else {
+            (body.keys || []).forEach((k, i) => { e.keys[i] = (k && k.fa) || ''; if (k && k.fa) { any = true; delete k.fa; } });
+            if (body.encoder && body.encoder.fa) { e.enc = body.encoder.fa; any = true; delete body.encoder.fa; }
+            (body.chords || []).forEach((c, i) => { e.chords[i] = (c && c.fa) || ''; if (c && c.fa) { any = true; delete c.fa; } });
+            e.name = String(body.name || '').toUpperCase().slice(0, 10);
+        }
+        return any ? [JSON.stringify(d, null, 2) + '\n', e] : [text, null];
+    }
+    // SYNCING in the status button while files go to or from the macropad (this window's or another's)
+    let syncShown = false;
+    function syncShow(on, fromOther) {
+        if (syncShown && !on && pad) setTimeout(loadLinkIcons, 300);     // a sync ended: the icons may have changed
+        syncShown = on;
+        if (!fromOther) share({k: 'sync', from: ME, on});
+        render();
+    }
+    function request(obj) {
+        syncBegin();
+        const p = requestOne(obj);
+        p.then(syncDone, syncDone);
+        return p;
+    }
+    function requestOne(obj) {                  // one at a time: the macropad reads one line per request
+        const run = () => new Promise((resolve, reject) => {
+            if (!pad) return reject(new Error('The macropad isn\'t connected (MP1 Link).'));
+            const id = ++rid;
+            const timer = setTimeout(() => { delete pending[id]; reject(new Error('The macropad didn\'t answer.')); }, remote ? 12000 : 8000);
+            pending[id] = m => { clearTimeout(timer); m.err ? reject(Object.assign(new Error(m.err), {name: m.err === 'not found' ? 'NotFoundError' : 'Error'})) : resolve(m); };
+            send(Object.assign({id}, obj));
+        });
+        const p = queue.then(run, run);
+        queue = p.catch(() => {});
+        return p;
+    }
+    const b64 = bytes => { let s = ''; for (const b of bytes) s += String.fromCharCode(b); return btoa(s); };
+    const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    // One whole file at a time: a second save or read waits until the first is done (two at once
+    // could get their pieces mixed up)
+    let fileLock = Promise.resolve();
+    function oneAtATime(job) {
+        const p = fileLock.then(job, job);
+        fileLock = p.catch(() => {});
+        return p;
+    }
+    const cleared = job => job.finally(() => xfer());
+    const readAll = path => oneAtATime(() => cleared(readFile(path)));
+    const readBytes = path => oneAtATime(() => cleared(readFile(path, true)));
+    const writeAll = (path, text) => oneAtATime(() => cleared(writeFile(path, text)));
+    async function readFile(path, asBytes) {
+        const parts = [];
+        let off = 0;
+        for (;;) {
+            const r = await request({c: 'read', path, off});
+            const bytes = unb64(r.data);
+            parts.push(bytes);
+            off += bytes.length;
+            if (r.size > CHUNK) xfer('Reading', path, off, r.size);
+            if (r.eof || !bytes.length) break;
+        }
+        xfer();
+        const all = new Uint8Array(off);
+        let at = 0;
+        for (const p of parts) { all.set(p, at); at += p.length; }
+        return asBytes ? all : new TextDecoder().decode(all);
+    }
+    async function writeFile(path, text) {
+        const bytes = text instanceof Uint8Array ? text : new TextEncoder().encode(text);     // (bytes: a dropped file)
+        const xid = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);     // this save
+        for (let off = 0; off < bytes.length || off === 0; off += WRITE_CHUNK) {
+            await request({c: 'write', path, off, xid, total: bytes.length, data: b64(bytes.subarray(off, off + WRITE_CHUNK)), last: off + WRITE_CHUNK >= bytes.length});
+            xfer('Saving', path, Math.min(off + WRITE_CHUNK, bytes.length), bytes.length);
+            if (!bytes.length) break;
+        }
+        xfer();
+        // keymap, settings, profiles, drop-ins: used at start-up, so the macropad restarts (once, after the last save)
+        if (/^(keymap\.json|settings\.json|default\.json|profiles\/|layers\/|scenes\/|modules\/|keys\/|icons\/)/.test(path)) restartSoon();
+    }
+    // A transfer's progress in the player (no arguments: done)
+    let xferBusy = false;
+    function xfer(what, path, done, total, fromOther) {
+        if (!fromOther) share({k: 'xfer', from: ME, a: [what || null, path || null, done || 0, total || 0]});
+        const box = q('mXfer');
+        if (!box) return;
+        if (!what && batch && !fromOther) what = batch.verb, path = '', done = 0, total = 0;    // (between two files of a drop)
+        if (!!what !== xferBusy) { xferBusy = !!what; renderLegend(); }      // (makes room for the bar)
+        box.classList.toggle('busy', !!what);
+        const up = box.querySelector('.bar.up'), down = box.querySelector('.bar.down'), label = box.querySelector('.label');
+        if (!what) { up.style.width = down.style.width = '0'; label.textContent = ''; xferNow = null; paintSync(); return; }     // stays in place, empty
+        // a drop or an update: the whole of it (the files so far + this one), not each file from 0
+        const b = !fromOther && batch;
+        const frac = b ? Math.min(1, (b.before + done) / b.total) : total ? done / total : 0;
+        const pct = Math.round(100 * frac);
+        const reading = what === 'Reading';
+        up.style.width = reading ? '0' : pct + '%';
+        down.style.width = reading ? pct + '%' : '0';
+        const name = path ? path.split('/').pop() : (b && b.name) || '';
+        if (b && path) b.name = name;
+        xferNow = {pct, name: name || (b ? b.verb.toUpperCase() : ''), i: b ? b.i + 1 : 1, n: b ? b.sizes.length : 1};
+        const arrow = reading ? '↓' : '↑';
+        const count = b && b.sizes.length > 1 ? ` ${b.i + 1} of ${b.sizes.length}` : '';
+        label.innerHTML = `${arrow} ${esc(what)}${count}${name ? ' · ' + esc(name) : ''}<span class="pct">${pct}%</span>`;
+        if (miniMode()) { q('mInfo').textContent = `${arrow} ${what}${count} ${pct}%`; infoUntil = Date.now() + 1500; }     // (one line in the mini windows)
+        paintSync();
+    }
+    function miniMode() { return !!pipWin || document.body.classList.contains('compact'); }
+    const notFound = () => Object.assign(new Error('not found'), {name: 'NotFoundError'});
+    const join = (dir, name) => dir ? dir + '/' + name : name;
+    async function stat(path) {
+        const i = path.lastIndexOf('/');
+        try {
+            const r = await request({c: 'ls', path: i < 0 ? '' : path.slice(0, i)});
+            const item = r.items.find(x => x[0] === path.slice(i + 1));
+            return item ? {dir: item[1]} : null;
+        } catch (e) { return null; }
+    }
+    function padFile(path) {
+        const name = path.split('/').pop();
+        return {kind: 'file', name, isPad: true,
+            async getFile() { return {name, text: () => readAll(path), arrayBuffer: () => readBytes(path).then(b => b.buffer)}; },
+            async createWritable() {
+                const parts = [];
+                // the configurator keeps the old file as .bak itself: the macropad already does that
+                if (name.endsWith('.bak')) return {write: async () => {}, close: async () => {}};
+                return {write: async s => { parts.push(s); }, close: async () => {
+                    if (parts.every(p => typeof p === 'string')) return writeAll(path, parts.join(''));
+                    // bytes (the configurator's icon strips): joined as they are
+                    const bufs = parts.map(p => typeof p === 'string' ? new TextEncoder().encode(p) : new Uint8Array(p.buffer || p));
+                    const all = new Uint8Array(bufs.reduce((n, b) => n + b.length, 0));
+                    let at = 0;
+                    for (const b of bufs) { all.set(b, at); at += b.length; }
+                    await writeAll(path, all);
+                }};
+            },
+            queryPermission: async () => 'granted', requestPermission: async () => 'granted'};
+    }
+    function padDir(path) {
+        return {kind: 'directory', name: path ? path.split('/').pop() : 'MP1 over USB', isPad: true,
+            async getDirectoryHandle(name, o = {}) {
+                const p = join(path, name), st = await stat(p);
+                if (!st) { if (!o.create) throw notFound(); await request({c: 'mkdir', path: p}); }
+                return padDir(p);
+            },
+            async getFileHandle(name, o = {}) {
+                const p = join(path, name);
+                if (!o.create && !name.endsWith('.bak') && !(await stat(p))) throw notFound();
+                return padFile(p);
+            },
+            async removeEntry(name, o = {}) {
+                const p = join(path, name), st = await stat(p);
+                if (!st) throw notFound();
+                if (st.dir) {
+                    const r = await request({c: 'ls', path: p});
+                    if (r.items.length && !o.recursive) throw new Error(`${p} isn't empty`);
+                    for (const [n] of r.items) await padDir(p).removeEntry(n, {recursive: true});
+                }
+                await request({c: 'delete', path: p});
+                if (/^(layers|scenes|modules)\//.test(p)) restartSoon();
+            },
+            async *entries() {
+                const r = await request({c: 'ls', path});
+                for (const [name, dir] of r.items) yield [name, dir ? padDir(join(path, name)) : padFile(join(path, name))];
+            },
+            queryPermission: async () => 'granted', requestPermission: async () => 'granted'};
+    }
+    window.MP1Pad = {connected: () => !!pad, root: () => padDir(''), restartSoon: () => { if (pad) restartSoon(); },
+                     updateFirmware: file => { showView('link'); return firmwareCard(file); },
+                     secretKey: () => requestOne({c: 'skey'}).then(r => r.key)};
+    // Tell the configurator when the link comes or goes (it shows "MP1 over USB" as its drive)
+    let padWas = false;
+    function padChanged() {
+        const now = !!pad;
+        $('tabDot').classList.toggle('on', now);
+        const f = frames.config;
+        if (!f || !f.dataset.ready || now === padWas) return;
+        padWas = now;
+        try { f.contentWindow.MP1PadChanged && f.contentWindow.MP1PadChanged(now); } catch (e) { /* fine */ }
+    }
+
+    // ─── player only (small window, or #mini) ───
+    // MP1 Link.html, the stand-alone mini window, is this page without the other tools in it
+    // (tools/make_app.py sets MINI_PAGE): always just the player
+    const MINI_PAGE = true;
+    function miniPage() { return MINI_PAGE || location.hash === '#mini'; }
+    // The mini window's size, the same for the MP1 Mini shortcut window and the always-on-top one:
+    // the shortcut window opens at 300 x 266 (title bar included; room for the chord legend) and never goes under 200 x 190;
+    // the always-on-top window gets the same content area (its title bar is the browser's own).
+    const MINI_MAX_W = 450;                     // the mini windows are never wider than this
+    const MINI_W = 300, MINI_H = 266, MINI_MIN_W = 200, MINI_MIN_H = 190, MINI_BAR = 32;    // MINI_BAR: a title bar
+    const MINI_AREA = [MINI_W, MINI_H - MINI_BAR], MINI_MIN_AREA = [MINI_MIN_W, MINI_MIN_H - MINI_BAR];
+    function miniSize(first) {
+        if (!miniPage()) return;
+        try {
+            if (first) window.resizeTo(MINI_W, MINI_H);
+        } catch (e) { /* a normal browser tab can't be resized */ }
+        miniFitSoon();
+    }
+    // The content heights at this width: [least (top line, screen, status line), most (with the
+    // transfer bar and the chord legend at its biggest)]
+    function miniHeights() {
+        const legend = q('mChords'), xfer = q('mXfer'), info = q('mInfo');
+        const was = [legend.hidden, xfer.style.display, legend.style.getPropertyValue('--cs')];
+        const bottom = () => Math.ceil(info.getBoundingClientRect().bottom + 10);
+        legend.hidden = true;
+        xfer.style.display = 'none';
+        const least = bottom();
+        xfer.style.display = '';
+        if (pad && !pad.secret && chordPairs().length) {
+            legend.hidden = false;
+            legend.style.setProperty('--cs', 2.5);
+        }
+        const most = bottom();
+        legend.hidden = was[0];
+        xfer.style.display = was[1];
+        legend.style.setProperty('--cs', was[2] || 1);
+        return [least, most];
+    }
+    // Keep the mini window (the shortcut one or the always-on-top one) between those heights and
+    // MINI_MIN_W-MINI_MAX_W wide. Done a moment after a resize ends, not while it's being dragged.
+    let fitTimer = null;
+    function miniFitSoon() { clearTimeout(fitTimer); fitTimer = setTimeout(miniFit, 300); }
+    function miniFit() {
+        const win = pipWin || (miniPage() ? window : null);
+        if (!win) return;
+        const [least, most] = miniHeights();
+        const h = Math.min(Math.max(win.innerHeight, least), Math.max(least, most));
+        const w = Math.min(MINI_MAX_W, Math.max(win.outerWidth, MINI_MIN_W));
+        if (h !== win.innerHeight || w !== win.outerWidth)
+            try { win.resizeTo(w, win.outerHeight + h - win.innerHeight); } catch (e) { /* the browser decides */ }
+    }
+    function pipMinSize() { miniFitSoon(); }
+    function compactCheck() {
+        const compact = miniPage() || window.innerWidth < 520;
+        document.body.classList.toggle('compact', compact);
+        if (compact && view !== 'link') showView('link');     // the widget is the player, whatever tab was open
+        document.documentElement.style.setProperty('--bar-h', $('topbar').offsetHeight + 'px');
+    }
+
+    // ─── start ───
+    if ('serial' in navigator) {
+        navigator.serial.addEventListener('connect', () => setTimeout(autoConnect, 1500));    // plugged in
+        navigator.serial.addEventListener('disconnect', e => { if (port && e.target === port) closePort(); });
+    }
+    window.addEventListener('DOMContentLoaded', () => {
+        // Listeners, not onclick="": the player moves into the mini window, where this page's
+        // functions aren't globals
+        $('mini').addEventListener('dragover', e => {
+            if (![...e.dataTransfer.types].includes('Files')) return;
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'copy';
+            q('mini').classList.add('drop-on');
+        });
+        $('mini').addEventListener('dragleave', e => { if (!q('mini').contains(e.relatedTarget)) q('mini').classList.remove('drop-on'); });
+        $('mini').addEventListener('drop', dropOnPad);
+        cardEvents($('mCard'));
+        $('mGear').addEventListener('click', e => { e.stopPropagation(); miniMenu(q('mMenu').hidden); });
+        $('mini').addEventListener('click', e => { if (!e.target.closest('#mMenu, #mGear')) miniMenu(false); });
+        $('mOnTop').closest('label').hidden = !('documentPictureInPicture' in window);
+        $('mSkin').addEventListener('change', e => { pickSkin(e.target.value); });
+        $('mChordMode').addEventListener('change', e => { saveOptions({chordMarks: e.target.value}); render(); });
+        $('mLook').addEventListener('click', e => {
+            const b = e.target.closest('[data-look]');
+            if (!b) return;
+            saveOptions({miniLook: b.dataset.look});
+            applyLook();
+            markLook();
+        });
+        $('mOnTop').addEventListener('change', e => {
+            const on = e.target.checked;
+            saveOptions({onTop: on});
+            miniMenu(false);
+            if (on && !pipWin) openMini();
+            else if (!on && pipWin) pipWin.close();
+        });
+        $('mOled').addEventListener('mousemove', hoverAt);
+        $('mOled').addEventListener('mouseleave', () => { if (hotKey !== -1) { hotKey = -1; drawLive(); } });
+        $('mChords').addEventListener('mouseover', e => {
+            const s = e.target.closest('[data-chord]'), n = s ? +s.dataset.chord : 0;
+            if (n !== hotChord) { hotChord = n; drawLive(); }
+        });
+        $('mChords').addEventListener('mouseleave', () => { if (hotChord) { hotChord = 0; drawLive(); } });
+        $('mOled').addEventListener('click', e => {
+            const k = keyAt(e);
+            if (k >= 0 && pad && pad.keys && (pad.keys[k] || pad.hold)) pressFromHere({key: k}, pad.keys[k] || 'key ' + (k + 1));
+        });
+        $('mChords').addEventListener('click', e => {
+            const s = e.target.closest('[data-chord]');
+            if (s) pressFromHere({chord: +s.dataset.chord - 1}, 'chord ' + s.dataset.chord);
+        });
+        window.addEventListener('fa-ready', render);     // Font Awesome arrived: the legend's icons
+        $('mini').addEventListener('click', e => {
+            const chip = e.target.closest('[data-layer]');
+            if (chip) pickLayer(chip.dataset.layer);
+        });
+        $('profiles').addEventListener('click', e => {
+            const chip = e.target.closest('[data-profile]');
+            if (chip) pickProfile(chip.dataset.profile);
+        });
+        $('connectBtn').addEventListener('click', connectNew);
+        $('topConnect').addEventListener('click', connectNew);
+        $('mFull').addEventListener('click', () => {         // the full page in a normal Edge window / tab
+            const url = MINI_PAGE ? new URL('MP1.html', location.href).href : location.href.split('#')[0];     // (MP1 Link.html: the full page next to it)
+            if (pipWin && !location.hash && !MINI_PAGE) { window.focus(); return; }       // always-on-top window: the full page is its own tab
+            window.open(url, '_blank');
+        });
+        $('mStatus').addEventListener('click', () => {
+            if (!pad) { if (!port && !remote) connectNew(); return; }
+            const names = pad.profiles_on !== false ? pad.profiles || [] : [];
+            if (names.length > 1 && !syncShown && !updating) pickProfile(names[(names.indexOf(pad.profile) + 1) % names.length]);
+        });
+        $('pipBtn').addEventListener('click', openMini);
+        $('miniTop').addEventListener('click', openMini);
+        $('autoProfile').addEventListener('change', e => { saveOptions({profile: e.target.value || ''}); if (e.target.value) pickProfile(e.target.value); });
+        $('syncClock').addEventListener('change', () => saveOptions());
+        $('openLinks').addEventListener('change', () => saveOptions());
+        window.addEventListener('resize', () => { compactCheck(); render(); miniFitSoon(); });
+        window.addEventListener('hashchange', compactCheck);
+        $('tabs').addEventListener('click', e => {
+            const b = e.target.closest('button[data-view]');
+            if (b) showView(b.dataset.view);
+        });
+        const base = location.href.split('#')[0];
+        $('shortcutLine').value = `"C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe" --app="${base}#mini" --window-size=${MINI_W},${MINI_H}`;
+        $('copyShortcut').addEventListener('click', () => {
+            navigator.clipboard.writeText($('shortcutLine').value).then(() => flashInfo('Copied: paste it into New → Shortcut'), () => $('shortcutLine').select());
+        });
+        miniSize(true);
+        applySkin();
+        if (miniPage()) applyLook();
+        // Always on top was on when this mini window last closed: the browser only opens that window
+        // on a click, so the first click here does it
+        if (miniPage() && options().onTop && 'documentPictureInPicture' in window) {
+            flashInfo('Click to put it back on top');
+            document.addEventListener('pointerdown', () => { if (!pipWin && options().onTop) openMini(); }, {once: true});
+        }
+        compactCheck();
+        supported();
+        render();
+        autoConnect();
+    });
+    </script>
+<!-- FA_LOADER: Font Awesome icons with an internet connection; the built-in drawings without one.
+     Kept in app/fa_loader.html and copied into each page (tools/fa_sync.py); edit it there. -->
+<script>
+(() => {
+    const FA_CSS = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css';
+    window.FA_CSS = FA_CSS;
+    window.FA_BRANDS_CSS = FA_CSS.replace('all.min.css', 'brands.min.css');
+    window.FA_OK = false;
+    // The page's own buttons: their label -> the Font Awesome icon that replaces the drawing
+    const MAP = {
+        'Help': 'fa-circle-question', 'Auto: follow the computer': 'fa-circle-half-stroke', 'Light': 'fa-sun', 'Dark': 'fa-moon',
+        'Mini window (always on top)': 'fa-window-restore', 'Export layer': 'fa-file-export', 'Import layer': 'fa-file-import',
+        'Export key': 'fa-file-export', 'Import key': 'fa-folder-open', 'Preview screen': 'fa-display', 'Delete layer': 'fa-trash-can',
+        'Copy JSON': 'fa-copy', 'Undo': 'fa-rotate-left', 'Redo': 'fa-rotate-right', 'Print a cheat sheet': 'fa-print',
+        'Stop': 'fa-stop', 'Remove the last step': 'fa-delete-left', 'Edit the key action': 'fa-pen',
+        'Connect the macropad': 'fa-plug', 'Open from drive': 'fa-file-import', 'Open file': 'fa-folder-open', 'Save as': 'fa-floppy-disk', 'Refresh': 'fa-arrows-rotate',
+        'Add to the drive': 'fa-upload', 'Add files': 'fa-upload', 'Add a folder': 'fa-folder-plus', 'Reset all to defaults': 'fa-clock-rotate-left',
+        'Capture keys': 'fa-keyboard', 'Record macro': 'fa-circle', 'Hold to confirm': 'fa-clock', 'Repeat while held': 'fa-repeat',
+        'Mouse jiggle while shown': 'fa-arrow-pointer', 'Keep Num Lock on while shown': 'fa-hashtag', 'Speed up when turned fast': 'fa-bolt',
+        'Swap directions': 'fa-right-left', 'Clear the encoder': 'fa-trash-can', 'Add layer': 'fa-plus', 'Layer menu': 'fa-ellipsis',
+        'Key tools': 'fa-ellipsis', 'No icon': 'fa-xmark', 'Download': 'fa-download', 'Delete': 'fa-trash-can', 'Lights for this layer': 'fa-lightbulb',
+        'Home layer': 'fa-star', 'Home layer (at power-up)': 'fa-star', 'Make this the home layer': 'fa-star',
+        'Secret layer (TOG SEC 1 / 2)': 'fa-lock', "The home layer can't be secret": 'fa-lock', 'Secret 1': 'fa-lock', 'Secret 2': 'fa-lock',
+    };
+    // A stored "fa" value -> safe classes ("fa-house" alone means the solid style)
+    window.faClass = value => {
+        const s = String(value || '').trim().toLowerCase();
+        if (!s || !/^[a-z0-9 -]+$/.test(s)) return '';
+        return /(^|\s)(fa-(solid|regular|brands|light|thin|duotone|sharp)|fas|far|fab)(\s|$)/.test(s) ? s : 'fa-solid ' + s;
+    };
+    // ─── Icon sets for Link / pad icons. A stored value names one icon of one set:
+    //   "fa-solid fa-house" (Font Awesome Free), "ri-home-fill" (Remix Icon), "si si-github"
+    //   (Simple Icons), "ms home" (Material Symbols, filled). All free licences.
+    const SET_CSS = {
+        ri: 'https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css',
+        si: 'https://cdn.jsdelivr.net/npm/simple-icons-font@11.0.0/font/simple-icons.min.css',
+        ms: 'https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,1,0',
+    };
+    window.ICON_SET_CSS = SET_CSS;
+    window.MS_NAMES_URL = 'https://cdn.jsdelivr.net/npm/material-symbols@0.27.0/index.d.ts';
+    // Your own icons, drawn in the Pixel studio: "my NAME". Their pixels: icons/mine.json on the pad
+    // (the configurator) or linkicons.json's "mine" (the Link pages): NAME -> {"18": rows, "14", "32"}
+    window.MY_ICONS = window.MY_ICONS || {};
+    window.myIconRows = (name, n) => {       // NAME's pixels at n x n: as drawn, or scaled from its biggest
+        const e = window.MY_ICONS[name];
+        if (!e) return null;
+        if (Array.isArray(e[n])) return e[n];
+        const have = Object.keys(e).map(Number).filter(k => Array.isArray(e[k])).sort((a, b) => b - a);
+        if (!have.length) return null;
+        const src = e[have[0]], m = have[0], rows = [];
+        for (let y = 0; y < n; y++) { let r = ''; for (let x = 0; x < n; x++) r += (src[Math.floor(y * m / n)] || '')[Math.floor(x * m / n)] === '1' ? '1' : '0'; rows.push(r); }
+        return rows;
+    };
+    const myUrls = {};                       // NAME -> a PNG of it (a mask: takes the text color)
+    window.myIconUrl = name => {
+        const e = window.MY_ICONS[name];
+        const rows = e && (e[32] || e[18] || e[14] || window.myIconRows(name, 32));
+        if (!rows) return '';
+        const key = name + ':' + rows.join('');
+        if (myUrls[name] && myUrls[name][0] === key) return myUrls[name][1];
+        const c = document.createElement('canvas');
+        c.width = c.height = rows.length;
+        const g = c.getContext('2d');
+        rows.forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] === '1') g.fillRect(x, y, 1, 1); });
+        myUrls[name] = [key, c.toDataURL()];
+        return myUrls[name][1];
+    };
+    // The 14 built-in symbols (the pad's font order) and your redrawn ones: {"k": {SYMBOL: 18 rows of
+    // 13 (keys)}, "s": {SYMBOL: 13 rows of 10 (status row)}}, put into a page's PAD_FONT
+    window.SYM_ORDER = ['⏯', '⏭', '⏮', '⏹', '🔊', '🔉', '🔇', '▲', '▼', '◀', '▶', '↵', '⇥', '⌫'];
+    const SYM_BOX = {k: {bits: 14, r0: 2, rows: 18, c0: 0, cols: 13}, s: {bits: 16, r0: 1, rows: 13, c0: 3, cols: 10}};
+    window.SYM_BOX = SYM_BOX;
+    window.symRows = (font, kind, ch) => {   // a symbol's pixels from a PAD_FONT (or its __orig): rows of '0'/'1'
+        const g = font[kind] && font[kind][ch], b = SYM_BOX[kind];
+        if (!g) return null;
+        const rows = [];
+        for (let r = b.r0; r < b.r0 + b.rows; r++) rows.push(parseInt(g.substr(r * 4, 4), 16).toString(2).padStart(b.bits, '0').slice(b.c0, b.c0 + b.cols));
+        return rows;
+    };
+    window.applySymEdits = (font, edits) => {
+        if (!font.__orig) Object.defineProperty(font, '__orig', {value: {k: Object.assign({}, font.k), s: Object.assign({}, font.s)}});
+        for (const kind of ['k', 's']) {
+            const b = SYM_BOX[kind];
+            for (const ch of window.SYM_ORDER) {
+                const o = font.__orig[kind][ch], e = edits && edits[kind] && edits[kind][ch];
+                if (!o) continue;
+                if (!Array.isArray(e)) { font[kind][ch] = o; continue; }
+                let g = '';
+                for (let r = 0; r < o.length / 4; r++) {
+                    let v = parseInt(o.substr(r * 4, 4), 16).toString(2).padStart(b.bits, '0');
+                    if (r >= b.r0 && r < b.r0 + b.rows) v = v.slice(0, b.c0) + String(e[r - b.r0] || '').replace(/[^01]/g, '0').padEnd(b.cols, '0').slice(0, b.cols) + v.slice(b.c0 + b.cols);
+                    g += parseInt(v, 2).toString(16).padStart(4, '0');
+                }
+                font[kind][ch] = g;
+            }
+        }
+    };
+    window.iconInfo = value => {             // {set, cls, text} or null
+        const s = String(value || '').trim().toLowerCase();
+        if (!s) return null;
+        let m = s.match(/^my[ :]([a-z0-9_-]{1,24})$/);
+        if (m) return {set: 'my', cls: 'my-ico', text: '', name: m[1]};
+        m = s.match(/^ms[ :]([a-z0-9_]+)$/);
+        if (m) return {set: 'ms', cls: 'material-symbols-rounded', text: m[1]};
+        if (/^ri-[a-z0-9-]+$/.test(s)) return {set: 'ri', cls: s, text: ''};
+        m = s.match(/^(?:si\s+)?si-([a-z0-9-]+)$/);
+        if (m) return {set: 'si', cls: 'si si-' + m[1], text: ''};
+        const fa = window.faClass(s);
+        return fa ? {set: 'fa', cls: fa, text: ''} : null;
+    };
+    window.iconParts = value => String(value || '').split(';').map(s => s.trim()).filter(Boolean).slice(0, 2);
+    // ─── Key labels: letters and up to two icons in any order, like typing. Stored as the letters
+    // ("icon"), the icons ("fa", "a; b") and where the icons sit among them ("icon_at": positions in
+    // the whole label; none = the icons first). Everything must fit the key's 30 pixels: a letter is
+    // 6 wide (a symbol 13), an icon 18 (16 or 14 when that's what fits; two icons 14 or 12), with a
+    // 1-pixel gap between neighbors (2 between two lone icons). Drawn the same way here, in MP1 Link
+    // and (as one picture, icons/pair.bmp) on the pad. ───
+    window.labelItems = (letters, fa, at) => {
+        const parts = window.iconParts(fa), L = Array.from(letters || ''), total = L.length + parts.length;
+        const pos = Array.isArray(at) && at.length === parts.length ? at : parts.map((_, i) => i);
+        const out = [];
+        let li = 0;
+        for (let p = 0; p < total; p++) {
+            const j = pos.indexOf(p);
+            if (j >= 0) out.push({i: parts[j]});
+            else if (li < L.length) out.push({t: L[li++]});
+        }
+        parts.forEach((c, j) => { if (!out.some(x => x.i === c)) out.push({i: c}); });     // (positions out of range)
+        while (li < L.length) out.push({t: L[li++]});
+        return out;
+    };
+    window.LABEL_W = 30;
+    window.labelFit = (items, wide) => {          // {n: icon size, total: width, gap} or null (doesn't fit)
+        const icons = items.filter(x => x.i).length;
+        const lw = ch => ((wide && wide[ch]) || 7) - 1;
+        const gap = icons === 2 && items.length === 2 ? 2 : 1;
+        for (const n of icons > 1 ? [14, 12] : icons ? [18, 16, 14] : [0]) {
+            const total = items.reduce((t, x) => t + (x.i ? n : lw(x.t)), 0) + Math.max(0, items.length - 1) * gap;
+            if (total <= window.LABEL_W) return {n, total, gap};
+        }
+        return null;
+    };
+    // Draw a label: icon(code, n) gives rows or null (not ready: returns false), letter(ch, x) draws
+    // one letter at its left edge x; the label is centered in the 30 pixels from x0; icons centered on cy.
+    window.drawLabel = (items, fit, x0, cy, icon, rowsAt, letter, wide) => {
+        let x = x0 + Math.floor((window.LABEL_W - fit.total) / 2);
+        const lw = ch => ((wide && wide[ch]) || 7) - 1;
+        const got = items.map(it => it.i ? icon(it.i, fit.n) : true);
+        if (got.some(r => !r)) return false;
+        items.forEach((it, j) => {
+            if (it.i) { rowsAt(got[j], x, Math.round(cy - fit.n / 2)); x += fit.n + fit.gap; }
+            else { letter(it.t, x); x += lw(it.t) + fit.gap; }
+        });
+        return true;
+    };
+    // Does a key need the whole-label picture (rather than the pad's own text, or one icon + a letter)?
+    window.labelMixed = (letters, fa, at) => {
+        const parts = window.iconParts(fa), L = Array.from(letters || '');
+        if (!parts.length) return false;
+        if (parts.length > 1) return true;
+        const items = window.labelItems(letters, fa, at);
+        return !(items[0].i && L.length <= 1 && (!L.length || window.labelFit(items) && window.labelFit(items).n === 18));
+    };
+    window.iconHtml = (value, extra = '', style = '') => {      // the icon as HTML ('' if it isn't one)
+        const parts = window.iconParts(value);
+        if (parts.length > 1) return parts.map(p => window.iconHtml(p, extra, style)).join('');
+        const i = window.iconInfo(value);
+        if (!i) return '';
+        if (i.set === 'my') {
+            const url = window.myIconUrl(i.name);
+            return `<i class="my-ico${extra ? ' ' + extra : ''}" style="${url ? `-webkit-mask-image:url(${url});mask-image:url(${url});` : ''}${style}" aria-hidden="true"></i>`;
+        }
+        return `<i class="${i.cls}${extra ? ' ' + extra : ''}"${style ? ` style="${style}"` : ''} aria-hidden="true">${i.text}</i>`;
+    };
+    // An icon as 1-bit pixels, n x n (cropped to its own ink, fitted, thresholded at half), the way
+    // the pad shows it: rows of '0'/'1', or null (not loaded / not an icon)
+    window.iconPixels = async (value, n) => {
+        if (String(value || '').includes(';')) value = window.iconParts(value)[0];     // (two icons: the first, where only one fits)
+        const info = window.iconInfo(value);
+        if (info && info.set === 'my') return window.myIconRows(info.name, n);
+        if (!window.FA_OK || !info) return null;
+        const el = document.createElement('i');
+        el.className = info.cls;
+        el.textContent = info.text;
+        el.style.cssText = 'position:absolute;left:-9999px;top:0;font-size:16px';
+        document.body.appendChild(el);
+        const glyph = info.text || (getComputedStyle(el, '::before').content || '').replace(/^["']|["']$/g, '');
+        const fam = getComputedStyle(el).fontFamily, wt = getComputedStyle(el).fontWeight;
+        el.remove();
+        if (!glyph || glyph === 'none') return null;
+        try { await document.fonts.load(`${wt} 64px ${fam}`, glyph); } catch (e) { return null; }
+        const N = 256, k = document.createElement('canvas');
+        k.width = k.height = N;
+        const g = k.getContext('2d');
+        g.font = `${wt} ${info.text ? 180 : 200}px ${fam}`;
+        g.textAlign = 'center';
+        g.textBaseline = 'middle';
+        g.fillText(glyph, N / 2, N / 2);
+        const d = g.getImageData(0, 0, N, N).data;
+        let x0 = N, y0 = N, x1 = -1, y1 = -1;
+        for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) if (d[(y * N + x) * 4 + 3] > 20) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+        if (x1 < 0 || (info.text && x1 - x0 > N * 0.9)) return null;        // (a ligature that didn't form draws the word)
+        const sw = x1 - x0 + 1, sh = y1 - y0 + 1, o = document.createElement('canvas');
+        o.width = o.height = n;
+        const og = o.getContext('2d'), s = Math.min(n / sw, n / sh);
+        og.drawImage(k, x0, y0, sw, sh, (n - sw * s) / 2, (n - sh * s) / 2, sw * s, sh * s);
+        const od = og.getImageData(0, 0, n, n).data, rows = [];
+        for (let y = 0; y < n; y++) { let r = ''; for (let x = 0; x < n; x++) r += od[(y * n + x) * 4 + 3] >= 128 ? '1' : '0'; rows.push(r); }
+        return rows;
+    };
+    function swap(root) {
+        if (!window.FA_OK || !root || !root.querySelectorAll) return;
+        const list = root.matches && root.matches('svg.ico') ? [root] : root.querySelectorAll('svg.ico');
+        list.forEach(svg => {
+            const host = svg.closest('[aria-label],[data-tip]');
+            const name = svg.dataset.fa || (host && (MAP[host.getAttribute('aria-label')] || MAP[host.getAttribute('data-tip')]));
+            if (!name || !svg.parentNode) return;
+            const i = document.createElement('i');
+            i.className = 'ico fa-solid ' + name;
+            i.setAttribute('aria-hidden', 'true');
+            svg.replaceWith(i);
+        });
+    }
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = FA_CSS;
+    link.crossOrigin = 'anonymous';
+    link.onload = () => document.fonts.load('900 16px "Font Awesome 6 Free"').then(found => {
+        if (!found.length) return;          // the font didn't come: keep the drawings
+        window.FA_OK = true;
+        document.documentElement.classList.add('fa-on');
+        for (const href of Object.values(SET_CSS)) {        // the other icon sets (their fonts load when used)
+            const l = document.createElement('link');
+            l.rel = 'stylesheet';
+            l.href = href;
+            l.crossOrigin = 'anonymous';
+            document.head.appendChild(l);
+        }
+        swap(document.body);
+        new MutationObserver(ms => ms.forEach(m => m.addedNodes.forEach(n => { if (n.nodeType === 1) swap(n); })))
+            .observe(document.body, {childList: true, subtree: true});
+        window.dispatchEvent(new Event('fa-ready'));
+    }, () => { /* offline */ });
+    document.head.appendChild(link);
+})();
+</script>
+<style>
+    i.ico { width: 18px; height: 18px; font-size: 16px; line-height: 18px; text-align: center; vertical-align: -2px; stroke: none; }
+    .theme-toggle i.ico { width: 17px; height: 17px; font-size: 15px; line-height: 17px; }
+    i.my-ico { display: inline-block; width: 1em; height: 1em; vertical-align: -0.125em; background: currentColor; -webkit-mask-size: contain; mask-size: contain; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; image-rendering: pixelated; }
+    i.my-ico:not([style*="mask-image"]) { background: none; outline: 1px dashed currentColor; outline-offset: -2px; }
+    i.material-symbols-rounded { font-style: normal; font-size: 1.15em; line-height: 1; vertical-align: -0.15em; }
+</style>
+<!-- /FA_LOADER -->
+</body>
+</html>

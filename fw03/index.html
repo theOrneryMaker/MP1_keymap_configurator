@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>MP1 Firmware 03</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="mp1.ico">
+<style>
+:root { --bg: #f4f4f2; --panel: #fff; --text: #1b1c1f; --muted: #6b6e76; --border: #dddcd8; --orange: #f26b1d;
+        --mono: ui-monospace, Consolas, monospace; --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+@media (prefers-color-scheme: dark) { :root { --bg: #16171a; --panel: #212226; --text: #ececec; --muted: #9a9ca3; --border: #34363c; } }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 var(--font); }
+.wrap { max-width: 640px; margin: 0 auto; padding: 24px 16px 48px; }
+h1 { font: 800 1.5em/1.2 var(--mono); letter-spacing: .05em; margin: 0 0 4px; }
+.card { background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px 16px; margin: 14px 0; }
+.card h2 { font-size: 1.05em; margin: 0 0 6px; }
+a { color: var(--orange); font-weight: 600; }
+.hint { color: var(--muted); font-size: .92em; margin: 4px 0; }
+ul { margin: 6px 0; padding-left: 20px; } li { margin: 4px 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>MP1 Firmware 03</h1>
+  <p class="hint">For macropads on firmware 03. Pads still on the original firmware keep using the old configurator.</p>
+
+  <div class="card">
+    <h2>Pages</h2>
+    <ul>
+      <li><a href="MP1.html">MP1</a>: configurator, help, workbench and module guide.</li>
+      <li><a href="MP1%20Link.html">MP1 Link</a>: the macropad's screen live, layer and profile switching.</li>
+      <li><a href="../mp1_phone.html">MP1 Phone</a>: firmware update and backup from an Android phone.</li>
+    </ul>
+    <p class="hint">Use Chrome or Edge. The pages talk to the macropad over USB.</p>
+  </div>
+
+  <div class="card">
+    <h2>Downloads</h2>
+    <ul>
+      <li><a href="MP1_firmware_03.zip" download>MP1_firmware_03.zip</a>: for pads on standard CircuitPython.</li>
+      <li><a href="MP1_firmware_03_custom.zip" download>MP1_firmware_03_custom.zip</a>: for pads on the MP1 custom firmware.</li>
+      <li><a href="mp1_yd_rp2040_03.uf2" download>mp1_yd_rp2040_03.uf2</a>: the MP1 custom firmware itself (YD-RP2040), copied onto the RPI-RP2 drive.</li>
+    </ul>
+    <p class="hint">Updates never include your keymap, settings or wiring.</p>
+  </div>
+</div>
+</body>
+</html>
