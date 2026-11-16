@@ -988,6 +988,8 @@ html {
         const turnKeys = turn >= 0 && turn < pairs.length ? pairs[turn][1] : [], turnColor = turn >= 0 && turn < pairs.length ? CHORD_COLORS[pairs[turn][0] - 1] : '';
         pad.keys.forEach((icon, k) => {
             const [cx, cy] = KEY_CENTERS[k], keyInk = turnKeys.includes(k) ? turnColor : ink;
+            // a whole label fixed by hand in the pixel editor (As on the pad): that picture, like the pad
+            if (iconLook() === 'pad' && hasPicon(icon) && li.px && Array.isArray(li.px[k])) return drawRows(ctx, li.px[k], MARGIN + (k % 4) * KEY_COL_W + 1, Math.round(cy - 9) - 2, keyInk);
             // a whole label (letters and icons, as the configurator drew it for the macropad)
             if (hasPicon(icon) && li.text && typeof li.text[k] === 'string' && window.labelItems) {
                 const items = window.labelItems(li.text[k], (li.keys || [])[k], (li.at || [])[k]), fit = window.labelFit(items, PAD_FONT_WIDE.k);
